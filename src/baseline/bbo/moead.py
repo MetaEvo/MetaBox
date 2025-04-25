@@ -35,6 +35,8 @@ class MOEAD(Basic_Optimizer):
         self.moead_eta = 2
         # self.max_fes=config.maxFEs
         self.max_fes = config.maxFEs
+    def __str__(self):
+        return 'MOEAD'
 
     def init_population(self, problem):
         # problem
