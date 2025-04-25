@@ -145,6 +145,7 @@ class MOEAD(Basic_Optimizer):
             if self.fes >= self.max_fes:
                 self.done = True
                 print("fes:{},last_igd:{},last_hv:{}".format(self.fes,self.last_igd,self.last_hv))
+                results = {'cost': self.cost, 'fes': self.fes, 'metadata': self.metadata}
             else:
                 self.done = False
             
