@@ -1,4 +1,4 @@
-# MetaBox: A Benchmark Platform for Meta-Black-Box Optimization with Reinforcement Learning
+# MetaBox: A Benchmark Platform for Meta-Black-Box Optimization with Reinforcement Learning (NeurIPS 2023, Oral)
 
 [![NeurIPS](https://img.shields.io/badge/NeurIPS-2023-b31b1b.svg)]([https://proceedings.neurips.cc/paper_files/paper/2023/hash/232eee8ef411a0a316efa298d7be3c2b-Abstract-Datasets_and_Benchmarks.html]) **MetaBox has been published at NeurIPS 2023！**
 
