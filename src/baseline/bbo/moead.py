@@ -7,7 +7,9 @@ import sys
 from operator import itemgetter
 from scipy.spatial.distance import cdist
 from environment.optimizer.basic_optimizer import Basic_Optimizer
-EPSILON = sys.float_info.epsilon
+# from baseline.bbo.moo_utils import *
+from environment.problem.MOO.MOO_synthetic.dtlz_numpy import *
+
 
 
 POSITIVE_INFINITY = float("inf")
@@ -26,29 +28,31 @@ class MOEAD(Basic_Optimizer):
         # Problem Related
         self.n_ref_points = 1000
         # # MOEA/D Algorithm Related
-        self.population_size = 40
-        self.neighborhood_size = 10
+        self.population_size = 100
+        self.moead_neighborhood_size = 8
+        self.moead_neighborhood_maxsize = 30
         self.moead_delta = 0.8
         self.moead_eta = 2
-        self.max_fes=config.maxFEs
-        
+        # self.max_fes=config.maxFEs
+        self.max_fes = config.maxFEs
+
     def init_population(self, problem):
         # problem
         self.problem = problem
         self.n_obj = problem.n_obj
         self.n_var = problem.n_var
         # population
-        self.weights = self.get_weights(self.n_obj)
+        self.weights = self.random_weights(self.n_obj,self.population_size)
         if self.population_size!=len(self.weights):
             self.population_size = len(self.weights)
         self.population = self.rng.uniform(low=problem.lb, high=problem.ub, size=(self.population_size, problem.n_var))
         self.population_obj = problem.eval(self.population)
         self.neighborhoods = self.get_neighborhoods()
         # budget
+        self.done = False
         self.fes = len(self.population)
         self.episode_limit = self.max_fes // self.population_size
         self.moead_generation = 0 
-        self.done = False
         # reference
         self.archive_maximum = np.max(self.population_obj, axis=0)
         self.archive_minimum = np.min(self.population_obj, axis=0)
@@ -56,14 +60,16 @@ class MOEAD(Basic_Optimizer):
         self.problem_ref_points = self.problem.get_ref_set(
             n_ref_points=self.n_ref_points)
         # indicators
-        self.cost,self.metadata = self.update_information()
-        self.initial_hv = self.get_hypervolume()
-        self.best_hv = self.initial_hv
-        self.last_hv = self.initial_hv
+        self.igd_his = []
         self.initial_igd = self.get_igd()
-        self.best_igd = self.initial_igd
         self.last_igd = self.initial_igd
-        return self.get_state()
+        self.best_igd = self.initial_igd
+        self.hv_his = []
+        self.initial_hv = self.get_hv()
+        self.last_hv = self.initial_hv
+        self.best_hv = self.initial_hv
+        self.metadata = {'X':[],'cost':[]}
+        self.update_information()
 
     def get_neighborhoods(self):
         neighborhoods = []  # the i-th element save the index of the neighborhoods of it
@@ -76,15 +82,20 @@ class MOEAD(Basic_Optimizer):
 
     def get_weights(self, n_obj):
         weights = None
-        # if n_obj == 3:
-        #     weights = self.normal_boundary_weights(n_obj, 13, 0)
-        # elif n_obj == 6:
-        #     weights = self.normal_boundary_weights(n_obj, 4, 1)
-        # elif n_obj == 8:
-        #     weights = self.normal_boundary_weights(n_obj, 3, 2)
-        # else:
-        #     weights = self.normal_boundary_weights(n_obj, 2, 3)
-        weights = self.random_weights(n_obj, self.population_size)
+        if n_obj == 2:
+            weights = self.normal_boundary_weights(n_obj,99, 0)
+        elif n_obj == 3:
+            weights = self.normal_boundary_weights(n_obj, 13, 0)
+        elif n_obj == 5:
+            weights = self.normal_boundary_weights(n_obj, 5, 0)
+        elif n_obj == 7:
+            weights = self.normal_boundary_weights(n_obj, 3, 2)
+        elif n_obj == 8:
+            weights = self.normal_boundary_weights(n_obj, 3, 1)
+        elif n_obj == 10:
+            weights = self.normal_boundary_weights(n_obj,2, 2)
+        else:
+            weights = self.random_weights(n_obj, self.population_size)
         return weights
 
     def moead_update_ideal(self, solution_obj):
@@ -112,31 +123,34 @@ class MOEAD(Basic_Optimizer):
                 offspring = self.pm(problem, offspring)
                 offspring_obj = problem.eval(offspring)
                 self.fes += 1
-                self.offspring_list.extend(offspring)
-                self.offspring_obj_list.extend(offspring_obj)
-                for child, child_obj in zip(offspring, offspring_obj):
+                safe_extend(self.offspring_list,offspring)
+                safe_extend(self.offspring_obj_list,offspring_obj)
+                # if offspring.ndim == 1:  # Check if offspring is a 1D array
+                for child, child_obj in zip([offspring], [offspring_obj]):
                     self.moead_update_ideal(child_obj)
-                    self.moead_update_solution(child, child_obj, mating_indices)  # selection
+                    self.moead_update_solution(child, child_obj, mating_indices)
+                # else:
+                #     for child, child_obj in zip(offspring, offspring_obj):
+                #         self.moead_update_ideal(child_obj)
+                #         self.moead_update_solution(child, child_obj, mating_indices)
             self.moead_generation += 1
-            self.cost, self.metadata = self.update_information()
             self.last_igd = self.get_igd()
             self.best_igd = min(self.best_igd, self.last_igd)
-            self.last_hv = self.get_hypervolume()
+            self.last_hv = self.get_hv()
             self.best_hv = max(self.best_hv, self.last_hv)
+            self.update_information()
+            print("igd:{},hv:{}".format(self.last_igd,self.last_hv))
             if self.fes >= self.max_fes:
                 self.done = True
-                print("fes:{},best_igd:{}".format(self.fes,self.best_value))
+                print("fes:{},last_igd:{},last_hv:{}".format(self.fes,self.last_igd,self.last_hv))
             else:
                 self.done = False
             
     def update_information(self):
         index =  self.find_non_dominated_indices(self.population_obj)
-        cost = [self.population_obj[i] for i in index] # parato front
-        metadata = {
-            "cost": self.population,
-            "cost_obj": self.population_obj,
-        }
-        return cost,metadata
+        self.cost = [copy.deepcopy(self.population_obj[i]) for i in index] # parato front
+        self.metadata['X'].append(copy.deepcopy(self.population))
+        self.metadata['cost'].append(copy.deepcopy(self.population_obj))
         
     def find_non_dominated_indices(self, population_list):
         """
@@ -236,8 +250,8 @@ class MOEAD(Basic_Optimizer):
         else:
             return list(range(self.population_size))
 
-    def get_hypervolume(self, n_samples=1e5):
-        if self.problem.n_obj <= 3:
+    def get_hv(self,n_samples=1e5):
+        if self.problem.n_obj <= 3 or self.population_size <= 50:
             hv_fast = False
         else:
             hv_fast = True
@@ -248,7 +262,6 @@ class MOEAD(Basic_Optimizer):
             hv_value = hyp.calculate(np.array(self.population_obj))
         else:
             # Estimate the hv value by Monte Carlo
-
             popobj = copy.deepcopy(self.population_obj)
             optimum = self.problem_ref_points
             fmin = np.clip(np.min(popobj, axis=0), np.min(popobj), 0)
@@ -282,11 +295,13 @@ class MOEAD(Basic_Optimizer):
                 samples = samples[save_id, :]
             hv_value = np.prod(hv_maximum - hv_minimum) * (
                     1 - samples.shape[0] / n_samples_hv)
+        self.hv_his.append(hv_value)
         return hv_value
 
     def get_igd(self):
         igd_calculator = InvertedGenerationalDistance(reference_set=self.problem_ref_points)
         igd_value = igd_calculator.calculate(self.population_obj)
+        self.igd_his.append(igd_value)
 
         return igd_value
 
@@ -396,7 +411,7 @@ class MOEAD(Basic_Optimizer):
         return weights
 
     def sbx(self, problem,parents,probability=1.0, distribution_index=20.0):
-        def sbx_crossover(self, x1, x2, lb, ub, distribution_index):
+        def sbx_crossover(x1, x2, lb, ub, distribution_index):
             dx = x2 - x1
 
             if dx > EPSILON:
@@ -434,7 +449,7 @@ class MOEAD(Basic_Optimizer):
                 x2 = 0.5 * ((y1 + y2) + betaq * (y2 - y1));
 
                 # randomly swap the values
-                if bool(self.rng.getrandbits(1)):
+                if bool(self.rng.randint(0, 2)):
                     x1, x2 = x2, x1
 
                 x1 = np.clip(x1, lb, ub)
@@ -448,21 +463,20 @@ class MOEAD(Basic_Optimizer):
             nvars = problem.n_var
 
             for i in range(nvars):
-                if isinstance(problem.types[i], np.Real):
-                    if self.rng.uniform(0.0, 1.0) <= 0.5:
-                        x1 = float(child1.variables[i])
-                        x2 = float(child2.variables[i])
-                        lb = problem.lb[i]
-                        ub = problem.ub[i]
+                if self.rng.uniform(0.0, 1.0) <= 0.5:
+                    x1 = float(child1[i])
+                    x2 = float(child2[i])
+                    lb = problem.lb[i]
+                    ub = problem.ub[i]
 
-                        x1, x2 = sbx_crossover(x1, x2, lb, ub,distribution_index=distribution_index)
-                        child1[i] = x1
-                        child2[i]= x2
+                    x1, x2 = sbx_crossover(x1, x2, lb, ub,distribution_index=distribution_index)
+                    child1[i] = x1
+                    child2[i]= x2
 
         return [child1, child2]
  
     def pm(self, problem,parent, probability=1.0, distribution_index=20.0):
-        def pm_mutation(self, x, lb, ub,distribution_index):
+        def pm_mutation(x, lb, ub,distribution_index):
             u = self.rng.uniform(0, 1)
             dx = ub - lb
 
@@ -483,19 +497,74 @@ class MOEAD(Basic_Optimizer):
         probability /= float(problem.n_var)
 
         for i in range(problem.n_var):
-            if isinstance(problem.types[i], np.Real):
-                if self.rng.uniform(0.0, 1.0) <= probability:
-                    child[i] = pm_mutation(float(child[i]),
-                                            problem.lb[i],
-                                            problem.ub[i],
-                                            distribution_index=distribution_index)
+            if self.rng.uniform(0.0, 1.0) <= probability:
+                child[i] = pm_mutation(float(child[i]),
+                                        problem.lb[i],
+                                        problem.ub[i],
+                                        distribution_index=distribution_index)
         return child
 
     
 
+## Aggregate functions
+def chebyshev(solution_obj, ideal_point, weights, min_weight=0.0001):
+    """Chebyshev (Tchebycheff) fitness of a solution with multiple objectives.
 
+    This function is designed to only work with minimized objectives.
 
+    Parameters
+    ----------
+    solution : Solution
+        The solution.
+    ideal_point : list of float
+        The ideal point.
+    weights : list of float
+        The weights.
+    min_weight : float
+        The minimum weight allowed.
+    """
+    objs = solution_obj
+    n_obj = objs.shape[-1]
+    return max([max(weights[i], min_weight) * (objs[i] - ideal_point[i]) for i in range(n_obj)])
 
+def pbi(solution_obj, ideal_point, weights, theta=5):
+    """Penalty-based boundary intersection fitness of a solution with multiple objectives.
+    
+    Requires numpy.  This function is designed to only work with minimized
+    objectives.
+    
+    Callers need to set the theta value by using
+        functools.partial(pbi, theta=0.5)
+    
+    Parameters
+    ----------
+    solution : Solution
+        The solution.
+    ideal_point: list of float
+        The ideal point.
+    weights : list of float
+        The weights.
+    theta : float
+        The theta value.
+    """
+    try:
+        import numpy as np
+    except:
+        print("The pbi function requires numpy.", file=sys.stderr)
+        raise
+
+    w = np.array(weights)
+    z_star = np.array(ideal_point)
+    F = np.array(solution_obj)
+
+    d1 = np.linalg.norm(np.dot((F - z_star), w)) / np.linalg.norm(w)
+    d2 = np.linalg.norm(F - (z_star + d1 * w))
+
+    return (d1 + theta * d2).tolist()
+
+## indicators
+POSITIVE_INFINITY = float("inf")
+EPSILON = sys.float_info.epsilon
 class Indicator(object):
     #__metaclass = ABCMeta
 
@@ -618,15 +687,14 @@ class Hypervolume(Indicator):
 
 
 class InvertedGenerationalDistance(Indicator):
-    def __init__(self, reference_set, d=1.0):
+    def __init__(self, reference_set):
         super(InvertedGenerationalDistance, self).__init__()
         self.reference_set = reference_set
-        self.d = d
+
 
     def calculate(self, set):
-        return math.pow(sum([math.pow(distance_to_nearest(s, set), self.d) for s in self.reference_set]),
-                        1.0 / self.d) / len(self.reference_set)
-
+        return sum([distance_to_nearest(s, set) for s in self.reference_set])/ len(self.reference_set)
+                        
 
 def distance_to_nearest(solution_obj, set):
     if len(set) == 0:
@@ -636,9 +704,12 @@ def distance_to_nearest(solution_obj, set):
 
 
 def euclidean_dist(x, y):
-    
-    return math.sqrt(sum([math.pow(x[i] - y[i], 2.0) for i in range(len(x))]))
+    if not isinstance(x, (list, np.ndarray)) or not isinstance(y, (list, np.ndarray)):
+        print("x:", x)
+        print("y:", y)
+        raise TypeError("x and y must be lists or tuples.")
 
+    return math.sqrt(sum([math.pow(x[i] - y[i], 2.0) for i in range(len(x))]))
 
 
 def normalize(solutions_obj: np.ndarray, minimum: np.ndarray = None, maximum: np.ndarray = None) -> np.ndarray:
@@ -685,46 +756,18 @@ def normalize(solutions_obj: np.ndarray, minimum: np.ndarray = None, maximum: np
 
     return solutions_normalized_obj
     
-
-
-def chebyshev(solution_obj, ideal_point, weights, min_weight=0.0001):
-    """Chebyshev (Tchebycheff) fitness of a solution with multiple objectives.
-
-    This function is designed to only work with minimized objectives.
-
-    Parameters
-    ----------
-    solution : Solution
-        The solution.
-    ideal_point : list of float
-        The ideal point.
-    weights : list of float
-        The weights.
-    min_weight : float
-        The minimum weight allowed.
-    """
-    objs = solution_obj
-    n_obj = objs.shape[-1]
-    return max([max(weights[i], min_weight) * (objs[i] - ideal_point[i]) for i in range(n_obj)])
-
-class SBX:
-
-    def __init__(self, probability=1, distribution_index=20.0):
-        super(SBX, self).__init__(2)
-        self.probability = probability
-        self.distribution_index = distribution_index
-
-    
-
-        
-
-if __name__ == "__main__":
-    optimizer = MADAC_MOEAD_Optimizer(1)
-    dtlz2 = DTLZ2()
-    optimizer.init_population(dtlz2)
-    optimizer.get_state()
-    for i in range(100):
-        first_three = np.random.randint(0, 4, 3)
-        last_one = np.random.randint(0, 2, 1)
-        action = np.concatenate((first_three, last_one))
-        optimizer.step(action, dtlz2)
+def safe_extend(lst, items):
+    # 如果 items 是 None，跳过处理
+    if items is None:
+        return
+    # 判断是否是 list 或 ndarray
+    if isinstance(items, (list, np.ndarray)):
+        # 获取维度
+        shape = np.shape(items)
+        if len(shape) > 1:  # 多维的：用 extend
+            lst.extend(items)
+        else:               # 一维的：用 append
+            lst.append(items)
+    else:
+        # 不是列表/数组，默认 append
+        lst.append(items)
