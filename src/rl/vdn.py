@@ -257,16 +257,15 @@ class VDN_Agent(Basic_Agent):
                     state = torch.FloatTensor(state).unsqueeze(0).to(self.device)
                 except:
                     state = [state]
-                action = self.actor(state)[0]
-                action = action.cpu().numpy().squeeze()
+                action = self.get_action(state)[0]
                 state, reward, is_done = env.step(action)
-                R += reward
+                R += reward[:,0]
             env_cost = env.get_env_attr('cost')
             env_fes = env.get_env_attr('fes')
             env_metadata = env.get_env_attr('metadata') 
             results = {'cost': env_cost, 'fes': env_fes, 'return': R, 'metadata': env_metadata}
             for key in required_info.keys():
-                results[key] = getattr(env, required_info[key])
+                results[key] = env.get_env_attr(env, required_info[key])
             return results
 
     def rollout_batch_episode(self,
