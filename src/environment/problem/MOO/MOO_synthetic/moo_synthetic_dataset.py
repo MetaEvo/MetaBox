@@ -164,6 +164,10 @@ class MOO_Synthetic_Dataset(Dataset):
             elif difficulty == 'all':
                 train_set = instance_set
                 test_set = instance_set
+            for i in range(len(train_set)):
+                train_set[i].dim = train_set[i].n_var
+            for i in range(len(test_set)):
+                test_set[i].dim = test_set[i].n_var
 
         return MOO_Synthetic_Dataset(train_set, train_batch_size), MOO_Synthetic_Dataset(test_set, test_batch_size)
 
