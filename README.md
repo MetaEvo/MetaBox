@@ -2,6 +2,7 @@
 
 [![NeurIPS](https://img.shields.io/badge/NeurIPS-2023-b31b1b.svg)]([https://proceedings.neurips.cc/paper_files/paper/2023/hash/232eee8ef411a0a316efa298d7be3c2b-Abstract-Datasets_and_Benchmarks.html]) **MetaBox has been published at NeurIPS 2023！**
 
+### MetaBox 2.0 is now accessible at [here](https://github.com/MetaEvo/MetaBox/tree/v2.0.0). We strongly suggest you use MetaBox-v2 now to embrace new features such as high-efficiency and coding flexibility!
 MetaBox is the first benchmark platform expressly tailored for developing and evaluating MetaBBO-RL methods. MetaBox offers a flexible algorithmic template that allows users to effortlessly implement their unique designs within the platform. Moreover, it provides a broad spectrum of over 300 problem instances, collected from synthetic to realistic scenarios, and an extensive library of 19 baseline methods, including both traditional black-box optimizers and recent MetaBBO-RL methods. Besides, MetaBox introduces three standardized performance metrics, enabling a more thorough assessment of the methods.
 
 ## 😁Contact Us
