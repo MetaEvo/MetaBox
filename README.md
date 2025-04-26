@@ -11,7 +11,7 @@ Here is our [homepage](https://metaevo.github.io/) and [github](https://github.c
 
 If you have any question or want to contact us：
 - 🌱Fork, Add, and Merge
-- ❓️Report an [issue](https://github.com/GMC-DRL/MetaBox/issues)
+- ❓️Report an [issue](https://github.com/MetaEvo/MetaBox/issues)
 - 📧Contact WenJie Qiu ([wukongqwj@gmail.com](mailto:wukongqwj@gmail.com))
 - 🚨**We warmly invite you to join our QQ group for further communication (Group Number: 952185139).**
 
@@ -20,7 +20,7 @@ If you have any question or want to contact us：
 You can access all MetaBox files with the command:
 
 ```shell
-git clone git@github.com:GMC-DRL/MetaBox.git
+git clone git@github.com:MetaEvo/MetaBox.git
 cd MetaBox
 ```
 
@@ -94,7 +94,7 @@ volume = {36}
 
 ## Documentation
 
-For more details about the usage of `MetaBox`, please refer to [MetaBox User's Guide](https://gmc-drl.github.io/MetaBox/).
+For more details about the usage of `MetaBox`, please refer to [MetaBox User's Guide](https://metaevo.github.io/MetaBox/).
 
 ## Datasets
 
