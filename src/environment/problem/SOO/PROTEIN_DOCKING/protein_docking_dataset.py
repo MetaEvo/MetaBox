@@ -1,11 +1,12 @@
-from os import path
 import torch
 import numpy as np
 from torch.utils.data import Dataset
 from ....problem.basic_problem import Basic_Problem
 import time
 from .protein_docking import Protein_Docking_Torch_Problem, Protein_Docking_Numpy_Problem
+import importlib.util
 import importlib.resources as pkg_resources
+import os
 class Protein_Docking_Dataset(Dataset):
     """
     # Attributes:
@@ -78,7 +79,6 @@ class Protein_Docking_Dataset(Dataset):
             train_proteins_set.extend(permutated[:n_train_proteins])
             test_proteins_set.extend(permutated[n_train_proteins:])
         # construct problem instances
-        data_folder = 'metaevobox.environment.problem.SOO.PROTEIN_DOCKING.datafile'
         train_set = []
         test_set = []
         instance_list = []
@@ -87,13 +87,24 @@ class Protein_Docking_Dataset(Dataset):
             for j in range(Protein_Docking_Dataset.n_start_points):
                 problem_id = id + '_' + str(j + 1)
 
-                f = pkg_resources.files(data_folder).joinpath(problem_id)
-                coor_init = np.loadtxt(f.joinpath('coor_init').open('r'))
-                q = np.loadtxt(f.joinpath('q').open('r'))
-                e = np.loadtxt(f.joinpath('e').open('r'))
-                r = np.loadtxt(f.joinpath('r').open('r'))
-                basis = np.loadtxt(f.joinpath('basis').open('r'))
-                eigval = np.loadtxt(f.joinpath('eigval').open('r'))
+                try:
+                    data_folder = 'metaevobox.environment.problem.SOO.PROTEIN_DOCKING.datafile'
+                    if importlib.util.find_spec(data_folder) is not None:
+                        f = pkg_resources.files(data_folder).joinpath(problem_id)
+                        open_fn = lambda filename: f.joinpath(filename).open('r')
+                    else:
+                        raise ModuleNotFoundError
+                except ModuleNotFoundError:
+                    baseline_path = os.path.dirname(os.path.abspath(__file__))
+                    data_folder = os.path.join(baseline_path, "datafile", f"{problem_id}")
+                    open_fn = lambda filename: open(os.path.join(data_folder, filename), 'r')
+
+                coor_init = np.loadtxt(open_fn('coor_init'))
+                q = np.loadtxt(open_fn('q'))
+                e = np.loadtxt(open_fn('e'))
+                r = np.loadtxt(open_fn('r'))
+                basis = np.loadtxt(open_fn('basis'))
+                eigval = np.loadtxt(open_fn('eigval'))
 
 
                 q = np.tile(q, (1, 1))

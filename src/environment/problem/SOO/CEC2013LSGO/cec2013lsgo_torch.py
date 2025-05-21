@@ -1,6 +1,8 @@
 from ....problem.basic_problem import Basic_Problem_Torch
 import torch
+import importlib.util
 import importlib.resources as pkg_resources
+import os
 class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
     """
     # CEC2013LSGO_Torch_Problem
@@ -114,10 +116,20 @@ class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
         d = torch.zeros(self.dim)
         file_name = f"F{self.ID}-xopt.txt"
 
-        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
+        try:
+            data_dir = "metaevobox.environment.problem.SOO.CEC2013LSGO.datafile"
+            if importlib.util.find_spec(data_dir) is not None:
+                file_path = pkg_resources.files(data_dir).joinpath(file_name)
+                file_obj = file_path.open('r')
+            else:
+                raise ModuleNotFoundError
+        except ModuleNotFoundError:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            local_path = os.path.join(base_path, 'datafile', file_name)
+            file_obj = open(local_path, 'r')
 
         try:
-            with file_path.open('r') as file:
+            with file_obj as file:
                 c = 0
                 for line in file:
                     values = line.strip().split(',')
@@ -126,7 +138,7 @@ class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
                             d[c] = float(value)
                             c += 1
         except FileNotFoundError:
-            print(f"Cannot open the datafile '{file_path}'")
+            print(f"Cannot open the datafile '{file_name}'")
 
         return d
 
@@ -135,10 +147,20 @@ class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
         d = [torch.zeros(self.s[i]) for i in range(self.s_size)]
         file_name = f"F{self.ID}-xopt.txt"
 
-        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
+        try:
+            data_dir = "metaevobox.environment.problem.SOO.CEC2013LSGO.datafile"
+            if importlib.util.find_spec(data_dir) is not None:
+                file_path = pkg_resources.files(data_dir).joinpath(file_name)
+                file_obj = file_path.open('r')
+            else:
+                raise ModuleNotFoundError
+        except ModuleNotFoundError:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            local_path = os.path.join(base_path, 'datafile', file_name)
+            file_obj = open(local_path, 'r')
 
         try:
-            with file_path.open('r') as file:
+            with file_obj as file:
                 c = 0  # index over 1 to dim
                 i = -1  # index over 1 to s_size
                 up = 0  # current upper bound for one group
@@ -154,7 +176,7 @@ class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
                         d[i][c - (up - self.s[i])] = float(value)
                         c += 1
         except FileNotFoundError:
-            print(f"Cannot open the OvectorVec datafiles '{file_path}'")
+            print(f"Cannot open the OvectorVec datafiles '{file_name}'")
 
         return d
 
@@ -163,10 +185,20 @@ class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
         d = torch.zeros(self.dim, dtype=int)
         file_name = f"F{self.ID}-p.txt"
 
-        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
+        try:
+            data_dir = "metaevobox.environment.problem.SOO.CEC2013LSGO.datafile"
+            if importlib.util.find_spec(data_dir) is not None:
+                file_path = pkg_resources.files(data_dir).joinpath(file_name)
+                file_obj = file_path.open('r')
+            else:
+                raise ModuleNotFoundError
+        except ModuleNotFoundError:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            local_path = os.path.join(base_path, 'datafile', file_name)
+            file_obj = open(local_path, 'r')
 
         try:
-            with file_path.open('r') as file:
+            with file_obj as file:
                 c = 0
                 for line in file:
                     values = line.strip().split(',')
@@ -175,7 +207,7 @@ class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
                             d[c] = int(float(value)) - 1
                             c += 1
         except FileNotFoundError:
-            print(f"Cannot open the datafile '{file_path}'")
+            print(f"Cannot open the datafile '{file_name}'")
 
         return d
 
@@ -184,10 +216,20 @@ class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
         m = torch.zeros((sub_dim, sub_dim))
         file_name = f"F{self.ID}-R{sub_dim}.txt"
 
-        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
+        try:
+            data_dir = "metaevobox.environment.problem.SOO.CEC2013LSGO.datafile"
+            if importlib.util.find_spec(data_dir) is not None:
+                file_path = pkg_resources.files(data_dir).joinpath(file_name)
+                file_obj = file_path.open('r')
+            else:
+                raise ModuleNotFoundError
+        except ModuleNotFoundError:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            local_path = os.path.join(base_path, 'datafile', file_name)
+            file_obj = open(local_path, 'r')
 
         try:
-            with file_path.open('r') as file:
+            with file_obj as file:
                 i = 0
                 for line in file:
                     values = line.strip().split(',')
@@ -195,7 +237,7 @@ class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
                         m[i, j] = float(value)
                     i += 1
         except FileNotFoundError:
-            print(f"Cannot open the datafile '{file_path}'")
+            print(f"Cannot open the datafile '{file_name}'")
 
         return m
 
@@ -204,15 +246,25 @@ class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
         self.s = torch.zeros(num, dtype=int)
         file_name = f"F{self.ID}-s.txt"
 
-        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
         try:
-            with file_path.open('r') as file:
+            data_dir = "metaevobox.environment.problem.SOO.CEC2013LSGO.datafile"
+            if importlib.util.find_spec(data_dir) is not None:
+                file_path = pkg_resources.files(data_dir).joinpath(file_name)
+                file_obj = file_path.open('r')
+            else:
+                raise ModuleNotFoundError
+        except ModuleNotFoundError:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            local_path = os.path.join(base_path, 'datafile', file_name)
+            file_obj = open(local_path, 'r')
+        try:
+            with file_obj as file:
                 c = 0
                 for line in file:
                     self.s[c] = int(float(line.strip()))
                     c += 1
         except FileNotFoundError:
-            print(f"Cannot open the datafile '{file_path}'")
+            print(f"Cannot open the datafile '{file_name}'")
         return self.s
 
     # 读取W
@@ -220,16 +272,26 @@ class CEC2013LSGO_Torch_Problem(Basic_Problem_Torch):
         self.w = torch.zeros(num)
         file_name = f"F{self.ID}-w.txt"
 
-        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
+        try:
+            data_dir = "metaevobox.environment.problem.SOO.CEC2013LSGO.datafile"
+            if importlib.util.find_spec(data_dir) is not None:
+                file_path = pkg_resources.files(data_dir).joinpath(file_name)
+                file_obj = file_path.open('r')
+            else:
+                raise ModuleNotFoundError
+        except ModuleNotFoundError:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            local_path = os.path.join(base_path, 'datafile', file_name)
+            file_obj = open(local_path, 'r')
 
         try:
-            with file_path.open('r') as file:
+            with file_obj as file:
                 c = 0
                 for line in file:
                     self.w[c] = float(line.strip())
                     c += 1
         except FileNotFoundError:
-            print(f"Cannot open the datafile '{file_path}'")
+            print(f"Cannot open the datafile '{file_name}'")
 
         return self.w
 

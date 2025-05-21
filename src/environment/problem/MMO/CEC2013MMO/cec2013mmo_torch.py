@@ -4,6 +4,8 @@ import math
 import torch
 import time
 from os import path
+import os
+import importlib.util
 import importlib.resources as pkg_resources
 MINMAX = -1
 
@@ -231,10 +233,10 @@ class CFunction(CEC2013MMO_Torch_Problem):
         tmpx = torch.divide((x - torch.tensor(self.__O_[index], device = x.device)), torch.tensor(self.__lambda_[index], device = x.device))
         self.__z_ = torch.matmul(tmpx, torch.tensor(self.__M_[index], device = x.device))
 
-    def __load_rotmat(self, fname):
+    def __load_rotmat(self, file_obj):
         self.__M_ = []
 
-        with fname.open('r') as f:
+        with file_obj as f:
             tmp = np.zeros((self.dim, self.dim))
             cline = 0
             ctmp = 0
@@ -481,11 +483,18 @@ class F9_Torch(CFunction): # CF1
         self._CFunction__weight_ = np.zeros(self._CFunction__nofunc_)
         self._CFunction__lambda_ = np.array([1.0, 1.0, 8.0, 8.0, 1.0 / 5.0, 1.0 / 5.0])
 
-        # Load optima
-        folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
-        optima_file = pkg_resources.files(folder_package).joinpath('optima.dat')
-
-        with optima_file.open('r') as f:
+        try:
+            folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
+            if importlib.util.find_spec(folder_package) is not None:
+                file_path = pkg_resources.files(folder_package).joinpath('optima.dat')
+                file_obj = file_path.open('r')
+            else:
+                raise ModuleNotFoundError
+        except ModuleNotFoundError:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            local_file_path = os.path.join(base_path, "datafile", 'optima.dat')
+            file_obj = open(local_file_path, 'r')
+        with file_obj as f:
             o = np.loadtxt(f)
 
         # o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
@@ -533,11 +542,18 @@ class F10_Torch(CFunction): # CF2
             [1.0, 1.0, 10.0, 10.0, 1.0 / 10.0, 1.0 / 10.0, 1.0 / 7.0, 1.0 / 7.0]
         )
 
-        # Load optima
-        folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
-        optima_file = pkg_resources.files(folder_package).joinpath('optima.dat')
-
-        with optima_file.open('r') as f:
+        try:
+            folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
+            if importlib.util.find_spec(folder_package) is not None:
+                file_path = pkg_resources.files(folder_package).joinpath('optima.dat')
+                file_obj = file_path.open('r')
+            else:
+                raise ModuleNotFoundError
+        except ModuleNotFoundError:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            local_file_path = os.path.join(base_path, "datafile", 'optima.dat')
+            file_obj = open(local_file_path, 'r')
+        with file_obj as f:
             o = np.loadtxt(f)
 
         # o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
@@ -584,11 +600,18 @@ class F11_Torch(CFunction): # CF3
         self._CFunction__weight_ = np.zeros(self._CFunction__nofunc_)
         self._CFunction__lambda_ = np.array([1.0 / 4.0, 1.0 / 10.0, 2.0, 1.0, 2.0, 5.0])
 
-        # Load optima
-        folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
-        optima_file = pkg_resources.files(folder_package).joinpath('optima.dat')
-
-        with optima_file.open('r') as f:
+        try:
+            folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
+            if importlib.util.find_spec(folder_package) is not None:
+                file_path = pkg_resources.files(folder_package).joinpath('optima.dat')
+                file_obj = file_path.open('r')
+            else:
+                raise ModuleNotFoundError
+        except ModuleNotFoundError:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            local_file_path = os.path.join(base_path, "datafile", 'optima.dat')
+            file_obj = open(local_file_path, 'r')
+        with file_obj as f:
             o = np.loadtxt(f)
 
         # o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
@@ -601,10 +624,19 @@ class F11_Torch(CFunction): # CF3
 
         # Load M_: Rotation matrices
         if dim == 2 or dim == 3 or dim == 5 or dim == 10 or dim == 20:
-            folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
-            fname = pkg_resources.files(folder_package).joinpath(f'CF3_M_D{dim}.dat')
+            try:
+                folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
+                if importlib.util.find_spec(folder_package) is not None:
+                    file_path = pkg_resources.files(folder_package).joinpath(f'CF3_M_D{dim}.dat')
+                    file_obj = file_path.open('r')
+                else:
+                    raise ModuleNotFoundError
+            except ModuleNotFoundError:
+                base_path = os.path.dirname(os.path.abspath(__file__))
+                local_file_path = os.path.join(base_path, "datafile", f'CF3_M_D{dim}.dat')
+                file_obj = open(local_file_path, 'r')
             # fname = path.join(path.dirname(__file__), 'datafile') + "/CF3_M_D" + str(dim) + ".dat"
-            self._CFunction__load_rotmat(fname)
+            self._CFunction__load_rotmat(file_obj)
         else:
             # M_ Identity matrices
             self._CFunction__M_ = [np.eye(dim)] * self._CFunction__nofunc_
@@ -643,11 +675,18 @@ class F12_Torch(CFunction): # CF4
             [4.0, 1.0, 4.0, 1.0, 1.0 / 10.0, 1.0 / 5.0, 1.0 / 10.0, 1.0 / 40.0]
         )
 
-        # Load optima
-        folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
-        optima_file = pkg_resources.files(folder_package).joinpath('optima.dat')
-
-        with optima_file.open('r') as f:
+        try:
+            folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
+            if importlib.util.find_spec(folder_package) is not None:
+                file_path = pkg_resources.files(folder_package).joinpath('optima.dat')
+                file_obj = file_path.open('r')
+            else:
+                raise ModuleNotFoundError
+        except ModuleNotFoundError:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            local_file_path = os.path.join(base_path, "", 'optima.dat')
+            file_obj = open(local_file_path, 'r')
+        with file_obj as f:
             o = np.loadtxt(f)
         # o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
         if o.shape[1] >= dim:
@@ -659,10 +698,19 @@ class F12_Torch(CFunction): # CF4
 
         # Load M_: Rotation matrices
         if dim == 2 or dim == 3 or dim == 5 or dim == 10 or dim == 20:
-            folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
-            fname = pkg_resources.files(folder_package).joinpath(f'CF4_M_D{dim}.dat')
+            try:
+                folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
+                if importlib.util.find_spec(folder_package) is not None:
+                    file_path = pkg_resources.files(folder_package).joinpath(f'CF4_M_D{dim}.dat')
+                    file_obj = file_path.open('r')
+                else:
+                    raise ModuleNotFoundError
+            except ModuleNotFoundError:
+                base_path = os.path.dirname(os.path.abspath(__file__))
+                local_file_path = os.path.join(base_path, "datafile", f'CF4_M_D{dim}.dat')
+                file_obj = open(local_file_path, 'r')
             # fname = path.join(path.dirname(__file__), 'datafile') + "/CF4_M_D" + str(dim) + ".dat"
-            self._CFunction__load_rotmat(fname)
+            self._CFunction__load_rotmat(file_obj)
         else:
             # M_ Identity matrices 
             self._CFunction__M_ = [np.eye(dim)] * self._CFunction__nofunc_

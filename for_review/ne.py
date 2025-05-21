@@ -4,7 +4,7 @@ from metaevobox.baseline.metabbo import *
 from metaevobox.baseline.bbo import *
 import pickle
 import matplotlib.pyplot as plt
-
+import numpy as np
 import warnings
 warnings.filterwarnings("ignore")
 

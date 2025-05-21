@@ -3,6 +3,7 @@ from .wcci2020_torch import Sphere_Torch, Ackley_Torch, Rosenbrock_Torch, Rastri
 import numpy as np
 from torch.utils.data import Dataset
 import os
+import importlib.util
 import importlib.resources as pkg_resources
 
 class WCCI2020MTO_Tasks():
@@ -168,17 +169,24 @@ class WCCI2020_Dataset(Dataset):
             for task_id in range(1, task_size+1):
                 id = (task_id-1) % len(choice_functions)
                 func_id = choice_functions[id]
+                try:
+                    folder_package = f"metaevobox.environment.problem.MTO.WCCI2020.datafile.benchmark_{task_ID + 1}"
+                    if importlib.util.find_spec(folder_package) is not None:
+                        shift_file_path = pkg_resources.files(folder_package).joinpath(f'bias_{task_id}')
+                        rotate_file_path = pkg_resources.files(folder_package).joinpath(f'matrix_{task_id}')
+                        shift_file_obj = shift_file_path.open('r')
+                        rotate_file_obj = rotate_file_path.open('r')
+                    else:
+                        raise ModuleNotFoundError
+                except ModuleNotFoundError:
+                    base_path = os.path.dirname(os.path.abspath(__file__))
+                    local_path = os.path.join(base_path, 'datafile', f"benchmark_{task_ID + 1}")
+                    shift_file_obj = open(os.path.join(local_path, f'bias_{task_id}'), 'r')
+                    rotate_file_obj = open(os.path.join(local_path, f'matrix_{task_id}'), 'r')
 
-                folder_package = f"metaevobox.environment.problem.MTO.WCCI2020.datafile.benchmark_{task_ID + 1}"
-                shift_file_path = pkg_resources.files(folder_package).joinpath(f'bias_{task_id}')
-                rotate_file_path = pkg_resources.files(folder_package).joinpath(f'matrix_{task_id}')
-                # folder_dir = os.path.join(os.path.dirname(__file__),'datafile',f'benchmark_{task_ID+1}')
-                # shift_file = os.path.join(folder_dir, f'bias_{task_id}')
-                # rotate_file = os.path.join(folder_dir, f'matrix_{task_id}')
-
-                with shift_file_path.open('r') as f:
+                with shift_file_obj as f:
                     shift = np.loadtxt(f)
-                with rotate_file_path.open('r') as f:
+                with rotate_file_obj as f:
                     rotate_matrix = np.loadtxt(f)
 
                 if func_id == 1:
