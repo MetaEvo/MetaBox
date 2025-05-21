@@ -10,56 +10,39 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
     "[**Reinforcement learning-based particle swarm optimization with neighborhood differential mutation strategy**](https://www.sciencedirect.com/science/article/pii/S2210650223000482)." Swarm and Evolutionary Computation (2023).
     # Official Implementation
     None
-    # Args:
-    - config (object): Configuration object containing algorithm parameters such as maximum function evaluations (`maxFEs`), problem dimensionality (`dim`), logging interval (`log_interval`), and flags for metadata collection (`full_meta_data`, `n_logpoint`).
-    # Attributes:
-    - NP (int): Number of particles in the population.
-    - k (int): Number of neighbors considered for each particle.
-    - total_state (int): Total number of possible states/actions for each particle.
-    - w_max, w_min (float): Maximum and minimum inertia weights for velocity update.
-    - u, v, v_ratio (float): Parameters controlling inertia weight adaptation.
-    - n_state (int): Number of discrete states for reinforcement learning.
-    - __maxFEs (int): Maximum number of function evaluations allowed.
-    - __dim (int): Dimensionality of the optimization problem.
-    - cost (list): History of global best costs for logging.
-    - log_index (int): Current logging index.
-    - log_interval (int): Interval for logging progress.
-    - meta_X, meta_Cost (list): Optional metadata for population and cost history.
-    - pointer (int): Index of the current particle being updated.
-    - __population (np.ndarray): Current positions of all particles.
-    - __velocity (np.ndarray): Current velocities of all particles.
-    - __cost (np.ndarray): Current costs of all particles.
-    - __pbest_pos, __pbest_cost (np.ndarray): Personal best positions and costs.
-    - __gbest_pos, __gbest_cost (np.ndarray): Global best position and cost.
-    - pbest_stag_count (np.ndarray): Stagnation counters for personal bests.
-    - fes (int): Current number of function evaluations.
-    - r_w (float): Random value for inertia weight adaptation.
-    - __state (np.ndarray): Current state/action for each particle.
-    - pbest_neb, gbest_neb (np.ndarray): Neighborhoods for personal and global bests.
-    - pbest_neb_index, gbest_neb_index (np.ndarray): Indices of neighborhood members.
-    - distance, d_min, d_max (np.ndarray, float): Distance metrics for diversity calculation.
-    - w (float): Current inertia weight.
-    # Methods:
-    - init_population(problem): Initializes the particle population and related attributes.
-    - update_construct_neighborhood(): Constructs neighborhoods for each particle based on distances.
-    - cal_w(): Calculates the dynamic inertia weight for velocity updates.
-    - cal_reward(f_new, f_old, ef_new, ef_old): Computes the reward signal for reinforcement learning based on cost and diversity changes.
-    - cal_ef(ith): Calculates the normalized diversity (exploration factor) for a given particle.
-    - update_distance(): Updates the pairwise distances and diversity metrics for the population.
-    - cal_cs(p1, p2): Calculates the cosine similarity between two vectors.
-    - get_p_b(ith): Selects a neighbor from the personal best neighborhood.
-    - get_p_a(): Selects a neighbor from the global best neighborhood.
-    - generate_v_vector(action, ith, w): Generates the velocity vector for a particle based on its action/state.
-    - cal_cost(x, problem): Evaluates the cost of a solution.
-    - neb_mutation(ith, problem): Performs neighborhood-based mutation for stagnated particles.
-    - update(action, problem): Updates the state, position, and velocity of the current particle, applies mutation if needed, and logs progress.
-    # Returns:
-    - Various methods return updated states, rewards, done flags, and info dictionaries as required by the optimizer interface.
-    # Raises:
-    - No explicit exceptions are raised, but underlying numpy or problem evaluation errors may propagate.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the optimizer with the provided configuration and sets up default parameters for the optimization process.
+        # Args:
+        - config (object): Config object containing optimizer settings.
+            - The Attributes needed for the NRLPSO are the following:
+                - maxFEs (int): Maximum number of function evaluations.
+                - log_interval (int): Interval for logging progress.
+                - n_logpoint (int): Number of log points to record.
+                - full_meta_data (bool): Flag for using full meta data.
+        # Built-in Attribute:
+        - NP (int): Number of particles, default is 100.
+        - k (int): Number of neighbors or clusters, default is 5.
+        - total_state (int): Total number of states, default is 4.
+        - w_max (float): Maximum inertia weight, default is 1.
+        - w_min (float): Minimum inertia weight, default is 0.4.
+        - u (float): Parameter for algorithm control, default is 0.6.
+        - v (float): Parameter for algorithm control, default is 0.33.
+        - v_ratio (float): Ratio parameter for velocity, default is 0.1.
+        - n_state (int): Number of states, default is 4.
+        - __maxFEs (int): Maximum number of function evaluations, taken from config.
+        - cost (list or None): List to store costs for backbone optimizers.
+        - log_index (int or None): Index for logging.
+        - log_interval (int): Interval for logging, taken from config.
+        # Returns:
+        - None
+        # Raises:
+        - AttributeError: If required attributes are missing in the `config` object.
+        """
+        
         super().__init__(config)
         self.__config = config
         
@@ -86,6 +69,26 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         Initializes the population and related attributes for the optimizer based on the given problem definition.
         # Args:
         - problem: An object representing the optimization problem, which must provide `lb` (lower bounds), `ub` (upper bounds), `eval` (evaluation function), and optionally `optimum` (known optimum value).
+        # Built-in Attributes:
+        - __dim (int): Dimensionality of the problem.
+        - pointer (int): Current index in the population.Default is 0.
+        - __population (np.ndarray): The current population of particles.
+        - __velocity (np.ndarray): The current velocity of particles.
+        - __cost (np.ndarray): The cost of each particle in the population.
+        - __pbest_pos (np.ndarray): The personal best position of each particle.
+        - __pbest_cost (np.ndarray): The personal best cost of each particle.
+        - __gbest_pos (np.ndarray): The global best position found so far.
+        - __gbest_cost (float): The global best cost found so far.
+        - pbest_stag_count (np.ndarray): Stagnation count for each particle.
+        - fes (int): Function evaluation count.
+        - log_index (int): Index for logging progress.
+        - cost (list): List to store costs at each logging interval.
+        - meta_X (list): List to store population positions for meta-data logging.
+        - meta_Cost (list): List to store costs for meta-data logging.
+        - meta_tmp_x (list): Temporary list to store population positions for meta-data logging.
+        - meta_tmp_cost (list): Temporary list to store costs for meta-data logging.
+        - r_w (float): Random weight for exploration.
+        - __state (np.ndarray): The current state of each particle.
         # Returns:
         - int: The initial state of the individual at the current pointer index.
         # Notes:
@@ -171,8 +174,22 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         self.gbest_neb = self.__population[n_index]
         self.gbest_neb_index = n_index
 
-    # todo: debug
     def cal_w(self):
+        """
+        # Introduction
+        Calculates the inertia weight (`w`) for the optimizer based on the current function evaluations and random weight.
+        # Built-in Attribute:
+        - self.r_w (float): Random weight, updated using a logistic map.
+        - self.u (float): Upper bound parameter for inertia weight calculation.
+        - self.fes (int): Current number of function evaluations.
+        - self.__maxFEs (int): Maximum number of function evaluations.
+        - self.w_min (float): Minimum inertia weight.
+        - self.w_max (float): Maximum inertia weight.
+        - self.v (float): Scaling parameter for inertia weight adjustment.
+        # Returns:
+        - float: The calculated inertia weight (`w`) for the current iteration.
+        """
+
         self.r_w = 4 * self.r_w * (1 - self.r_w)
 
         w = self.u - ((self.fes / self.__maxFEs) * self.r_w * self.w_min + self.v * (self.w_max - self.w_min) * (self.fes / self.__maxFEs))
@@ -180,6 +197,22 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         return w
 
     def cal_reward(self, f_new, f_old, ef_new, ef_old):
+        """
+        # Introduction
+        Calculates a reward value based on the comparison of new and old fitness and error values.
+        # Args:
+        - f_new (float): The new fitness value.
+        - f_old (float): The previous (old) fitness value.
+        - ef_new (float): The new error value.
+        - ef_old (float): The previous (old) error value.
+        # Returns:
+        - int: The reward value, determined as follows:
+            - 2 if the new fitness is better (lower) and the new error is worse (higher).
+            - 1 if the new fitness is better (lower) but the new error is not worse.
+            - 0 if the new fitness is not better but the new error is worse (higher).
+            - -2 if neither the new fitness is better nor the new error is worse.
+        """
+        
         cond1 = f_new < f_old
         cond2 = ef_new > ef_old
 
@@ -195,10 +228,41 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         return r
 
     def cal_ef(self, ith):
+        """
+        # Introduction
+        Calculates the normalized effectiveness factor for the `ith` element based on its distance.
+        # Args:
+        - ith (int): The index of the element for which the effectiveness factor is to be calculated.
+        # Built-in Attribute:
+        - self.distance (list or np.ndarray): The list or array of distances for all elements.
+        - self.d_min (float): The minimum distance among all elements.
+        - self.d_max (float): The maximum distance among all elements.
+        # Returns:
+        - float: The normalized effectiveness factor for the specified element.
+        # Raises:
+        - ZeroDivisionError: If `self.d_max` equals `self.d_min`, resulting in division by zero.
+        """
+        
         self.update_distance()
         return (self.distance[ith] - self.d_min) / (self.d_max - self.d_min)
     
     def update_distance(self):
+        """
+        # Introduction
+        Computes the pairwise Euclidean distances between individuals in the population and updates distance-related attributes.
+        # Args:
+        None
+        # Built-in Attribute:
+        - self.__population (np.ndarray): The current population array of shape (NP, D).
+        - self.NP (int): The number of individuals in the population.
+        # Updates:
+        - self.distance (np.ndarray): The average distance from each individual to all others.
+        - self.d_min (float): The minimum average distance among all individuals.
+        - self.d_max (float): The maximum average distance among all individuals.
+        # Returns:
+        None
+        """
+        
         p1 = self.__population[None, :]
         p2 = self.__population[:, None]
         distance = np.sqrt(np.sum((p1 - p2)**2, -1))
@@ -209,18 +273,76 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         self.d_max = np.max(self.distance)
 
     def cal_cs(self, p1, p2):
+        """
+        # Introduction
+        Calculates the cosine similarity between two vectors.
+        # Args:
+        - p1 (np.ndarray): The first input vector.
+        - p2 (np.ndarray): The second input vector.
+        # Returns:
+        - float: The cosine similarity value between `p1` and `p2`.
+        # Raises:
+        - ValueError: If either `p1` or `p2` is a zero vector, resulting in division by zero.
+        """
+        
         return np.sum(p1 * p2) / (np.sqrt(np.sum(p1**2)) * np.sqrt(np.sum(p2**2)))
 
     def get_p_b(self, ith):
+        """
+        # Introduction
+        Selects and returns a personal best neighbor for the given particle index.
+        # Args:
+        - ith (int): The index of the particle for which to retrieve a personal best neighbor.
+        # Returns:
+        - Any: The personal best neighbor selected for the specified particle index.
+        # Notes:
+        - The neighbor is chosen randomly from the `pbest_neb` list using the random number generator `rng`.
+        """
+        
         r_idx = self.rng.randint(0, self.k)
         return self.pbest_neb[ith][r_idx]
 
     def get_p_a(self):
+        """
+        # Introduction
+        Selects and returns a global best neighbor from the population using a random index.
+        # Returns:
+        - The selected global best neighbor from `self.gbest_neb` at a randomly chosen index.
+        """
+        
         r_idx = self.rng.randint(0, self.k)
         return self.gbest_neb[r_idx]
     
 
     def generate_v_vector(self, action, ith, w):
+        """
+        # Introduction
+        Updates the velocity vector for a particle in the NR-LPSO (Non-Redundant Learning Particle Swarm Optimization) algorithm based on the selected action strategy.
+        The method modifies the velocity of the `ith` particle in the swarm according to the specified action, which determines the exploration, exploitation, convergence, or jumping-out behavior. The update uses personal best, global best, and additional reference positions, with random coefficients and inertia weight.
+        # Args:
+        - action (int): The action type indicating the update strategy.  
+            - 0: Exploration  
+            - 1: Exploitation  
+            - 2: Convergence  
+            - 3: Jumping-out
+        - ith (int): The index of the particle in the population whose velocity is to be updated.
+        - w (float): The inertia weight applied to the previous velocity.
+        # Built-in Attribute:
+        - self.__population (np.ndarray): The current positions of all particles.
+        - self.__velocity (np.ndarray): The current velocities of all particles.
+        - self.__pbest_pos (np.ndarray): The personal best positions of all particles.
+        - self.__gbest_pos (np.ndarray): The global best position found by the swarm.
+        - self.rng (np.random.Generator): Random number generator for stochastic updates.
+        - self.v_min (float or np.ndarray): Minimum allowed velocity.
+        - self.v_max (float or np.ndarray): Maximum allowed velocity.
+        - self.__dim (int): Dimensionality of the search space.
+        # Returns:
+        - None: The method updates the velocity of the specified particle in-place.
+        # Raises:
+        - IndexError: If `ith` is out of bounds for the population arrays.
+        - AttributeError: If required attributes are not initialized.
+        """
+        
         c1, c2, P1, P2 = None, None, None, None
         r1 = self.rng.rand()
         r2 = self.rng.rand()
@@ -281,6 +403,20 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         self.__velocity[ith] = np.clip(self.__velocity[ith], self.v_min, self.v_max)
 
     def cal_cost(self, x, problem):
+        """
+        # Introduction
+        Calculates the cost of a solution vector `x` for a given optimization problem. The cost is either the raw evaluation of `x` or the difference between the evaluation and the known optimum, if available. Also increments the function evaluation counter.
+        # Args:
+        - x (Any): The solution vector to be evaluated.
+        - problem (object): The optimization problem instance, which must have `eval(x)` and `optimum` attributes.
+        # Returns:
+        - float: The computed cost value for the solution vector `x`.
+        # Built-in Attribute:
+        - self.fes (int): Increments the function evaluation count by 1.
+        # Raises:
+        - AttributeError: If `problem` does not have the required attributes (`eval` method or `optimum`).
+        """
+        
         self.fes += 1
         if problem.optimum is None:
             cost = problem.eval(x)
@@ -289,6 +425,31 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         return cost
 
     def neb_mutation(self, ith, problem):
+        """
+        # Introduction
+        Performs neighborhood-based mutation on the particle at index `ith` within a population for a given optimization problem. This mutation is applied to both the personal best (pbest) and global best (gbest) neighborhoods, potentially updating the best positions and costs or replacing a neighbor in the population.
+        # Args:
+        - ith (int): Index of the particle in the population to apply the mutation.
+        - problem (object): The optimization problem instance, used to evaluate the cost of candidate solutions.
+        # Built-in Attribute:
+        - self.__pbest_pos (np.ndarray): Personal best positions of all particles.
+        - self.pbest_neb (np.ndarray): Neighborhood personal best positions for each particle.
+        - self.pbest_neb_index (np.ndarray): Indices of neighborhood personal bests.
+        - self.__pbest_cost (np.ndarray): Personal best costs of all particles.
+        - self.__gbest_pos (np.ndarray): Global best position.
+        - self.gbest_neb (np.ndarray): Neighborhood global best positions.
+        - self.gbest_neb_index (np.ndarray): Indices of neighborhood global bests.
+        - self.__gbest_cost (float): Global best cost.
+        - self.__population (np.ndarray): Current population of particles.
+        - self.__cost (np.ndarray): Current costs of all particles.
+        - self.rng (np.random.Generator): Random number generator.
+        - self.__dim (int): Dimensionality of the problem.
+        # Returns:
+        - None
+        # Raises:
+        - None
+        """
+        
         # for pbest ith neibourhood
         # find out P1 P2
         distance = np.sqrt(np.sum((self.__pbest_pos[ith][None, :] - self.pbest_neb[ith])**2, axis=-1))
@@ -333,11 +494,10 @@ class NRLPSO_Optimizer(Learnable_Optimizer):
         - action (Any): The action to be applied for updating the agent's state (typically from a reinforcement learning policy or heuristic).
         - problem (object): The optimization problem instance, which should provide lower and upper bounds (`lb`, `ub`), and optionally an optimum value.
         # Returns:
-        - tuple:
-            - state (Any): The updated state of the agent after applying the action.
-            - reward (float): The reward calculated based on the improvement in cost and efficiency.
-            - is_done (bool): Whether the optimization episode should be terminated.
-            - info (dict): Additional information (currently empty, but can be extended).
+        - state (Any): The updated state of the agent after applying the action.
+        - reward (float): The reward calculated based on the improvement in cost and efficiency.
+        - is_done (bool): Whether the optimization episode should be terminated.
+        - info (dict): Additional information (currently empty, but can be extended).
         # Notes:
         - Updates the velocity and position of the current agent/particle.
         - Applies boundary constraints to the position.

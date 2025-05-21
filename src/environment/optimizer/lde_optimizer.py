@@ -11,46 +11,27 @@ class LDE_Optimizer(Learnable_Optimizer):
     "[**Learning Adaptive Differential Evolution Algorithm from Optimization Experiences by Policy Gradient**](https://ieeexplore.ieee.org/abstract/document/9359652)." IEEE Transactions on Evolutionary Computation (2021).
     # Official Implementation
     [LDE](https://github.com/yierh/LDE)
-    # Args:
-    - config (object): Configuration object containing optimizer parameters such as population size (`NP`), number of histogram bins (`BINS`), initial and minimum p-best rates (`P_INI`, `P_NUM_MIN`), problem dimension (`dim`), logging intervals, and other DE-specific settings.
-    # Attributes:
-    - __config (object): Stores the configuration object.
-    - __BATCH_SIZE (int): Batch size for optimization (default: 1).
-    - fes (int): Current number of function evaluations.
-    - cost (list): List of best costs found at each logging interval.
-    - log_index (int): Current logging index.
-    - log_interval (int): Interval for logging progress.
-    - gbest_cost (float): Best cost found so far.
-    - meta_X (list): (Optional) Stores population history if `full_meta_data` is enabled.
-    - meta_Cost (list): (Optional) Stores cost history if `full_meta_data` is enabled.
-    # Methods:
-    - __init__(config): Initializes the optimizer with the given configuration.
-    - init_population(problem): Initializes the population for a given problem and returns extracted features.
-    - get_best(): Returns the best cost found so far.
-    - update(action, problem): Updates the population based on the provided action and problem, returning new features, reward, done flag, and info.
-    - __get_cost(batch, pop): Computes the cost for each individual in the population.
-    - __modifyChildwithParent(cross_pop, parent_pop, x_max, x_min): Applies boundary control to the offspring.
-    - __de_crosselect_random_dataset(...): Performs DE crossover, selection, and returns the next population and fitness.
-    - __mulgenerate_pop(...): Generates initial population(s) for the optimizer.
-    - __order_by_f(pop, fit): Orders the population and fitness by ascending fitness.
-    - __maxmin_norm(a): Applies min-max normalization to fitness values.
-    - __con2mat_current2pbest_Nw(mutation_vector, p): Constructs mutation matrices for current-to-pbest strategies.
-    - __con2mat_rand2pbest_Nw(mutation_vector, nfes, MaxFEs): Constructs mutation matrices with dynamic p-best rate.
-    - __add_random(m_pop, pop, mu): Adds random differential vectors for mutation.
-    - __get_feature(): Extracts meta-features from the current population and fitness.
-    - __str__(): Returns the string representation of the optimizer.
-    # Returns:
-    - Various methods return population arrays, fitness arrays, features, rewards, and status flags as appropriate for DE optimization and meta-learning.
-    # Raises:
-    - ValueError: May be raised internally if input shapes or configurations are invalid.
-    - Other exceptions may be raised depending on the implementation of the `problem` object or configuration.
-    # Notes:
-    - This optimizer is designed for integration with meta-learning frameworks and supports logging and meta-feature extraction.
-    - Requires numpy and torch for numerical operations.
-    - The optimizer assumes the `problem` object provides `lb`, `ub`, `dim`, and `eval` methods/attributes.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the optimizer with the provided configuration and sets default values for several optimization parameters.
+        # Args:
+        - config (object): Configuration object containing optimizer settings.
+        # Built-in Attribute:
+        - self.__config: Stores the configuration object.
+        - self.__BATCH_SIZE: Batch size for optimization (default is 1).
+        - self.fes: Function evaluation counter (initialized as None).
+        - self.cost: Cost value (initialized as None).
+        - self.log_index: Logging index (initialized as None).
+        - self.log_interval: Interval for logging, taken from the configuration.
+        # Returns:
+        - None
+        # Raises:
+        - None
+        """
+        
         super().__init__(config)
         self.__config = config
         self.__config.NP = 50
@@ -180,9 +161,8 @@ class LDE_Optimizer(Learnable_Optimizer):
         - pop (np.ndarray): The population array of shape (batch_size, pop_size, ...).
         - fit (np.ndarray): The fitness array of shape (batch_size, pop_size).
         # Returns:
-        - Two Tuple [np.ndarray, np.ndarray]:
-            - temp_pop (p, NP, input_dimension): The population array sorted by fitness for each batch.
-            - temp_fit (p, NP, input_dimension): The fitness array sorted in ascending order for each batch.
+        - temp_pop (p, NP, input_dimension): The population array sorted by fitness for each batch.
+        - temp_fit (p, NP, input_dimension): The fitness array sorted in ascending order for each batch.
         """
         
         batch_size, pop_size = pop.shape[0], pop.shape[1]
@@ -295,6 +275,13 @@ class LDE_Optimizer(Learnable_Optimizer):
         return mur_pop
 
     def __str__(self):
+        """
+        # Introduction
+        Returns a string representation of the LDE_Optimizer object.
+        # Returns:
+        - str: The name of the optimizer, "LDE_Optimizer".
+        """
+        
         return "LDE_Optimizer"
 
     def init_population(self, problem):
@@ -302,7 +289,7 @@ class LDE_Optimizer(Learnable_Optimizer):
         # Introduction
         Initializes the population for the optimizer, evaluates their fitness, and sets up internal tracking variables.
         # Args:
-        - problem (object): An object representing the optimization problem, expected to have attributes `lb` (lower bounds) and `ub` (upper bounds).
+        - problem (object): The optimization problem object, which has attributes `lb` (lower bounds) and `ub` (upper bounds).
         # Returns:
         - np.ndarray: Feature representation of the initialized population, as returned by `self.__get_feature()`.
         # Notes:
@@ -327,6 +314,13 @@ class LDE_Optimizer(Learnable_Optimizer):
         return self.__get_feature()
 
     def get_best(self):
+        """
+        # Introduction
+        Retrieves the best (global best) cost found by the optimizer.
+        # Returns:
+        - float: The lowest cost value (gbest_cost) discovered during the optimization process.
+        """
+        
         return self.gbest_cost
 
     def __get_feature(self):

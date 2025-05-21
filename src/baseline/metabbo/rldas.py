@@ -7,6 +7,21 @@ from ...rl.utils import *
 
 class Actor(nn.Module):
     def __init__(self, dim, optimizer_num, feature_dim, device):
+        """
+        # Introduction
+        Initializes the model with multiple embedders, a final embedder, and a main model for processing input features and producing optimizer selection probabilities.
+        # Args:
+        - dim (int): The input dimension for each embedder.
+        - optimizer_num (int): The number of optimizers, determines how many embedders are created.
+        - feature_dim (int): The dimension of the input features for the final embedder.
+        - device (torch.device or str): The device on which to place the model components (e.g., 'cpu' or 'cuda').
+        # Attributes:
+        - device: Stores the computation device.
+        - embedders (nn.ModuleList): Contains pairs of sequential neural network modules for each optimizer.
+        - embedder_final (nn.Sequential): Processes concatenated features from all embedders and input features.
+        - model (nn.Sequential): Produces a probability distribution over optimizers using a softmax layer.
+        """
+        
         super().__init__()
         self.device = device
         self.embedders = nn.ModuleList([])

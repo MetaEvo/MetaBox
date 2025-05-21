@@ -11,52 +11,40 @@ class GLEET_Optimizer(Learnable_Optimizer):
     "[**Auto-configuring Exploration-Exploitation Tradeoff in Evolutionary Computation via Deep Reinforcement Learning**](https://dl.acm.org/doi/abs/10.1145/3638529.3653996)." Proceedings of the Genetic and Evolutionary Computation Conference (2024).
     # Official Implementation
     [GLEET](https://github.com/GMC-DRL/GLEET)
-    # Args:
-    - config (object): Configuration object containing optimizer hyperparameters such as dimension (`dim`), maximum function evaluations (`maxFEs`), logging interval (`log_interval`), and meta-data options (`full_meta_data`).
-    # Attributes:
-    - dim (int): Dimensionality of the optimization problem.
-    - w_decay (bool): Whether to use inertia weight decay.
-    - w (float): Inertia weight for velocity update.
-    - c (float): Acceleration coefficient.
-    - reward_scale (float): Scaling factor for reward calculation.
-    - ps (int): Population size (number of particles).
-    - no_improve (int): Counter for stagnation steps without improvement.
-    - max_fes (int): Maximum number of function evaluations.
-    - boarder_method (str): Method for handling boundary violations ('clipping', 'random', 'periodic', 'reflect').
-    - reward_func (str): Reward function type ('direct', '11', 'relative', 'triangle').
-    - fes (int): Current number of function evaluations.
-    - cost (list): Log of global best costs.
-    - log_index (int): Index for logging.
-    - log_interval (int): Interval for logging progress.
-    - particles (dict): Dictionary storing current state of all particles.
-    - per_no_improve (np.ndarray): Array tracking stagnation steps for each particle.
-    - max_velocity (float): Maximum allowed velocity for particles.
-    - max_cost (float): Maximum (worst) cost observed.
-    - max_dist (float): Maximum distance in the search space.
-    - pbest_feature (np.ndarray): Encoded features for personal bests.
-    - gbest_feature (np.ndarray): Encoded features for global best.
-    - meta_X (list): List of particle positions for meta-data (if enabled).
-    - meta_Cost (list): List of particle costs for meta-data (if enabled).
-    # Methods:
-    - __str__(): Returns the string representation of the optimizer.
-    - initialize_particles(problem): Initializes particle positions, velocities, and costs.
-    - get_cat_xy(): Concatenates and returns current, personal best, and global best positions and costs.
-    - init_population(problem): Resets the optimizer state and initializes the population.
-    - get_costs(position, problem): Evaluates the cost of given positions.
-    - observe(): Encodes and returns population features for meta-learning.
-    - gp_cat(): Concatenates exploration and exploitation features for each particle.
-    - cal_reward_direct(new_gbest, pre_gbest): Computes direct reward based on improvement.
-    - cal_reward_11(new_gbest, pre_gbest): Computes binary reward (+1/-1) based on improvement.
-    - cal_reward_relative(new_gbest, pre_gbest): Computes relative improvement reward.
-    - cal_reward_triangle(new_gbest, pre_gbest): Computes triangle-shaped reward based on improvement.
-    - update(action, problem): Updates the population based on actions, computes rewards, and returns the next state.
-    # Returns:
-    - Various methods return numpy arrays, floats, or tuples depending on their purpose (e.g., next state, reward, termination flag, and info dictionary in `update`).
-    # Raises:
-    - AssertionError: If calculated rewards are negative in certain reward functions.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the optimizer with the provided configuration and sets up internal parameters for optimization.
+        # Args:
+        - config (object): Config object containing optimizer settings.
+            - The Attributes needed for the GLEET_Optimizer are the following:
+                - log_interval (int): Interval at which logs are recorded.Default is config.maxFEs/config.n_logpoint.
+                - n_logpoint (int): Number of log points to record.Default is 50.
+                - full_meta_data (bool): Flag indicating whether to use full meta data.Default is False.
+                - maxFEs (int): Maximum number of function evaluations.Default is 10000.
+                - __FEs (int): Counter for the number of function evaluations.Default is 0.
+                - __config (object): Stores the config object from src/config.py.
+                - PS (int): Population size.Default is 100.
+        # Built-in Attribute:
+        - self.__config (object): Stores the configuration object.
+        - self.w_decay (bool): Flag to determine weight decay usage.Default is True.
+        - self.w (float): Inertia weight, set based on `w_decay`.Default is 0.9 if `w_decay` is True, otherwise 0.729.
+        - self.c (float): Acceleration coefficient.Default is 4.1.
+        - self.reward_scale (int): Scaling factor for rewards.Default is 100.
+        - self.ps (int): Population size or related parameter.Default is 100.
+        - self.no_improve (int): Counter for iterations without improvement.Default is 0.
+        - self.boarder_method (str): Method for handling boundaries.Default is 'clipping'.
+        - self.reward_func (str): Reward function type.Default is 'direct'.
+        - self.fes (Any): Tracks function evaluations (initialized as None).Default is None.
+        - self.cost (Any): Tracks cost (initialized as None).Default is None.
+        - self.log_index (Any): Logging index (initialized as None).Default is None.
+        - self.log_interval (int): Interval for logging progress.
+        # Returns:
+        - None
+        """
+        
         super().__init__(config)
         self.__config = config
 
@@ -84,6 +72,13 @@ class GLEET_Optimizer(Learnable_Optimizer):
         self.log_interval = config.log_interval
 
     def __str__(self):
+        """
+        # Introduction
+        Returns a string representation of the GLEET optimizer instance.
+        # Returns:
+        - str: The name of the optimizer, "GLEET_Optimizer".
+        """
+        
         return "GLEET_Optimizer"
 
     # initialize GPSO environment
@@ -92,7 +87,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
         # Introduction
         Initializes the particles for a particle swarm optimization (PSO) algorithm by generating random positions and velocities, evaluating initial costs, and setting up personal and global bests.
         # Args:
-        - problem (object): An object representing the optimization problem, which must have attributes `lb` (lower bounds), `ub` (upper bounds), and be compatible with the `get_costs` method.
+        - problem (object): The problem object, which has attributes `lb` (lower bounds), `ub` (upper bounds), and be compatible with the `get_costs` method.
         # Returns:
         - None: This method updates the internal state of the optimizer by initializing the `particles` attribute with positions, velocities, costs, and bests.
         # Notes:
@@ -156,6 +151,18 @@ class GLEET_Optimizer(Learnable_Optimizer):
         Initializes the population and related state variables for the optimizer, preparing it for a new optimization run.
         # Args:
         - problem (object): An object representing the optimization problem, expected to have attributes `ub` (upper bounds) and `lb` (lower bounds) for the search space.
+        # Built-in Attribute:
+        - self.fes (int): Function evaluation steps, initialized to 0.
+        - self.per_no_improve (np.ndarray): Array to track the number of iterations without improvement for each particle, initialized to zeros.
+        - self.max_velocity (np.ndarray): Maximum velocity for each particle, calculated based on the problem's bounds.
+        - self.max_dist (float): Maximum distance in the search space, calculated based on the problem's bounds.
+        - self.no_improve (int): Counter for the number of iterations without improvement, initialized to 0.
+        - self.log_index (int): Index for logging progress, initialized to 1.
+        - self.cost (list): List to store the best cost found at each logging interval, initialized with the global best value.
+        - self.pbest_feature (np.ndarray): Array to store the personal best features of the particles.
+        - self.gbest_feature (np.ndarray): Array to store the global best features of the particles.
+        - self.meta_X (list): List to store the positions of the particles for meta-data logging, if configured.
+        - self.meta_Cost (list): List to store the costs of the particles for meta-data logging, if configured.
         # Returns:
         - np.ndarray: The concatenated state of the population, including both the population state and additional features, with shape (ps, 27).
         # Notes:

@@ -6,6 +6,18 @@ import torch
 import numpy as np
 
 def vector2nn(x,net):
+    """
+    # Introduction
+    Maps a flat parameter vector to the parameters of a given neural network, updating the network's weights in-place.
+    # Args:
+    - x (list or numpy.ndarray): A 1D array or list containing all the parameters to be assigned to the network.
+    - net (torch.nn.Module): The neural network whose parameters will be updated.
+    # Returns:
+    - torch.nn.Module: The neural network with updated parameters.
+    # Raises:
+    - AssertionError: If the length of `x` does not match the total number of parameters in `net`.
+    """
+    
     assert len(x) == sum([param.nelement() for param in net.parameters()]), 'dim of x and net not match!'
     params = net.parameters()
     ptr = 0
@@ -20,34 +32,29 @@ class Policy(nn.Module):
     """
     # Introduction
     The `Policy` class implements a neural network-based policy for evolutionary optimization, utilizing attention mechanisms for selection and adaptation of candidate solutions. It is designed to operate on populations of solutions, transforming fitness values and controlling mutation step sizes in an adaptive manner.
-    # Args:
-    - pop_size (int): The size of the population.
-    - mu (float, optional): Mean for weight initialization. Default is 0.
-    - sigma (float, optional): Standard deviation for weight initialization. Default is 1.0.
-    - DK (int, optional): Dimensionality of the key/query/value vectors in attention layers. Default is 16.
-    - device (torch.device or str, optional): Device on which tensors are allocated (e.g., 'cpu' or 'cuda'). Default is None.
-    # Attributes:
-    - pop_size (int): Population size.
-    - mu (float): Mean for weight initialization.
-    - sigma (float): Standard deviation for weight initialization.
-    - DF (int): Dimensionality of fitness features (fixed at 2).
-    - D_sigma (int): Dimensionality of sigma features (fixed at 1).
-    - DK (int): Dimensionality of key/query/value vectors.
-    - device (torch.device or str): Device for computation.
-    - W_QP, W_KC, W_VC, W_QS, W_KS, W_QM, W_KM, W_VM, W_sigma (nn.Linear): Linear layers for attention mechanisms.
-    # Methods:
-    - _init_weights(mu, sigma): Initializes the weights and biases of all linear layers with a normal distribution.
-    - trans_F(f): Transforms fitness values into standardized z-scores and scaled ranks.
-    - adaptation(fitness, sigma): Computes adaptive mutation step sizes using attention over fitness and sigma features.
-    - selection(fitness_c, fitness_p): Performs selection among candidate and parent fitness values using attention, returning a one-hot selection mask.
-    # Returns:
-    - adaptation: Returns updated sigma values for each individual in the population.
-    - selection: Returns a one-hot encoded tensor indicating selected individuals.
-    # Notes:
-    This class is intended for use in evolutionary algorithms where neural attention mechanisms are leveraged for adaptive selection and mutation. It requires PyTorch and is designed to be compatible with GPU acceleration.
     """
     
     def __init__(self, pop_size, mu = 0, sigma = 1.0, DK = 16, device = None):
+        """
+        # Introduction
+        Initializes the Policy optimizer with specified population size, mean, standard deviation, feature dimensions, and device. 
+        Sets up multiple linear layers for query, key, value, and sigma transformations, and applies custom weight initialization.
+        # Args:
+        - pop_size (int): The size of the population for the optimizer.
+        - mu (float, optional): The mean value for weight initialization. Default is 0.
+        - sigma (float, optional): The standard deviation for weight initialization. Default is 1.0.
+        - DK (int, optional): The dimension of the key/query/value vectors. Default is 16.
+        - device (torch.device or None, optional): The device on which to allocate tensors. Default is None.
+        # Built-in Attribute:
+        - DF (int): Feature dimension, set to 2.
+        - D_sigma (int): Sigma dimension, set to 1.
+        - W_QP, W_KC, W_VC, W_QS, W_KS, W_QM, W_KM, W_VM, W_sigma (nn.Linear): Linear layers for various transformations.
+        # Returns:
+        - None
+        # Raises:
+        - None
+        """
+        
         super(Policy, self).__init__()
         self.pop_size = pop_size
         self.mu = mu
@@ -202,42 +209,32 @@ class LGA_Optimizer(Learnable_Optimizer):
     "[**Discovering attention-based genetic algorithms via meta-black-box optimization**](https://dl.acm.org/doi/abs/10.1145/3583131.3590496)." Proceedings of the Genetic and Evolutionary Computation Conference. (2023).
     # Official Implementation
     [LGA](https://github.com/RobertTLange/evosax/blob/main/evosax/strategies/lga.py)
-
-    # Args:
-    - config (object): Configuration object containing optimizer parameters such as maximum function evaluations (`maxFEs`), logging interval (`log_interval`), device specification (`device`), and metadata options (`full_meta_data`, `n_logpoint`).
-    # Attributes:
-    - NP (int): Population size.
-    - MaxFEs (int): Maximum number of function evaluations allowed.
-    - policy (Policy): Neural network-based policy for adaptation and selection.
-    - fes (int): Current number of function evaluations.
-    - cost (list): Log of best costs found during optimization.
-    - log_index (int): Current logging index.
-    - log_interval (int): Interval for logging progress.
-    - population (np.ndarray): Current population of candidate solutions.
-    - sigma (np.ndarray): Mutation step sizes for each individual.
-    - c_cost (np.ndarray): Current costs for each individual in the population.
-    - fitness (np.ndarray): Fitness values for the population.
-    - gbest_val (float): Best cost found so far.
-    - init_gbest (float): Initial best cost.
-    - meta_X (list): (Optional) History of populations for metadata logging.
-    - meta_Cost (list): (Optional) History of costs for metadata logging.
-    # Methods:
-    - __str__(): Returns the string representation of the optimizer.
-    - get_costs(position, problem): Evaluates the cost of given positions for a problem.
-    - get_state(): Returns the current fitness state.
-    - softmax(x): Computes the softmax of input array `x`.
-    - init_population(problem): Initializes the population and related attributes for a given problem.
-    - update(action, problem): Performs one or more optimization steps using the provided action (policy network and skip step), updates the population, and logs progress.
-    # Returns (from update):
-    - fitness (np.ndarray): Updated fitness values after the optimization step(s).
-    - reward (float): Relative improvement in best cost during the update.
-    - is_end (bool): Whether the optimization process has reached its end condition.
-    - info (dict): Additional information (currently empty).
-    # Raises:
-    - None explicitly, but may raise exceptions from underlying numpy or neural network operations if inputs are invalid.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the optimizer with the provided configuration, setting up key parameters and internal state.
+        # Args:
+        - config (object): Config object containing optimizer settings.
+            - The Attributes needed for the LGA_Optimizer are the following:
+                - maxFEs (int): Maximum number of function evaluations.
+                - log_interval (int): Interval at which logs are recorded.
+                - full_meta_data (bool): Flag indicating whether to use full meta data.
+                - n_logpoint (int): Number of log points to record.
+        # Built-in Attribute:
+        - self.NP (int): Number of population members, set to 16.
+        - self.policy (Policy): Policy object initialized with population size, bounds, and device.
+        - self.fes (Any): Placeholder for function evaluation state, initialized as None.
+        - self.cost (Any): Placeholder for cost value, initialized as None.
+        - self.log_index (Any): Placeholder for logging index, initialized as None.
+        - self.log_interval (int): Logging interval, taken from `config.log_interval`.
+        # Returns:
+        - None
+        # Raises:
+        - AttributeError: If required attributes are missing from the `config` object.
+        """
+        
         super().__init__(config)
         self.config = config
 
@@ -253,6 +250,13 @@ class LGA_Optimizer(Learnable_Optimizer):
         self.log_interval = config.log_interval
 
     def __str__(self):
+        """
+        # Introduction
+        Returns a string representation of the LGA_Optimizer instance.
+        # Returns:
+        - str: The string "LGA_Optimizer".
+        """
+        
         return "LGA_Optimizer"
 
     def get_costs(self, position, problem):
@@ -295,20 +299,18 @@ class LGA_Optimizer(Learnable_Optimizer):
         Initializes the population and related attributes for the optimizer based on the given problem definition.
         # Args:
         - problem: An object representing the optimization problem, expected to have attributes `dim` (int), `ub` (upper bounds), and `lb` (lower bounds).
-        # Returns:
-        - None
-        # Side Effects:
-        - Initializes or updates the following instance attributes:
-            - self.fes: Function evaluation counter.
-            - self.population: The initial population matrix.
-            - self.sigma: Standard deviation array for the population.
-            - self.c_cost: Costs of the initial population.
-            - self.fitness: Fitness values for the population.
-            - self.gbest_val: Best cost value found so far.
-            - self.cost: List of best cost values per generation.
-            - self.log_index: Logging index for tracking progress.
-            - self.init_gbest: Initial best cost value.
-            - self.meta_X, self.meta_Cost: (If enabled) Metadata for population and costs.
+        # Built-in Attributes:
+        - self.fes (int): Function evaluation count, initialized to 0.
+        - self.population (numpy.ndarray): The initial population, a 2D array of shape (NP, dim).
+        - self.sigma (numpy.ndarray): The mutation step sizes for the population, initialized to 0.2.
+        - self.c_cost (numpy.ndarray): The costs associated with the initial population.
+        - self.fitness (numpy.ndarray): The fitness values of the population, calculated from the costs.
+        - self.gbest_val (float): The best cost value found in the population.
+        - self.cost (list): A list to store the best cost values at each logging interval.
+        - self.log_index (int): The current logging index, initialized to 1.
+        - self.init_gbest (float): The initial best cost value.
+        - self.meta_X (list): If `self.config.full_meta_data` is True, stores the initial population for analysis.
+        - self.meta_Cost (list): If `self.config.full_meta_data` is True, stores the initial costs for analysis.
         # Notes:
         - Uses a random number generator (`self.rng`) to initialize the population.
         - Assumes the existence of `get_costs` and `softmax` methods.
@@ -348,18 +350,16 @@ class LGA_Optimizer(Learnable_Optimizer):
         - action (dict): A dictionary containing the current policy network ('net') and optional 'skip_step' parameter. The policy network is used for adaptation and selection during the optimization process.
         - problem (object): An object representing the optimization problem, which must have attributes such as `dim` (problem dimensionality), `lb` (lower bounds), `ub` (upper bounds), and optionally `optimum`.
         # Returns:
-        - tuple:
-            - fitness (np.ndarray): The updated fitness values of the population after the optimization step(s).
-            - improvement (float): The relative improvement in the best cost value from the initial to the current generation.
-            - is_end (bool): A flag indicating whether the optimization process has reached its termination condition.
-            - info (dict): Additional information about the optimization process (currently an empty dictionary).
+        - fitness (np.ndarray): The updated fitness values of the population after the optimization step(s).
+        - improvement (float): The relative improvement in the best cost value from the initial to the current generation.
+        - is_end (bool): A flag indicating whether the optimization process has reached its termination condition.
+        - info (dict): Additional information about the optimization process (currently an empty dictionary).
         # Notes:
         - The method supports early stopping based on the number of function evaluations (`MaxFEs`), the minimum cost achieved, or a specified number of steps (`skip_step`).
         - The optimizer maintains logs of the best cost values and, if configured, full meta-data about the population and costs at each step.
         - The policy network is updated using the provided action, and is used for both mutation adaptation and selection.
         """
         
-        # action 是 网络
 
         self.policy = vector2nn(action['net'], self.policy).to(self.config.device)
 

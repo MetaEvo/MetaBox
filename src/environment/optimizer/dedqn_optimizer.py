@@ -75,6 +75,16 @@ def cal_rie(fitness):
 
 
 def cal_acf(fitness):
+    """
+    # Introduction
+    Calculates the autocorrelation coefficient (ACF) of a given fitness sequence.
+    # Args:
+    - fitness (np.ndarray or list of float): Sequence of fitness values for which the autocorrelation coefficient is to be computed.
+    # Returns:
+    - float: The computed autocorrelation coefficient of the input fitness sequence.
+    # Notes:
+    - A small constant (1e-6) is added to the denominator to prevent division by zero.
+    """
 
     
     avg_f = np.mean(fitness)
@@ -87,6 +97,17 @@ def cal_acf(fitness):
 
 
 def cal_nop(sample, fitness):
+    """
+    # Introduction
+    Calculates the number of optimal values (NOP) metric for a set of samples and their corresponding fitness values. The NOP metric quantifies how often the order of fitness values is preserved when samples are sorted by their distance to the best sample.
+    # Args:
+    - sample (np.ndarray): An array of sample points, where each row corresponds to a sample.
+    - fitness (np.ndarray): A 1D array of fitness values corresponding to each sample.
+    # Returns:
+    - float: The normalized count of order-preserving pairs, representing the proportion of times a better fitness value follows a worse one when samples are sorted by distance to the best sample.
+    # Raises:
+    - None
+    """
 
     
     best = np.argmin(fitness)
@@ -158,46 +179,42 @@ class DEDQN_Optimizer(Learnable_Optimizer):
     DEDQN is a mixed mutation strategy Differential Evolution (DE) algorithm based on deep Q-network (DQN), in which a deep reinforcement learning approach realizes the adaptive selection of mutation strategy in the evolution process.
     # Original paper
     "[**Differential evolution with mixed mutation strategy based on deep reinforcement learning**](https://www.sciencedirect.com/science/article/abs/pii/S1568494621005998)." Applied Soft Computing (2021).
-    # Official Implementation
-    None
-    # Args:
-    - config (object): Configuration object containing optimizer parameters such as population size, mutation factor, crossover rate, problem dimension, maximum function evaluations, logging interval, and meta-data options.
-    # Attributes:
-    - __config (object): Stores the configuration object.
-    - __dim (int): Dimensionality of the optimization problem.
-    - __NP (int): Population size.
-    - __F (float): Mutation factor.
-    - __Cr (float): Crossover rate.
-    - __maxFEs (int): Maximum number of function evaluations.
-    - __rwsteps (int): Number of random walk steps for feature calculation.
-    - __solution_pointer (int): Index of the current solution to receive an action.
-    - __population (np.ndarray): Current population of candidate solutions.
-    - __cost (np.ndarray): Cost values of the current population.
-    - __gbest (np.ndarray): Global best solution found so far.
-    - __gbest_cost (float): Cost of the global best solution.
-    - __state (np.ndarray): Current state features for reinforcement learning.
-    - __survival (np.ndarray): Survival counters for each solution.
-    - fes (int): Current number of function evaluations.
-    - cost (list): Log of best costs at each logging interval.
-    - log_index (int): Current logging index.
-    - log_interval (int): Interval for logging progress.
-    # Methods:
-    - __cal_feature(problem): Calculates state features for reinforcement learning based on the current population and problem landscape.
-    - init_population(problem): Initializes the population and related attributes for a new optimization run.
-    - update(action, problem): Applies a mutation and crossover strategy based on the given action, updates the population, calculates reward, and checks for termination.
-    # Returns:
-    - __cal_feature: np.ndarray of calculated features.
-    - init_population: np.ndarray representing the initial state features.
-    - update: Tuple (state, reward, is_done, info) where:
-        - state (np.ndarray): Updated state features.
-        - reward (float): Reward signal for the taken action.
-        - is_done (bool): Whether the optimization process has terminated.
-        - info (dict): Additional information (currently empty).
-    # Raises:
-    - ValueError: If an invalid action is provided to the update method.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the optimizer with the provided configuration, setting up key parameters and internal state variables for the optimization process.
+        # Args:
+        - config (object): Config object containing parameters for the optimizer。
+            - Attributes needed for the DEDQN_Optimizer are the following:
+                - log_interval (int): Interval at which logs are recorded.Default is config.maxFEs/config.n_logpoint.
+                - n_logpoint (int): Number of log points to record.Default is 50.
+                - full_meta_data (bool): Flag indicating whether to use full meta data.Default is False.
+                - maxFEs (int): Maximum number of function evaluations.Default is 100000.
+                
+        # Built-in Attribute:
+        - self.__config: Stores the configuration object.
+        - self.__NP: Population size for the optimizer. Default is 100.
+        - self.__F: Mutation factor. Default is 0.5.
+        - self.__Cr: Crossover rate. Default is 0.5.
+        - self.__maxFEs: Maximum number of function evaluations. Default is 100000.
+        - self.__rwsteps: Number of random walk steps. Default is 100.
+        - self.__solution_pointer: Index indicating which solution receives the action. Default is 0.
+        - self.__population: Stores the current population of solutions. Default is None.
+        - self.__cost: Stores the cost values for the population. Default is None.
+        - self.__gbest: Stores the global best solution found. Default is None.
+        - self.__gbest_cost: Stores the cost of the global best solution. Default is None.
+        - self.__state: Stores the current state of the optimizer. Default is None.
+        - self.__survival: Stores survival information for the population. Default is None.
+        - self.fes: Tracks the number of function evaluations performed.Default is None.
+        - self.cost: Tracks the cost values.Default is None.
+        - self.log_index: Tracks the logging index.Default is None.
+        - self.log_interval: Interval for logging progress.
+        # Returns:
+        - None
+        """
+        
         super().__init__(config)
         config.NP = 100
         config.F = 0.5
@@ -223,7 +240,16 @@ class DEDQN_Optimizer(Learnable_Optimizer):
         self.log_interval = config.log_interval
 
     def __cal_feature(self, problem):
-
+        """
+        # Introduction
+        Calculates a set of feature descriptors for the current population in the optimization process, including FDC, RIE, ACF, and NOP, based on random walk sampling and cost evaluation.
+        # Args:
+        - problem (object): The optimization problem instance, which must provide an `eval` method for evaluating solutions and an `optimum` attribute for the known optimum value (if available).
+        # Returns:
+        - np.ndarray: A NumPy array containing the computed feature values [fdc, rie, acf, nop].
+        # Raises:
+        - AttributeError: If the `problem` object does not have the required `eval` method or `optimum` attribute.
+        """
         
         samples = random_walk_sampling(self.__population, self.__dim, self.__rwsteps, self.rng)
         if problem.optimum is None:
@@ -239,6 +265,30 @@ class DEDQN_Optimizer(Learnable_Optimizer):
         return np.array([fdc, rie, acf, nop])
 
     def init_population(self, problem):
+        """
+        # Introduction
+        Initializes the population for the optimizer based on the provided problem definition. Sets up the initial population, evaluates their costs, determines the global best solution, and prepares meta-data if required.
+        # Args:
+        - problem (object):problem object, which have attributes `dim`, `lb`, `ub`, `optimum`, and a method `eval()` for evaluating solutions.
+        # Built-in Attribute:
+        - self.__dim (int): Dimensionality of the problem.
+        - self.__population (np.ndarray): The initialized population within the problem bounds.
+        - self.__survival (np.ndarray): Survival status of each individual in the population.
+        - self.__cost (np.ndarray): Cost values of the population.
+        - self.__gbest (np.ndarray): The best solution found so far.
+        - self.__gbest_cost (float): The cost of the best solution.
+        - self.fes (int): Function evaluation count.
+        - self.log_index (int): Logging index for tracking progress. Default is 1.
+        - self.cost (list): History of global best costs.
+        - self.__state (np.ndarray): Feature vector representing the current state.
+        - self.meta_X (list, optional): History of populations (if full meta-data is enabled).
+        - self.meta_Cost (list, optional): History of costs (if full meta-data is enabled).
+        # Returns:
+        - np.ndarray: The feature vector representing the current state of the optimizer.
+        # Raises:
+        - None explicitly, but may raise exceptions from problem.eval() or if problem attributes are missing.
+        """
+        
         self.__dim = problem.dim
         self.__population = self.rng.rand(self.__NP, self.__dim) * (problem.ub - problem.lb) + problem.lb  # [lb, ub]
         self.__survival = np.ones(self.__population.shape[0])
@@ -267,11 +317,10 @@ class DEDQN_Optimizer(Learnable_Optimizer):
         - action (int): The index of the mutation strategy to use (0: rand/1, 1: current-to-rand/1, 2: best/2).
         - problem (object): The optimization problem instance, which must provide lower and upper bounds (`lb`, `ub`), an evaluation function (`eval`), and optionally an optimum value (`optimum`).
         # Returns:
-        - tuple: A tuple containing:
-            - state (np.ndarray): The current feature state of the optimizer.
-            - reward (float): The reward calculated for the current update step.
-            - is_done (bool): Whether the optimization process has reached its termination condition.
-            - info (dict): Additional information (currently empty).
+        - state (np.ndarray): The current feature state of the optimizer.
+        - reward (float): The reward calculated for the current update step.
+        - is_done (bool): Whether the optimization process has reached its termination condition.
+        - info (dict): Additional information (currently empty).
         # Raises:
         - ValueError: If the provided `action` is not one of the supported mutation strategies (0, 1, or 2).
         """

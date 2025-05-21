@@ -136,46 +136,58 @@ class L2T_Optimizer(Learnable_Optimizer):
     """
     # Introduction
     L2T_Optimizer is a learnable optimizer designed for multi-task optimization problems. It leverages evolutionary strategies and knowledge transfer mechanisms to optimize multiple tasks simultaneously. The optimizer maintains separate populations for each task and applies both standard and knowledge transfer-based differential evolution operations to generate new candidate solutions. It tracks various statistics such as stagnation, improvement flags, and rewards to guide the optimization process.
-    # Args:
-    - config (object): Configuration object containing optimizer parameters such as the number of tasks (`task_cnt`), dimensionality (`dim`), total generations (`generation`), logging interval (`log_interval`), and flags for meta-data collection (`full_meta_data`, `n_logpoint`).
-    # Attributes:
-    - task_cnt (int): Number of tasks to optimize.
-    - dim (int): Dimensionality of the solution space.
-    - generation (int): Current generation counter.
-    - pop_cnt (int): Number of individuals in each population.
-    - total_generation (int): Total number of generations to run.
-    - flag_improved (np.ndarray): Flags indicating if improvement occurred for each task.
-    - stagnation (np.ndarray): Stagnation counters for each task.
-    - old_action_1/2/3 (np.ndarray): Stores previous action values for each task.
-    - N_kt (np.ndarray): Number of knowledge transfer individuals per task.
-    - Q_kt (np.ndarray): Proportion of successful knowledge transfer per task.
-    - gbest (np.ndarray): Best fitness value found for each task.
-    - task (list): List of task objects.
-    - offsprings (np.ndarray): Offspring populations for each task.
-    - noKT_offsprings (np.ndarray): Offspring populations without knowledge transfer.
-    - KT_offsprings (list): Offspring populations generated via knowledge transfer.
-    - KT_index (list): Indices of individuals selected for knowledge transfer.
-    - parent_population (np.ndarray): Current parent populations for each task.
-    - reward (list): Reward values for each task.
-    - total_reward (float): Cumulative reward across all tasks.
-    - fes (int): Function evaluation counter.
-    - cost (list): List of best fitness values per logging interval.
-    - log_index (int): Current logging index.
-    - log_interval (int): Interval for logging progress.
-    # Methods:
-    - get_state(): Returns the current state representation for the optimizer, including normalized statistics and action history.
-    - init_population(tasks): Initializes populations for all tasks and evaluates their initial fitness.
-    - self_update(): Applies standard differential evolution to generate offspring without knowledge transfer.
-    - transfer(actions): Applies knowledge transfer-based differential evolution using provided action parameters.
-    - seletion(): Selects the next generation population based on fitness and updates statistics and rewards.
-    - update(actions, tasks): Performs a full optimization step, including offspring generation, transfer, selection, reward calculation, and logging.
-    # Returns:
-    - Various methods return state representations, updated rewards, termination flags, and logging information as appropriate.
-    # Raises:
-    - No explicit exceptions are raised, but methods may propagate exceptions from underlying numpy operations or task evaluation functions.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the optimizer with configuration parameters, sets up task-specific attributes, and allocates memory for tracking optimization progress and statistics.
+        # Args:
+        - config (object): Config object containing problem settings.
+            - Attributes needed for the L2T_Optimizer are the following:
+                - train_problem (str): The training problem to be used.
+                - test_problem (str): The testing problem to be used.
+                - dim (int): Dimensionality of the optimization problem.
+                - log_interval (int): Interval for logging progress.
+                - n_logpoint (int): Number of log points to record.
+                - full_meta_data (bool): Flag indicating whether to use full meta data.
+                - device (str): Device to use for computations (e.g., "cpu", "cuda").
+        # Built-in Attributes:
+        - __config (object): Configuration object containing algorithm parameters.
+        - task_cnt (int): Number of tasks to be optimized.Decided based on the problem type.
+        - dim (int): Dimensionality of the optimization problem.Default is 50.
+        - generation (int): Current generation count.Default is 0.
+        - pop_cnt (int): Population size for each task.Default is 50.
+        - total_generation (int): Total number of generations for the optimization process.
+        - flag_improved (np.ndarray): Array to track improvement flags for each task.
+        - stagnation (np.ndarray): Array to track stagnation counts for each task.
+        - old_action_1 (np.ndarray): Array to store the last action taken for each task.
+        - old_action_2 (np.ndarray): Array to store the last action taken for each task.
+        - old_action_3 (np.ndarray): Array to store the last action taken for each task.
+        - N_kt (np.ndarray): Array to track the number of knowledge transfer operations for each task.Decided based on the problem type.
+        - Q_kt (np.ndarray): Array to track the quality of knowledge transfer for each task.
+        - gbest (np.ndarray): Array to store the best fitness values for each task.
+        - task (Any): Placeholder for the current task being optimized.Default is None.
+        - offsprings (np.ndarray): Array to store the generated offsprings for each task.
+        - noKT_offsprings (np.ndarray): Array to store the generated offsprings without knowledge transfer for each task.
+        - KT_offsprings (list): List to store the generated offsprings with knowledge transfer for each task.
+        - KT_index (list): List to store the indices of individuals selected for knowledge transfer for each task.
+        - parent_population (np.ndarray): Array to store the current population for each task.
+        - reward (list): List to store the rewards for each task.
+        - total_reward (float): Total accumulated reward across all tasks.
+        - begin_best (list): List to store the best fitness values at the beginning of the optimization for each task.
+        - last_gen_best (list): List to store the best fitness values from the last generation for each task.
+        - this_gen_best (list): List to store the best fitness values from the current generation for each task.
+        - optimal_value (list): List to store the optimal values for each task.
+        - fes (int): Counter for the number of function evaluations.Default is None.
+        - cost (list): List to store the best cost values during optimization.Default is None.
+        - log_index (int): Index for logging progress.Default is None.
+        # Returns:
+        - None
+        # Raises:
+        - None
+        """
+        
         super().__init__(config)
         self.__config = config
 
@@ -332,13 +344,6 @@ class L2T_Optimizer(Learnable_Optimizer):
         Transfers knowledge between tasks by generating offsprings using actions and a randomly selected source population. This method applies a mixed differential evolution (DE) strategy to a subset of individuals in each task's population, based on the provided actions.
         # Args:
         - actions (list or array-like): A sequence of three action values [action_1, action_2, action_3] used to control the transfer process and DE parameters.
-        # Modifies:
-        - self.N_kt: Updates the proportion of individuals to transfer for each task.
-        - self.KT_count: Sets the number of individuals to transfer for each task.
-        - self.KT_index: Selects the indices of individuals to transfer.
-        - self.KT_offsprings: Stores the generated offsprings after knowledge transfer.
-        - self.offsprings: Updates the offsprings with transferred individuals.
-        - self.old_action_1, self.old_action_2, self.old_action_3: Stores the latest actions used for each task.
         # Notes:
         - The method ensures that the source population for transfer is different from the target task.
         - At least one individual is always selected for transfer per task.
@@ -447,11 +452,10 @@ class L2T_Optimizer(Learnable_Optimizer):
         - actions (Any): Actions to be applied in the current update step.
         - tasks (Any): Tasks relevant to the current optimization step.
         # Returns:
-        - tuple: A tuple containing:
-            - next_state (Any): The next state after applying the actions.
-            - total_reward (float): The accumulated reward after the update.
-            - is_end (bool): Flag indicating whether the optimization process has ended.
-            - info (dict): Additional information (currently empty).
+        - next_state (Any): The next state after applying the actions.
+        - total_reward (float): The accumulated reward after the update.
+        - is_end (bool): Flag indicating whether the optimization process has ended.
+        - info (dict): Additional information (currently empty).
         # Raises:
         - None
         """
