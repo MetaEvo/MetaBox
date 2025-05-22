@@ -1,4 +1,4 @@
-# MetaBBO's Core Concept
+# Core Concept
 
 > 💡 **MetaBox is an all-in-one platform for using and developing the algorithms in Meta-Black-Box Optimization (MetaBBO)**. 💡
 
