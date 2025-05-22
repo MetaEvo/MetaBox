@@ -1,4 +1,4 @@
-# Test one MetaBox's algorithm on MetaBox's one Dataset
+# Test
 
 <!-- > [!NOTE]
 > **The following code demonstrates the core test logic.**
