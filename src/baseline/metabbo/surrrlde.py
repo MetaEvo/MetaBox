@@ -13,23 +13,23 @@ class SurrRLDE(DDQN_Agent):
 	# Application Scenario
 	single-object optimization problems(SOOP), in this implementation, the built-in DDQN_Agent is used as the parent class, since SurrRLDE is based on DDQN. 
 	# Raises:
-		None explicitly raised in the provided code, but potential exceptions may occur during tensor operations, environment interactions, or model updates.
+	None explicitly raised in the provided code, but potential exceptions may occur during tensor operations, environment interactions, or model updates.
 	"""
 	def __init__(self, config):
-        """
+		"""
         # Args:
         -config: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
-	# Built-in Attributes:
-	-config (object): Stores the configuration object.
-	-device (str): Device to be used for computation ('cpu' or 'cuda').
-	-memory_size (int): Size of the replay buffer.
-	-n_act (int): Number of possible actions.
-	-epsilon (float): Initial epsilon value for epsilon-greedy policy.
-	-gamma (float): Discount factor for future rewards.
-	-max_learning_step (int): Maximum number of learning steps.
-	-cur_checkpoint (int): Current checkpoint index for saving the model.
-	-replay_buffer (ReplayBuffer_torch): Replay buffer for storing experiences.
-	-model (MLP): Neural network model for Q-value prediction.
+		# Built-in Attributes:
+		-config (object): Stores the configuration object.
+		-device (str): Device to be used for computation ('cpu' or 'cuda').
+		-memory_size (int): Size of the replay buffer.
+		-n_act (int): Number of possible actions.
+		-epsilon (float): Initial epsilon value for epsilon-greedy policy.
+		-gamma (float): Discount factor for future rewards.
+		-max_learning_step (int): Maximum number of learning steps.
+		-cur_checkpoint (int): Current checkpoint index for saving the model.
+		-replay_buffer (ReplayBuffer_torch): Replay buffer for storing experiences.
+		-model (MLP): Neural network model for Q-value prediction.
         """
 
  

@@ -14,40 +14,40 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
  	[SurrRLDE](https://github.com/GMC-DRL/Surr-RLDE)
 	"""
 	def __init__(self, config):
-	"""
-	# Introduction
-	Initializes the optimizer with the given configuration, setting up algorithm parameters, population attributes, and logging controls.
-	# Args:
-	- config (object): Configuration object.
-	    - The Attributes needed for the surrrlde optimizer:
-		    - device (str): The device to be used for computation (e.g., 'cpu', 'cuda').
-			- maxFEs (int): The maximum number of function evaluations.
-			- upperbound (float): The upper bound for the optimization problem.
-			- log_interval (int): The interval for logging progress.
-			- n_logpoint (int): The number of log points.
-			- full_meta_data (bool): Flag to indicate whether to store full meta data.
-   
-	# Built-in Attribute:
-	- `self.F` (float): The mutation factor for DE.Default is 0.5.
-  	- `self.Cr` (float): The crossover probability for DE. Default is 0.7.
-   	- `self.pop_size` (int): The size of the population. Default is 100.
-	- `self.maxFEs` (int): The maximum number of function evaluations. 
-	- `self.ub` (float): The upper bound for the optimization problem.
-	- `self.lb` (float): The lower bound for the optimization problem.
-	- `self.population` (torch.Tensor): The current population of solutions.
-	- `self.fitness` (torch.Tensor): The fitness values of the current population.
-	- `self.pop_cur_best` (torch.Tensor): The best solution in the current population.
-	- `self.fit_cur_best` (torch.Tensor): The fitness value of the best solution in the current population.
-	- `self.pop_history_best` (torch.Tensor): The best solution found so far.Default is None.
-	- `self.fit_history_best` (torch.Tensor): The fitness value of the best solution found so far.Default is None.
- 	- `self.fit_init_best` (torch.Tensor): The initial best fitness value.Default is None.
-	- `self.improved_gen` (int): The number of generations since the last improvement.Default is 0.
-	- `self.fes` (int): The number of function evaluations used.Default is None.
-	- `self.cost` (list): The cost history of the best solution found so far.Default is None.
-	- `self.cur_logpoint` (int): The current log point.Default is None.
-	# Returns:
-	- None
-	"""
+		"""
+		# Introduction
+		Initializes the optimizer with the given configuration, setting up algorithm parameters, population attributes, and logging controls.
+		# Args:
+		- config (object): Configuration object.
+		    - The Attributes needed for the surrrlde optimizer:
+			    - device (str): The device to be used for computation (e.g., 'cpu', 'cuda').
+				- maxFEs (int): The maximum number of function evaluations.
+				- upperbound (float): The upper bound for the optimization problem.
+				- log_interval (int): The interval for logging progress.
+				- n_logpoint (int): The number of log points.
+				- full_meta_data (bool): Flag to indicate whether to store full meta data.
+	
+		# Built-in Attribute:
+		- `self.F` (float): The mutation factor for DE.Default is 0.5.
+  		- `self.Cr` (float): The crossover probability for DE. Default is 0.7.
+   		- `self.pop_size` (int): The size of the population. Default is 100.
+		- `self.maxFEs` (int): The maximum number of function evaluations. 
+		- `self.ub` (float): The upper bound for the optimization problem.
+		- `self.lb` (float): The lower bound for the optimization problem.
+		- `self.population` (torch.Tensor): The current population of solutions.
+		- `self.fitness` (torch.Tensor): The fitness values of the current population.
+		- `self.pop_cur_best` (torch.Tensor): The best solution in the current population.
+		- `self.fit_cur_best` (torch.Tensor): The fitness value of the best solution in the current population.
+		- `self.pop_history_best` (torch.Tensor): The best solution found so far.Default is None.
+		- `self.fit_history_best` (torch.Tensor): The fitness value of the best solution found so far.Default is None.
+ 		- `self.fit_init_best` (torch.Tensor): The initial best fitness value.Default is None.
+		- `self.improved_gen` (int): The number of generations since the last improvement.Default is 0.
+		- `self.fes` (int): The number of function evaluations used.Default is None.
+		- `self.cost` (list): The cost history of the best solution found so far.Default is None.
+		- `self.cur_logpoint` (int): The current log point.Default is None.
+		# Returns:
+		- None
+		"""
      
 		super().__init__(config)
 
@@ -80,35 +80,35 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 		self.log_interval = config.log_interval
 
 	def __str__(self):
-	"""
-	Returns a string representation of the SurrRLDE_Optimizer instance.
-	# Returns:
-	- str: The name of the optimizer, "SurrRLDE_Optimizer".
-	"""
+		"""
+		Returns a string representation of the SurrRLDE_Optimizer instance.
+		# Returns:
+		- str: The name of the optimizer, "SurrRLDE_Optimizer".
+		"""
 		return "SurrRLDE_Optimizer"
 
 	def get_state(self, problem):
-	"""
-	# Introduction
-	Computes a 9-dimensional state vector representing various statistics and progress indicators of the optimizer's current population and fitness landscape.
-	# Args:
-	- problem: The optimization problem instance (not directly used in this method, but may be required for interface compatibility).
-	# Returns:
-	- torch.Tensor: A 1D tensor of length 9 containing the following state features:
-		1. Mean pairwise Euclidean distance between individuals in the population.
-		2. Mean Euclidean distance between each individual and the current best individual.
-		3. Mean Euclidean distance between each individual and the historical best individual.
-		4. Mean Euclidean distance between current fitness values and historical best fitness values.
-		5. Mean Euclidean distance between current fitness values and current best fitness value.
-		6. Standard deviation of the current fitness values.
-		7. Normalized remaining function evaluations: (maxFEs - fes) / maxFEs.
-		8. Number of generations since last improvement in best fitness.
-		9. Binary indicator (1 if current best fitness improved over historical best, else 0).
-	# Built-in Attribute:
-	- Uses internal attributes such as `self.population`, `self.fitness`, `self.pop_cur_best`, `self.pop_history_best`, `self.fit_cur_best`, `self.fit_history_best`, `self.maxFEs`, `self.fes`, and `self.improved_gen`.
-	# Raises:
-	- None explicitly, but assumes all internal attributes are properly initialized and shaped.
-	"""
+		"""
+		# Introduction
+		Computes a 9-dimensional state vector representing various statistics and progress indicators of the optimizer's current population and fitness landscape.
+		# Args:
+		- problem: The optimization problem instance (not directly used in this method, but may be required for interface compatibility).
+		# Returns:
+		- torch.Tensor: A 1D tensor of length 9 containing the following state features:
+			1. Mean pairwise Euclidean distance between individuals in the population.
+			2. Mean Euclidean distance between each individual and the current best individual.
+			3. Mean Euclidean distance between each individual and the historical best individual.
+			4. Mean Euclidean distance between current fitness values and historical best fitness values.
+			5. Mean Euclidean distance between current fitness values and current best fitness value.
+			6. Standard deviation of the current fitness values.
+			7. Normalized remaining function evaluations: (maxFEs - fes) / maxFEs.
+			8. Number of generations since last improvement in best fitness.
+			9. Binary indicator (1 if current best fitness improved over historical best, else 0).
+		# Built-in Attribute:
+		- Uses internal attributes such as `self.population`, `self.fitness`, `self.pop_cur_best`, `self.pop_history_best`, `self.fit_cur_best`, `self.fit_history_best`, `self.maxFEs`, `self.fes`, and `self.improved_gen`.
+		# Raises:
+		- None explicitly, but assumes all internal attributes are properly initialized and shaped.
+		"""
      
 		state = torch.zeros(9)
 		# state 1
@@ -160,32 +160,32 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 		return state
 
 	def init_population(self, problem):
-	"""
-	# Introduction
-	Initializes the population for the optimizer based on the provided problem definition, evaluates the initial fitness, and sets up tracking for the best solutions and meta-data.
-	# Args:
-	- problem (object): The optimization problem object which has attributes `dim`, `ub`, `lb`, and methods `eval()`.
-	# Built-in Attribute:
-	- self.dim (int): Dimensionality of the problem.
-	- self.rng_torch (torch.Generator): Random number generator for torch, set according to device.
-	- self.population (torch.Tensor): The initialized population of candidate solutions.
-	- self.fitness (torch.Tensor): Fitness values of the population.
-	- self.pop_cur_best (torch.Tensor): Current best solution in the population.
-	- self.pop_history_best (torch.Tensor): Historical best solution found.
-	- self.fit_init_best (torch.Tensor): Initial best fitness value.
-	- self.fit_cur_best (torch.Tensor): Current best fitness value.
-	- self.fit_history_best (torch.Tensor): Historical best fitness value.
-	- self.fes (int): Number of function evaluations performed.
-	- self.cost (list): List of best cost values per generation.
-	- self.cur_logpoint (int): Current logpoint for logging.
-	- self.meta_X (list, optional): Meta-data of populations if `full_meta_data` is enabled.
-	- self.meta_Cost (list, optional): Meta-data of costs if `full_meta_data` is enabled.
-	# Returns:
-	- state (Any): The current state of the optimizer, as returned by `self.get_state(problem)`.
-	# Raises:
-	- AttributeError: If the `problem` object does not have required attributes or methods.
-	- TypeError: If the fitness evaluation returns an unexpected type.
-	"""
+		"""
+		# Introduction
+		Initializes the population for the optimizer based on the provided problem definition, evaluates the initial fitness, and sets up tracking for the best solutions and meta-data.
+		# Args:
+		- problem (object): The optimization problem object which has attributes `dim`, `ub`, `lb`, and methods `eval()`.
+		# Built-in Attribute:
+		- self.dim (int): Dimensionality of the problem.
+		- self.rng_torch (torch.Generator): Random number generator for torch, set according to device.
+		- self.population (torch.Tensor): The initialized population of candidate solutions.
+		- self.fitness (torch.Tensor): Fitness values of the population.
+		- self.pop_cur_best (torch.Tensor): Current best solution in the population.
+		- self.pop_history_best (torch.Tensor): Historical best solution found.
+		- self.fit_init_best (torch.Tensor): Initial best fitness value.
+		- self.fit_cur_best (torch.Tensor): Current best fitness value.
+		- self.fit_history_best (torch.Tensor): Historical best fitness value.
+		- self.fes (int): Number of function evaluations performed.
+		- self.cost (list): List of best cost values per generation.
+		- self.cur_logpoint (int): Current logpoint for logging.
+		- self.meta_X (list, optional): Meta-data of populations if `full_meta_data` is enabled.
+		- self.meta_Cost (list, optional): Meta-data of costs if `full_meta_data` is enabled.
+		# Returns:
+		- state (Any): The current state of the optimizer, as returned by `self.get_state(problem)`.
+		# Raises:
+		- AttributeError: If the `problem` object does not have required attributes or methods.
+		- TypeError: If the fitness evaluation returns an unexpected type.
+		"""
      
 		self.dim = problem.dim
 		self.rng_torch = self.rng_cpu
@@ -444,24 +444,24 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 		return mut_population
 
 	def crossover(self, mut_population):
-	"""
-	# Introduction
-	Performs the crossover operation in a differential evolution algorithm, combining the current population with a mutated population to generate a new candidate population.
-	# Args:
-	- mut_population (torch.Tensor): The mutated population tensor with the same shape as the current population.
-	# Built-in Attribute:
-	- self.population (torch.Tensor): The current population tensor.
-	- self.pop_size (int): The number of individuals in the population.
-	- self.dim (int): The dimensionality of each individual.
-	- self.Cr (float): The crossover probability.
-	- self.rng_torch (torch.Generator): The random number generator for reproducibility.
-	- self.device (torch.device): The device on which tensors are allocated.
-	# Returns:
-	- torch.Tensor: The new population tensor after crossover, with the same shape as the input population.
-	# Raises:
-	- None
-	"""
-     
+		"""
+		# Introduction
+		Performs the crossover operation in a differential evolution algorithm, combining the current population with a mutated population to generate a new candidate population.
+		# Args:
+		- mut_population (torch.Tensor): The mutated population tensor with the same shape as the current population.
+		# Built-in Attribute:
+		- self.population (torch.Tensor): The current population tensor.
+		- self.pop_size (int): The number of individuals in the population.
+		- self.dim (int): The dimensionality of each individual.
+		- self.Cr (float): The crossover probability.
+		- self.rng_torch (torch.Generator): The random number generator for reproducibility.
+		- self.device (torch.device): The device on which tensors are allocated.
+		# Returns:
+		- torch.Tensor: The new population tensor after crossover, with the same shape as the input population.
+		# Raises:
+		- None
+		"""
+	
 		crossover_population = self.population.clone()
 		for i in range(self.pop_size):
 
@@ -472,17 +472,17 @@ class SurrRLDE_Optimizer(Learnable_Optimizer):
 		return crossover_population
 
 	def generate_random_int(self, NP: int, cols: int) -> torch.Tensor:
-	"""
-	# Introduction
-	Generates a random integer tensor of shape (NP, cols) where each row contains unique indices not equal to the row index, suitable for population-based optimization algorithms.
-	# Args:
-	- NP (int): The population size, determines the number of rows in the output tensor.
-	- cols (int): The number of columns in the output tensor, typically the number of unique indices required per row.
-	# Returns:
-	- torch.Tensor: A tensor of shape (NP, cols) containing random integers in the range [0, NP), with the constraint that no row contains its own index.
-	# Raises:
-	- None
-	"""
+		"""
+		# Introduction
+		Generates a random integer tensor of shape (NP, cols) where each row contains unique indices not equal to the row index, suitable for population-based optimization algorithms.
+		# Args:
+		- NP (int): The population size, determines the number of rows in the output tensor.
+		- cols (int): The number of columns in the output tensor, typically the number of unique indices required per row.
+		# Returns:
+		- torch.Tensor: A tensor of shape (NP, cols) containing random integers in the range [0, NP), with the constraint that no row contains its own index.
+		# Raises:
+		- None
+		"""
     
 		r = torch.randint(0, NP, (NP, cols), dtype = torch.long, generator = self.rng_torch, device = self.device)  # [NP, 3]
 
