@@ -1,9 +1,9 @@
-from metaevobox import Config, Trainer
+from ..src import Config, Trainer
 # import meta-level agent of MetaBBO you want to meta-train
-from metaevobox.baseline.metabbo import *
+from ..src.baseline.metabbo import *
 # import low-level BBO optimizer of MetaBBO you want to meta-train
-from metaevobox.environment.optimizer import *
-from metaevobox.environment.problem.utils import construct_problem_set
+from ..src.environment.optimizer import *
+from ..src.environment.problem.utils import construct_problem_set
 
 # put user-specific configuration
 config = {'train_problem': 'bbob-10D', # specify the problem set you want to train your MetaBBO
