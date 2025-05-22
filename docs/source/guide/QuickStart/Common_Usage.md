@@ -2,7 +2,6 @@
 ```{toctree}
 
 :maxdepth: 1
-:hidden
 Train one MetaBox's algorithm on MetaBox's one Dataset
 Test one MetaBox's algorithm on MetaBox's one Dataset
 
