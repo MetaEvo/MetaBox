@@ -1,7 +1,7 @@
-from ..src import Tester, Config, construct_problem_set, get_baseline
-from ..src.baseline.metabbo import *
-from ..src.baseline.bbo import *
-from ..src.environment.optimizer import *
+from metaevobox import Tester, Config, construct_problem_set, get_baseline
+from metaevobox.baseline.metabbo import *
+from metaevobox.baseline.bbo import *
+from metaevobox.environment.optimizer import *
 
 import pickle
 import numpy as np

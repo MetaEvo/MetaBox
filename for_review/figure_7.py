@@ -141,6 +141,8 @@ anti_nfl_result = []
 for baseline in metabbo_list:
     baseline_anti_nfl = []
     for problem in zero_shot_problem:
+        if problem == "bbob-10D":
+            continue
         baseline_anti_nfl.append((zero_shot_result[problem][baseline] - zero_shot_result["bbob-10D"][baseline]) / zero_shot_result["bbob-10D"][baseline])
     anti_nfl_result.append(np.exp(np.mean(baseline_anti_nfl)))
     print(f"{baseline}: {anti_nfl_result[-1]}")
