@@ -14,42 +14,40 @@ class RLDAS_Optimizer(Learnable_Optimizer):
     "[**Deep Reinforcement Learning for Dynamic Algorithm Selection: A Proof-of-Principle Study on Differential Evolution**](https://ieeexplore.ieee.org/abstract/document/10496708/)." IEEE Transactions on Systems, Man, and Cybernetics: Systems (2024).
     # Official Implementation
     [RL-DAS](https://github.com/GMC-DRL/RL-DAS)
-    # Args:
-    - config (object): Configuration object containing parameters such as maximum function evaluations (`maxFEs`), logging interval (`log_interval`), problem types, and meta-data settings.
-    # Attributes:
-    - MaxFEs (int): Maximum number of function evaluations allowed.
-    - period (int): Number of function evaluations per optimization period, adjusted based on problem type.
-    - max_step (int): Maximum number of optimization steps.
-    - sample_times (int): Number of times to sample local optimizers per observation.
-    - n_dim_obs (int): Number of dimensions in the observation feature vector.
-    - final_obs (Any): Stores the final observation state.
-    - terminal_error (float): Threshold for considering the optimization as converged.
-    - FEs (int): Current number of function evaluations used.
-    - cost (list): History of best costs found during optimization.
-    - log_index (int): Index for logging progress.
-    - log_interval (int): Interval for logging progress.
-    - optimizers (list): List of embedded optimizer instances.
-    - best_history (list): History of best moves for each optimizer.
-    - worst_history (list): History of worst moves for each optimizer.
-    - population (Population): The current population of candidate solutions.
-    - cost_scale_factor (float): Scaling factor for normalizing costs.
-    - done (bool): Indicates whether the optimization process is finished.
-    - meta_X (list): (Optional) History of population groups for meta-data logging.
-    - meta_Cost (list): (Optional) History of population costs for meta-data logging.
-    # Methods:
-    - __init__(self, config): Initializes the optimizer with the given configuration.
-    - __str__(self): Returns the string representation of the optimizer.
-    - init_population(self, problem): Initializes the population and optimizer states for a given problem.
-    - local_sample(self): Samples the local optimizers and returns candidate solutions and their costs.
-    - observe(self, problem): Observes and returns the current environment state as a feature vector.
-    - update(self, action, problem): Applies the selected optimizer, updates the population, computes the reward, and returns the next state, reward, and done flag.
-    # Returns:
-    - Various methods return updated population states, feature vectors, rewards, and completion flags as appropriate for reinforcement learning environments.
-    # Raises:
-    - May raise exceptions related to population initialization, optimizer execution, or invalid configurations.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the optimizer with the provided configuration, setting up key parameters such as maximum function evaluations, logging intervals, and problem-specific periods.
+        # Args:
+        - config (object): Config object containing optimizer settings.
+            - The Attributes needed for the RLDAS_Optimizer:
+                - maxFEs (int): Maximum number of function evaluations allowed.
+                - train_problem (str): The training problem name.
+                - test_problem (str): The testing problem name.
+                - log_interval (int): Interval for logging, set in the config.
+                - full_meta_data (bool): Flag to indicate if full meta data should be collected.
+                - n_logpoint (int): Number of log points to collect.
+        # Built-in Attribute:
+        - MaxFEs (int): Maximum number of function evaluations allowed.
+        - period (int): Evaluation period, set based on the problem type.
+        - max_step (int): Maximum number of steps, calculated as MaxFEs divided by period.
+        - sample_times (int): Number of times to sample observations.
+        - n_dim_obs (int): Number of dimensions in the observation space.
+        - final_obs (Any): Stores the final observation (initialized as None).
+        - terminal_error (float): Threshold for terminal error.
+        - __config (object): Stores the configuration object.
+        - FEs (Any): Tracks function evaluations (initialized as None).
+        - cost (Any): Tracks cost values (initialized as None).
+        - log_index (Any): Tracks logging index (initialized as None).
+        - log_interval (int): Interval for logging, taken from config.
+        # Returns:
+        - None
+        # Raises:
+        - AttributeError: If required attributes are missing from the config object.
+        """
+        
         super().__init__(config)
         self.MaxFEs = config.maxFEs
         # self.period = 2500
@@ -73,9 +71,41 @@ class RLDAS_Optimizer(Learnable_Optimizer):
         self.log_interval = config.log_interval
 
     def __str__(self):
+        """
+        Returns a string representation of the RLDAS_Optimizer class.
+        # Returns:
+            str: The name of the optimizer, "RLDAS_Optimizer".
+        """
+        
         return "RLDAS_Optimizer"
 
     def init_population(self, problem):
+        """
+        # Introduction
+        Initializes the population and associated optimizers for the given optimization problem. Sets up tracking for best and worst solutions, initializes the population, and prepares metadata if required.
+        # Args:
+        - problem (object): The optimization problem object.
+        # Built-in Attribute:
+        - `self.dim` (int): Dimensionality of the problem.
+        - `self.problem` (object): Reference to the optimization problem.
+        - `self.optimizers` (list): List of optimizer instances used for the population.Default is ['NL_SHADE_RSP', 'MadDE', 'JDE21'].
+        - `self.best_history` (list): Tracks the best solution history for each optimizer.
+        - `self.worst_history` (list): Tracks the worst solution history for each optimizer.
+        - `self.population` (Population): The initialized population object.
+        - `self.cost_scale_factor` (float): The best cost found in the initial population.
+        - `self.FEs` (int): Number of function evaluations used so far.
+        - `self.done` (bool): Flag indicating if the optimization is complete.
+        - `self.cost` (list): List of best costs found so far.
+        - `self.log_index` (int): Index for logging progress.
+        - `self.meta_X` (list, optional): Metadata for population groups (if enabled).
+        - `self.meta_Cost` (list, optional): Metadata for population costs (if enabled).
+        # Returns:
+        - observation (object): The result of the `observe` method, representing the current state or observation of the problem.
+        # Raises:
+        - AttributeError: If the `problem` object does not have the required attributes.
+        - Exception: Propagates any exceptions raised during population or optimizer initialization.
+        """
+        
         self.dim = problem.dim
         self.problem = problem
 
@@ -101,6 +131,21 @@ class RLDAS_Optimizer(Learnable_Optimizer):
         return self.observe(problem)
 
     def local_sample(self):
+        """
+        # Introduction
+        Generates multiple local samples using different optimizers, collects their costs, and returns the samples and their associated costs as NumPy arrays. Ensures all cost arrays are truncated to the minimum length among them for consistency.
+        # Args:
+        None
+        # Returns:
+        - samples: Array of sampled populations generated by the optimizers.
+        - costs: Array of cost values associated with each sample, truncated to the minimum length.
+        # Raises:
+        None
+        # Notes:
+        - Updates the number of function evaluations (`self.FEs`) and sets `self.done` to True if the maximum number of evaluations (`self.MaxFEs`) is reached.
+        - Assumes that each optimizer's `step` method returns a sample with a `cost` attribute.
+        """
+        
         samples = []
         costs = []
         min_len = 1e9
@@ -124,6 +169,17 @@ class RLDAS_Optimizer(Learnable_Optimizer):
 
     # observed env state
     def observe(self, problem):
+        """
+        # Introduction
+        Observes the current state of the optimization process by collecting features, best and worst moves from optimizer histories, and returns a structured array representing these observations.
+        # Args:
+        - problem: The optimization problem instance being solved.
+        # Returns:
+        - np.ndarray: An array (dtype=object) containing the extracted feature and the mean best/worst moves for each optimizer.
+        # Notes:
+        - The first element of the returned array is the feature vector extracted from the current population and sample costs.
+        - Subsequent elements represent the mean of best and worst moves for each optimizer, if available.
+        """
 
         samples, sample_costs = self.local_sample()
         feature = self.population.get_feature(self.problem,
@@ -212,6 +268,37 @@ class RLDAS_Optimizer(Learnable_Optimizer):
 
 class Population:
     def __init__(self, dim, rng):
+        """
+        # Introduction
+        Initializes the RL-Differential Adaptive Search (RLDAS) optimizer with specified population and algorithm parameters.
+        # Args:
+        - dim (int): The dimensionality of each individual in the population.
+        - rng (np.random.Generator): A NumPy random number generator instance for stochastic operations.
+        # Built-in Attributes:
+        - `self.Nmax` (int): The upper bound of the population size.Default is 170.
+        - `self.Nmin` (int): The lower bound of the population size.Default is 30.
+        - `self.NP` (int): The current population size.
+        - `self.NA` (int): The size of the archive (collection of replaced individuals).
+        - `self.dim` (int): The dimension of individuals.
+        - `self.cost` (np.ndarray): The cost values of individuals in the population.
+        - `self.cbest` (float): The best cost in the current population.Default is 1e15.
+        - `self.cbest_id` (int): The index of the individual with the best cost.Default is -1.
+        - `self.gbest` (float): The global best cost found so far.Default is 1e15.
+        - `self.gbest_solution` (np.ndarray): The individual with the global best cost.Default is a zero vector of length `dim`.
+        - `self.Xmin` (np.ndarray): The lower bounds for individual values.Default is np.ones(dim) * -5.
+        - `self.Xmax` (np.ndarray): The upper bounds for individual values.Default is np.ones(dim) * 5.
+        - `self.rng` (np.random.Generator): The random number generator used for stochastic operations.
+        - `self.group` (np.ndarray): The current population of individuals.
+        - `self.archive` (np.ndarray): The archive of replaced individuals.
+        - `self.MF` (np.ndarray): The set of step lengths for Differential Evolution (DE).Default is np.ones(dim * 20) * 0.2.
+        - `self.MCr` (np.ndarray): The set of crossover rates for DE.Default is np.ones(dim * 20) * 0.2.
+        - `self.k` (int): The index for updating elements in MF and MCr.Default is 0.
+        - `self.F` (np.ndarray): The set of successful step lengths.Default is np.ones(self.NP) * 0.5.
+        - `self.Cr` (np.ndarray): The set of successful crossover rates.Default is np.ones(self.NP) * 0.9.
+        # Raises:
+        - None
+        """
+        
         self.Nmax = 170  # the upperbound of population size
         self.Nmin = 30  # the lowerbound of population size
         self.NP = self.Nmax  # the population size
@@ -237,12 +324,49 @@ class Population:
 
     # generate an initialized population with size(default self population size)
     def initialize_group(self, size = -1):
+        """
+        # Introduction
+        Initializes a group of individuals (solutions) within the defined search space boundaries.
+        # Args:
+        - size (int, optional): The number of individuals to initialize. If negative, defaults to `self.NP`.
+        # Built-in Attribute:
+        - `self.NP` (int): Default population size if `size` is not specified.
+        - `self.dim` (int): Dimensionality of each individual.
+        - `self.Xmin` (float or np.ndarray): Lower bound(s) of the search space.
+        - `self.Xmax` (float or np.ndarray): Upper bound(s) of the search space.
+        - `self.rng` (np.random.Generator): Random number generator instance.
+        # Returns:
+        - np.ndarray: An array of shape `(size, self.dim)` containing randomly initialized individuals within `[self.Xmin, self.Xmax]`.
+        # Raises:
+        - ValueError: If `size` is zero or negative after adjustment.
+        """
+        
         if size < 0:
             size = self.NP
         return self.rng.random((size, self.dim)) * (self.Xmax - self.Xmin) + self.Xmin
 
     # initialize cost
     def initialize_costs(self, problem):
+        """
+        # Introduction
+        Initializes the cost values for the optimizer based on the provided problem instance. 
+        Computes the cost of the current group of solutions, updates the global and current best costs, 
+        and stores the best solution found so far.
+        # Args:
+        - problem (object): An object representing the optimization problem. It must have an `optimum` attribute 
+          and an `eval` method that evaluates the cost of a group of solutions.
+        # Built-in Attribute:
+        - `self.cost` (np.ndarray or float): The computed cost(s) for the current group.
+        - `self.gbest` (float): The global best cost found so far.
+        - `self.cbest` (float): The current best cost in the group.
+        - `self.cbest_id` (int): The index of the current best solution in the group.
+        - `self.gbest_solution` (np.ndarray): The solution vector corresponding to the global best cost.
+        # Returns:
+        - None
+        # Raises:
+        - AttributeError: If `problem` does not have the required attributes or methods.
+        """
+        
         if problem.optimum is not None:
             self.cost = problem.eval(self.group) - problem.optimum
         else:
@@ -252,6 +376,20 @@ class Population:
         self.gbest_solution = self.group[self.cbest_id]
 
     def clear_context(self):
+        """
+        # Introduction
+        Resets the optimizer's internal context and parameters to their initial states.
+        # Built-in Attribute:
+        - self.archive (np.ndarray): Archive for storing replaced individuals, reset to an empty array.
+        - self.MF (np.ndarray): Step length set for Differential Evolution (DE), reset to an array of 0.2.
+        - self.MCr (np.ndarray): Crossover rate set for DE, reset to an array of 0.2.
+        - self.k (int): Index for updating elements in MF and MCr, reset to 0.
+        - self.F (np.ndarray): Set of successful step lengths, reset to an array of 0.5.
+        - self.Cr (np.ndarray): Set of successful crossover rates, reset to an array of 0.9.
+        # Returns:
+        - None
+        """
+        
         self.archive = np.array([])  # the archive(collection of replaced individuals)
         self.MF = np.ones(self.dim * 20) * 0.2  # the set of step length of DE
         self.MCr = np.ones(self.dim * 20) * 0.2  # the set of crossover rate of DE
@@ -261,6 +399,23 @@ class Population:
 
     # sort former 'size' population in respect to cost
     def sort(self, size, reverse = False):
+        """
+        # Introduction
+        Sorts the population based on their cost values up to a specified size, optionally in reverse order, and updates related attributes accordingly.
+        # Args:
+        - size (int): The number of individuals to sort based on their cost.
+        - reverse (bool, optional): If True, sorts in descending order of cost. Defaults to False (ascending order).
+        # Updates:
+        - self.cost: Reordered array of costs after sorting.
+        - self.cbest: The minimum cost value after sorting.
+        - self.cbest_id: The index of the minimum cost value after sorting.
+        - self.group: Reordered group attribute to match the sorted order.
+        - self.F: Reordered F attribute to match the sorted order.
+        - self.Cr: Reordered Cr attribute to match the sorted order.
+        # Returns:
+        - None
+        """
+        
         # new index after sorting
         r = -1 if reverse else 1
         ind = np.concatenate((np.argsort(r * self.cost[:size]), np.arange(self.NP)[size:]))
@@ -273,11 +428,41 @@ class Population:
 
     # calculate new population size with non-linear population size reduction
     def cal_NP_next_gen(self, FEs, MaxFEs):
+        """
+        # Introduction
+        Calculates the population size (NP) for the next generation in an evolutionary algorithm based on the current number of function evaluations.
+        # Args:
+        - FEs (int or float): The current number of function evaluations performed.
+        - MaxFEs (int or float): The maximum number of function evaluations allowed.
+        # Built-in Attribute:
+        - self.Nmax (int or float): The maximum population size.
+        - self.Nmin (int or float): The minimum population size.
+        # Returns:
+        - float: The computed population size for the next generation.
+        # Raises:
+        - AttributeError: If `self.Nmax` or `self.Nmin` are not defined in the class.
+        """
         NP = np.round(self.Nmax + (self.Nmin - self.Nmax) * np.power(FEs / MaxFEs, 1 - FEs / MaxFEs))
         return NP
 
     # slice the population and its cost, crossover rate, etc
     def slice(self, size):
+        """
+        # Introduction
+        Reduces the population size and associated attributes of the optimizer to the specified size.
+        # Args:
+        - size (int): The new population size to slice to.
+        # Modifies:
+        - self.NP: Updates to the new population size.
+        - self.group: Truncates to the first `size` individuals.
+        - self.cost: Truncates to the first `size` cost values.
+        - self.F: Truncates to the first `size` F values.
+        - self.Cr: Truncates to the first `size` Cr values.
+        - self.cbest_id: Updates if the current best index is out of bounds.
+        - self.cbest: Updates if the current best index is out of bounds.
+        # Raises:
+        - None
+        """
         self.NP = size
         self.group = self.group[:size]
         self.cost = self.cost[:size]
@@ -289,6 +474,23 @@ class Population:
 
     # reduce population in JDE way
     def reduction(self, bNP):
+        """
+        # Introduction
+        Reduces the population size and associated attributes by removing the middle portion of the arrays, keeping only the first half and the last segment.
+        # Args:
+        - bNP (int): The current population size before reduction.
+        # Built-in Attribute:
+        - self.group (np.ndarray): The population group array to be reduced.
+        - self.F (np.ndarray): The scaling factor array to be reduced.
+        - self.Cr (np.ndarray): The crossover rate array to be reduced.
+        - self.cost (np.ndarray): The cost array to be reduced.
+        - self.NP (int): The updated population size after reduction.
+        # Returns:
+        - None
+        # Raises:
+        - None
+        """
+
         self.group = np.concatenate((self.group[:bNP // 2], self.group[bNP:]), 0)
         self.F = np.concatenate((self.F[:bNP // 2], self.F[bNP:]), 0)
         self.Cr = np.concatenate((self.Cr[:bNP // 2], self.Cr[bNP:]), 0)
@@ -297,6 +499,20 @@ class Population:
 
     # calculate wL mean
     def mean_wL(self, df, s):
+        """
+        # Introduction
+        Computes the weighted mean of the squared values in `s` using the normalized weights from `df`.
+        If the weighted sum of `s` is very small (less than or equal to 1e-6), returns 0.5 as a fallback.
+        # Args:
+        - df (np.ndarray or pd.Series): Array or series of values to be used as weights.
+        - s (np.ndarray or pd.Series): Array or series of values whose weighted mean of squares is to be computed.
+        # Returns:
+        - float: The weighted mean of the squared values in `s`, or 0.5 if the weighted sum is too small.
+        # Notes:
+        - The weights are normalized so that their sum is 1.
+        - If the denominator in the weighted mean calculation is very small, a default value of 0.5 is returned to avoid instability.
+        """
+        
         w = df / np.sum(df)
         if np.sum(w * s) > 0.000001:
             return np.sum(w * (s ** 2)) / np.sum(w * s)
@@ -305,6 +521,19 @@ class Population:
 
     # randomly choose step length nad crossover rate from MF and MCr
     def choose_F_Cr(self):
+        """
+        # Introduction
+        Generates crossover rates (Cr) and scaling factors (F) for a population in a differential evolution optimizer, using normal and Cauchy distributions respectively.
+        # Args:
+        None
+        # Returns:
+        - C_r (np.ndarray): Array of crossover rates for the population, clipped to [0, 1].
+        - F (np.ndarray): Array of scaling factors for the population, with negative values reflected and clipped to a maximum of 1.
+        # Notes:
+        - Crossover rates are sampled from a normal distribution centered at memory values `MCr`.
+        - Scaling factors are sampled from a Cauchy distribution centered at memory values `MF`, with negative values reflected to ensure non-negativity.
+        """
+        
         # generate Cr can be done simutaneously
         gs = self.NP
         ind_r = self.rng.randint(0, self.MF.shape[0], size = gs)  # index
@@ -325,6 +554,23 @@ class Population:
 
     # update MF and MCr, join new value into the set if there are some successful changes or set it to initial value
     def update_M_F_Cr(self, SF, SCr, df):
+        """
+        # Introduction
+        Updates the memory arrays `MF` and `MCr` with new mean values based on successful F and Cr values, or resets them if no successful values are present.
+        # Args:
+        - SF (np.ndarray): Array of successful F values from the current generation.
+        - SCr (np.ndarray): Array of successful Cr values from the current generation.
+        - df (np.ndarray): Array of weights or fitness differences associated with the successful individuals.
+        # Built-in Attribute:
+        - self.MF (np.ndarray): Memory array for F values.
+        - self.MCr (np.ndarray): Memory array for Cr values.
+        - self.k (int): Current index for updating memory arrays.
+        # Returns:
+        - None
+        # Notes:
+        - If there are no successful individuals (`SF.shape[0] == 0`), the memory arrays are reset to 0.5 at the current index.
+        """
+        
         if SF.shape[0] > 0:
             mean_wL = self.mean_wL(df, SF)
             self.MF[self.k] = mean_wL
@@ -337,6 +583,22 @@ class Population:
 
     # non-linearly reduce population size and update it into new population
     def NLPSR(self, FEs, MaxFEs):
+        """
+        # Introduction
+        Adjusts the population size and archive size for the next generation in the optimization process based on the current number of function evaluations.
+        # Args:
+        - FEs (int): The current number of function evaluations.
+        - MaxFEs (int): The maximum allowed number of function evaluations.
+        # Built-in Attribute:
+        - self.NP (int): Current population size.
+        - self.Nmin (int): Minimum allowed population size.
+        - self.archive (np.ndarray): Archive of solutions.
+        - self.NA (int): Current archive size.
+        # Returns:
+        - None
+        # Raises:
+        - None
+        """
         self.sort(self.NP)
         N = self.cal_NP_next_gen(FEs, MaxFEs)
         A = int(max(N * 2.1, self.Nmin))
@@ -349,6 +611,22 @@ class Population:
 
     # update archive, join new individual
     def update_archive(self, old_id):
+        """
+        # Introduction
+        Updates the archive of solutions by either appending a new solution or replacing an existing one.
+        # Args:
+        - old_id (int): The index of the solution in the current group to be added to the archive.
+        # Built-in Attribute:
+        - self.archive (np.ndarray): The current archive of solutions.
+        - self.NA (int): The maximum allowed size of the archive.
+        - self.group (np.ndarray): The current group of solutions.
+        - self.dim (int): The dimensionality of each solution.
+        - self.rng (np.random.Generator): Random number generator for selecting replacement index.
+        # Returns:
+        - None
+        # Raises:
+        - None
+        """
         if self.archive.shape[0] < self.NA:
             self.archive = np.append(self.archive, self.group[old_id]).reshape(-1, self.dim)
         else:
@@ -361,6 +639,19 @@ class Population:
                     cost_scale_factor,  # a scale factor to normalize costs
                     progress  # the current progress of evaluations
                     ):
+        """
+        # Introduction
+        Extracts a set of numerical features from the current optimization state, including normalized global best cost, fitness distance correlation, population dispersion, and other metrics relevant to the optimization process.
+        # Args:
+        - problem: The optimization problem instance, expected to provide a `func` method for evaluating samples.
+        - sample_costs (array-like): Costs associated with a set of sample solutions.
+        - cost_scale_factor (float): A scaling factor used to normalize cost values.
+        - progress (float): The current progress of evaluations, typically between 0 and 1.
+        # Returns:
+        - list: A list of 9 computed features representing the current state of the optimizer.
+        # Raises:
+        - Any exception raised by the underlying feature calculation functions or the problem's `func` method.
+        """
         gbc = self.gbest / cost_scale_factor
         fdc = cal_fdc(self.group / 100, self.cost / cost_scale_factor)
         random_walk_samples = rw_sampling(self.group, self.rng)
@@ -381,6 +672,23 @@ class Population:
 
 class NL_SHADE_RSP:
     def __init__(self, dim, rng, error = 1e-8):
+        """
+        # Introduction
+        Initializes the optimizer with problem dimension, random number generator, and error tolerance.
+        # Args:
+        - dim (int): The dimensionality of the optimization problem.
+        - rng (np.random.Generator): Random number generator for stochastic operations.
+        - error (float, optional): Error tolerance for convergence (default: 1e-8).
+        # Built-in Attribute:
+        - pb (float): Rate of best individuals in mutation (default: 0.4).
+        - pa (float): Rate of selecting individual from archive (default: 0.5).
+        - dim (int): Dimension of the problem.
+        - error (float): Error tolerance for convergence.
+        - rng (np.random.Generator): Random number generator instance.
+        # Returns:
+        - None
+        """
+        
         self.pb = 0.4  # rate of best individuals in mutation
         self.pa = 0.5  # rate of selecting individual from archive
         self.dim = dim  # dimension of problem
@@ -388,6 +696,19 @@ class NL_SHADE_RSP:
         self.rng = rng
 
     def evaluate(self, problem, u):
+        """
+        # Introduction
+        Evaluates the cost of a solution `u` for a given optimization problem, optionally normalizing by the known optimum.
+        # Args:
+        - problem: An object representing the optimization problem, expected to have `optimum` and `eval` attributes.
+        - u: The candidate solution(s) to be evaluated.
+        # Returns:
+        - cost: The evaluated cost(s) for the solution(s) `u`. If the problem's optimum is known, returns the difference between the evaluated value and the optimum, setting values below the error threshold to zero.
+        # Notes:
+        - If `problem.optimum` is not `None`, the cost is normalized by subtracting the optimum and thresholded by `self.error`.
+        - Assumes `problem.eval(u)` returns a numeric value or array compatible with the operations performed.
+        """
+        
         if problem.optimum is not None:
             cost = problem.eval(u) - problem.optimum
             cost[cost < self.error] = 0.0

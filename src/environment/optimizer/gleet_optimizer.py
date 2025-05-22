@@ -23,7 +23,7 @@ class GLEET_Optimizer(Learnable_Optimizer):
                 - log_interval (int): Interval at which logs are recorded.Default is config.maxFEs/config.n_logpoint.
                 - n_logpoint (int): Number of log points to record.Default is 50.
                 - full_meta_data (bool): Flag indicating whether to use full meta data.Default is False.
-                - maxFEs (int): Maximum number of function evaluations.Default is 10000.
+                - maxFEs (int): Maximum number of function evaluations.
                 - __FEs (int): Counter for the number of function evaluations.Default is 0.
                 - __config (object): Stores the config object from src/config.py.
                 - PS (int): Population size.Default is 100.

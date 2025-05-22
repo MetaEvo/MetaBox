@@ -26,7 +26,7 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
                 - log_interval (int): Interval at which logs are recorded.Default is config.maxFEs/config.n_logpoint.
                 - n_logpoint (int): Number of log points to record.Default is 50.
                 - full_meta_data (bool): Flag indicating whether to use full meta data.Default is False.
-                - maxFEs (int): Maximum number of function evaluations.Default is 10000.
+                - maxFEs (int): Maximum number of function evaluations.
                 - dim (int): Dimensionality of the problem.Default is 10.
                 - fes (int): Counter for the number of function evaluations.Default is 0.
                 - cost (float): Current cost of the best solution found.Default is None.
@@ -37,7 +37,7 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
                 - __F (float): Mutation factor for the optimizer.Default is 0.5.
                 - __Cr (float): Crossover rate for the optimizer.Default is 1.0.
                 - __NP (int): Population size.Default is 100.
-                - __maxFEs (int): Maximum number of function evaluations.Default is 10000.
+                - __maxFEs (int): Maximum number of function evaluations.
                 - __gen_max (int): Maximum number of generations.Default is 10.
                 - __W (int): Window size.Default is 50.
                 - __dim_max (int): Maximum dimensionality of the problem.Default is 10.

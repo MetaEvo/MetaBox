@@ -116,7 +116,7 @@ class LES_Optimizer(Learnable_Optimizer):
         - config (object): Config object containing optimizer settings.
             - Attributes needed for the LES_Optimizer are the following:
                 - device (str or torch.device): Device on which computations will be performed.Default is 'cpu'.
-                - maxFEs (int): Maximum number of function evaluations allowed.Default is 10000.
+                - maxFEs (int): Maximum number of function evaluations allowed.
                 - log_interval (int): Interval for logging progress.Default is 100.
                 - n_logpoint (int): Number of log points for logging.Default is 50.
         # Built-in Attribute:

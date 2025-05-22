@@ -38,30 +38,25 @@ class RNNOPT_Optimizer(Learnable_Optimizer):
     """
     # Introduction
     L2L_Optimizer is a learnable optimizer class that manages the optimization process for a given problem, tracking the best solution found and the cost history. It supports both rollout and standard evaluation modes, and terminates after a fixed number of function evaluations or when the optimum is known.
-    # Args:
-    - config (dict): Configuration dictionary containing optimizer parameters.
-    # Methods:
-    - __init__(config): Initializes the optimizer with the provided configuration.
-    - init_population(problem): Initializes the population and resets internal state for a new optimization run.
-    - update(action, problem): Updates the optimizer state based on the provided action and evaluates the solution.
-    # Returns (from update):
-    - y (float): The evaluated cost or fitness of the current solution.
-    - 0 (int): Placeholder value (can be used for additional info or reward).
-    - is_done (bool): Flag indicating whether the optimization process should terminate.
-    # Attributes:
-    - __config (dict): Stores the optimizer configuration.
-    - __fes (int): Counts the number of function evaluations performed.
-    - cost (list): Tracks the best cost found at each evaluation.
-    - __best (float or None): Stores the best solution found so far.
-    # Raises:
-    - None explicitly, but may propagate exceptions from problem.eval or scaling functions.
     """
     
     def __init__(self, config):
+        """
+        Initializes the optimizer with the given configuration.
+        # Args:
+        - config (dict): Configuration parameters for the optimizer.
+        # Returns:
+        - None
+        """
         super().__init__(config)
         self.__config = config
 
     def __str__(self):
+        """
+        Returns a string representation of the RNN optimizer.
+        # Returns:
+            str: The name of the optimizer, "RNN_Optimizer".
+        """
         return "RNN_Optimizer"
 
     def init_population(self, problem):
@@ -70,6 +65,13 @@ class RNNOPT_Optimizer(Learnable_Optimizer):
         Initializes the population and internal state variables for the optimizer.
         # Args:
         - problem: The optimization problem instance for which the population is to be initialized.
+        # Built-in Attributes:
+        - self.__fes (int): Function evaluation counter, initialized to zero.
+        - self.cost (list): List to track the cost history, initialized as empty.
+        - self.__best (Any): Tracker for the best solution found, initialized to None.
+        - self.meta_X (list): List to store the input data for meta-learning, initialized as empty.
+        - self.meta_Cost (list): List to store the cost data for meta-learning, initialized as empty.
+        
         # Effects:
         - Resets the function evaluation counter (`__fes`) to zero.
         - Initializes the cost list (`cost`) as empty.
@@ -93,10 +95,9 @@ class RNNOPT_Optimizer(Learnable_Optimizer):
         - action (Any): The action to be evaluated, can be a numpy array or other type.
         - problem (object): The problem instance, expected to have `lb`, `ub`, `eval()`, and `optimum` attributes.
         # Returns:
-        - tuple: A tuple containing:
-            - y (float or np.ndarray): The evaluated result (possibly shifted by the optimum).
-            - int: Always 0 (placeholder for compatibility).
-            - bool: Whether the optimization process is done.
+        - y (float or np.ndarray): The evaluated result (possibly shifted by the optimum).
+        - int: Always 0 (placeholder for compatibility).
+        - bool: Whether the optimization process is done.
         # Notes:
         - Updates internal state variables such as the best result found, evaluation count, and cost history.
         - The process is considered done if the optimum is known or if the number of function evaluations reaches 100.

@@ -22,7 +22,7 @@ class B2OPT_Optimizer(Learnable_Optimizer):
         # Args:
         - config (object): Configuration object.
             - The Attributes needed for the B2OPT are the following:
-                - maxFEs (int): Maximum number of function evaluations.Default is 10000.
+                - maxFEs (int): Maximum number of function evaluations.
                 - log_interval (int): Interval at which logs are recorded.Default is config.maxFEs/config.n_logpoint.
                 - n_logpoint (int): Number of log points to record.Default is 50.
                 - full_meta_data (bool): Flag indicating whether to use full meta data.Default is False.

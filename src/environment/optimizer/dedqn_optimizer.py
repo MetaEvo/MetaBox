@@ -191,14 +191,14 @@ class DEDQN_Optimizer(Learnable_Optimizer):
                 - log_interval (int): Interval at which logs are recorded.Default is config.maxFEs/config.n_logpoint.
                 - n_logpoint (int): Number of log points to record.Default is 50.
                 - full_meta_data (bool): Flag indicating whether to use full meta data.Default is False.
-                - maxFEs (int): Maximum number of function evaluations.Default is 100000.
+                - maxFEs (int): Maximum number of function evaluations.
                 
         # Built-in Attribute:
         - self.__config: Stores the configuration object.
         - self.__NP: Population size for the optimizer. Default is 100.
         - self.__F: Mutation factor. Default is 0.5.
         - self.__Cr: Crossover rate. Default is 0.5.
-        - self.__maxFEs: Maximum number of function evaluations. Default is 100000.
+        - self.__maxFEs: Maximum number of function evaluations.
         - self.__rwsteps: Number of random walk steps. Default is 100.
         - self.__solution_pointer: Index indicating which solution receives the action. Default is 0.
         - self.__population: Stores the current population of solutions. Default is None.
