@@ -28,22 +28,6 @@ class WCCI2020_Numpy_Problem(Basic_Problem):
         P8: Rosenbrock, Rastrigin, Ackley, Griewank, Weierstrass
         P9: Rosenbrock, Rastrigin, Ackley, Griewank, Weierstrass, Schwefel
         P10:Rastrigin, Ackley, Griewank, Weierstrass, Schwefel
-    # Args:
-    - `dim` (int): Dimensionality of the problem.
-    - `shift` (numpy.ndarray): Shift vector for the problem.
-    - `rotate` (numpy.ndarray): Rotation matrix for the problem.
-    - `bias` (float): Bias value added to the objective function.
-    # Attributes:
-    - `T1` (float): Accumulated time (in milliseconds) for evaluations.
-    - `dim` (int): Dimensionality of the problem.
-    - `shift` (numpy.ndarray): Shift vector for the problem.
-    - `rotate` (numpy.ndarray): Rotation matrix for the problem.
-    - `bias` (float): Bias value added to the objective function.
-    - `lb` (float): Lower bound of the search space.
-    - `ub` (float): Upper bound of the search space.
-    - `FES` (int): Function evaluation count.
-    - `opt` (numpy.ndarray): Optimal solution for the problem.
-    - `optimum` (float): Objective value of the optimal solution.
     # Methods:
     - `get_optimal() -> numpy.ndarray`: Returns the optimal solution for the problem.
     - `func(x: numpy.ndarray) -> numpy.ndarray`: Abstract method to define the objective function. Must be implemented in subclasses.
@@ -54,6 +38,26 @@ class WCCI2020_Numpy_Problem(Basic_Problem):
     - `NotImplementedError`: Raised if the `func` method is not implemented in a subclass.
     """
     def __init__(self, dim, shift, rotate, bias):
+        """
+        # Introduction
+        Initializes the class WCCI2020_Numpy_Problem.
+        # Args:
+        - `dim` (int): Dimensionality of the problem.
+        - `shift` (numpy.ndarray): Shift vector for the problem.
+        - `rotate` (numpy.ndarray): Rotation matrix for the problem.
+        - `bias` (float): Bias value added to the objective function.
+        # Attributes:
+        - `T1` (float): Accumulated time (in milliseconds) for evaluations.
+        - `dim` (int): Dimensionality of the problem.
+        - `shift` (numpy.ndarray): Shift vector for the problem.
+        - `rotate` (numpy.ndarray): Rotation matrix for the problem.
+        - `bias` (float): Bias value added to the objective function.
+        - `lb` (float): Lower bound of the search space.
+        - `ub` (float): Upper bound of the search space.
+        - `FES` (int): Function evaluation count.
+        - `opt` (numpy.ndarray): Optimal solution for the problem.
+        - `optimum` (float): Objective value of the optimal solution.
+        """
         self.T1 = 0
         self.dim = dim
         self.shift = shift
@@ -67,21 +71,56 @@ class WCCI2020_Numpy_Problem(Basic_Problem):
         self.optimum = self.func(self.get_optimal().reshape(1, -1))[0]
 
     def get_optimal(self):
+        """
+        # Introduction
+        Returns the optimal solution for the problem.
+        # Returns:
+        - numpy.ndarray: The optimal solution of the problem.
+        """
         return self.opt
 
     def func(self, x):
+        """
+        # Introduction
+        Abstract method to define the problem's objective function. Must be implemented in subclasses.
+        # Args:
+        - `x` (numpy.ndarray): The solution of the problem.
+        """
         raise NotImplementedError
     
     def decode(self, x):
+        """
+        # Introduction
+        Decodes a solution from the normalized space [0, 1] to the problem's actual search space.
+        # Args:
+        - `x` (numpy.ndarray): The solution of the problem.
+        # Returns:
+        - numpy.ndarray: The decoded solution of the problem.
+        """
         return x * (self.ub - self.lb) + self.lb
 
     def sr_func(self, x, shift, rotate):
+        """
+        # Introduction
+        Applies shift and rotation transformations to the input solution.
+        # Args:
+        - `x` (numpy.ndarray): The solution of the problem.
+        - `shift` (numpy.ndarray): The shift vector applied to the problem.
+        - `rotate` (numpy.ndarray): The rotation matrix applied to the problem.
+        # Returns:
+        - numpy.ndarray: The solution being transformed by shift and rotatation.
+        """
         y = x - shift
         return np.matmul(rotate, y.transpose()).transpose()
     
     def eval(self, x):
         """
+        # Introduction
         A specific version of func() with adaptation to evaluate both individual and population in MTO.
+        # Args:
+        - `x` (numpy.ndarray): The solution of the problem.
+        # Returns:
+        - numpy.ndarray: The fitness value of the solution.
         """
         start=time.perf_counter()
         x = self.decode(x)  # the solution in MTO is constrained in a unified space [0,1]
@@ -108,39 +147,109 @@ class WCCI2020_Numpy_Problem(Basic_Problem):
 
 class Sphere(WCCI2020_Numpy_Problem):
     def __init__(self, dim, shift, rotate, bias=0):
+        """
+        # Introduction
+        Initializes the Shpere function.
+        # Args:
+        - `dim` (int): The dimensionality of the problem.
+        - `shift` (numpy.ndarray): The shift vector applied to the problem.
+        - `rotate` (numpy.ndarray): The rotation matrix applied to the problem.
+        - `bias` (float): The bias value added to the problem. Defaults to 0.
+        # Attributes:
+        - `lb` (float): The lower bound of the problem's search space. Defaults to -100.
+        - `ub` (float): The upper bound of the problem's search space. Defaults to 100.
+        """
         super().__init__(dim, shift, rotate, bias)
         self.lb = -100
         self.ub = 100
 
     def func(self, x):
+        """
+        # Introduction
+        The specific implementation of the Sphere's objective function.
+        # Args:
+        - `x` (numpy.ndarray): The solution of the problem.
+        # Returns:
+        - numpy.ndarray: The fitness value of the solution.
+        """
         z = self.sr_func(x, self.shift, self.rotate)
         return np.sum(z ** 2, -1)
     
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The string "S" representing the object.
+        """
         return 'S'
 
 class Ackley(WCCI2020_Numpy_Problem):
     def __init__(self, dim, shift, rotate, bias=0):
+        """
+        # Introduction
+        Initializes the Ackley function.
+        # Args:
+        - `dim` (int): The dimensionality of the problem.
+        - `shift` (numpy.ndarray): The shift vector applied to the problem.
+        - `rotate` (numpy.ndarray): The rotation matrix applied to the problem.
+        - `bias` (float): The bias value added to the problem. Defaults to 0.
+        # Attributes:
+        - `lb` (float): The lower bound of the problem's search space. Defaults to -50.
+        - `ub` (float): The upper bound of the problem's search space. Defaults to 50.
+        """
         super().__init__(dim, shift, rotate, bias)
         self.lb = -50
         self.ub = 50
 
     def func(self, x):
+        """
+        # Introduction
+        The specific implementation of the Ackley's objective function.
+        # Args:
+        - `x` (numpy.ndarray): The solution of the problem.
+        # Returns:
+        - numpy.ndarray: The fitness value of the solution.
+        """
         z = self.sr_func(x, self.shift, self.rotate)
         sum1 = -0.2 * np.sqrt(np.sum(z ** 2, -1) / self.dim)
         sum2 = np.sum(np.cos(2 * np.pi * z), -1) / self.dim
         return np.round(np.e + 20 - 20 * np.exp(sum1) - np.exp(sum2), 15) + self.bias
     
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The string "A" representing the object.
+        """
         return 'A'
     
 class Griewank(WCCI2020_Numpy_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
+        """
+        # Introduction
+        Initializes the Griewank function.
+        # Args:
+        - `dim` (int): The dimensionality of the problem.
+        - `shift` (numpy.ndarray): The shift vector applied to the problem.
+        - `rotate` (numpy.ndarray): The rotation matrix applied to the problem.
+        - `bias` (float): The bias value added to the problem. Defaults to 0.
+        # Attributes:
+        - `lb` (float): The lower bound of the problem's search space. Defaults to -100.
+        - `ub` (float): The upper bound of the problem's search space. Defaults to 100.
+        """
         super().__init__(dim, shift, rotate, bias)
         self.lb = -100
         self.ub = 100
 
     def func(self, x):
+        """
+        # Introduction
+        The specific implementation of the Griewank's objective function.
+        # Args:
+        - `x` (numpy.ndarray): The solution of the problem.
+        # Returns:
+        - numpy.ndarray: The fitness value of the solution.
+        """
         z = self.sr_func(x, self.shift, self.rotate)
         s = np.sum(z ** 2, -1)
         p = np.ones(x.shape[0])
@@ -149,28 +258,78 @@ class Griewank(WCCI2020_Numpy_Problem):
         return 1 + s / 4000 - p + self.bias
     
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The string "G" representing the object.
+        """
         return 'G'
 
 class Rastrigin(WCCI2020_Numpy_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
+        """
+        # Introduction
+        Initializes the Rastrigin function.
+        # Args:
+        - `dim` (int): The dimensionality of the problem.
+        - `shift` (numpy.ndarray): The shift vector applied to the problem.
+        - `rotate` (numpy.ndarray): The rotation matrix applied to the problem.
+        - `bias` (float): The bias value added to the problem. Defaults to 0.
+        # Attributes:
+        - `lb` (float): The lower bound of the problem's search space. Defaults to -50.
+        - `ub` (float): The upper bound of the problem's search space. Defaults to 50.
+        """
         super().__init__(dim, shift, rotate, bias)
         self.lb = -50
         self.ub = 50
 
     def func(self, x):
+        """
+        # Introduction
+        The specific implementation of the Rastrigin's objective function.
+        # Args:
+        - `x` (numpy.ndarray): The solution of the problem.
+        # Returns:
+        - numpy.ndarray: The fitness value of the solution.
+        """
         z = self.sr_func(x, self.shift, self.rotate)
         return np.sum(z ** 2 - 10 * np.cos(2 * np.pi * z) + 10, -1) + self.bias
     
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The string "R" representing the object.
+        """
         return 'R'
     
 class Rosenbrock(WCCI2020_Numpy_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
+        """
+        # Introduction
+        Initializes the Rosenbrock function.
+        # Args:
+        - `dim` (int): The dimensionality of the problem.
+        - `shift` (numpy.ndarray): The shift vector applied to the problem.
+        - `rotate` (numpy.ndarray): The rotation matrix applied to the problem.
+        - `bias` (float): The bias value added to the problem. Defaults to 0.
+        # Attributes:
+        - `lb` (float): The lower bound of the problem's search space. Defaults to -50.
+        - `ub` (float): The upper bound of the problem's search space. Defaults to 50.
+        """
         super().__init__(dim, shift, rotate, bias)
         self.lb = -50
         self.ub = 50
 
     def func(self, x):
+        """
+        # Introduction
+        The specific implementation of the Rosenbrock's objective function.
+        # Args:
+        - `x` (numpy.ndarray): The solution of the problem.
+        # Returns:
+        - numpy.ndarray: The fitness value of the solution.
+        """
         z = self.sr_func(x, self.shift, self.rotate)
         z += 1
         z_ = z[:, 1:]
@@ -179,15 +338,40 @@ class Rosenbrock(WCCI2020_Numpy_Problem):
         return np.sum(100 * tmp1 * tmp1 + (z - 1) ** 2, -1) + self.bias
 
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The string "Ro" representing the object.
+        """
         return 'Ro'
 
 class Weierstrass(WCCI2020_Numpy_Problem):
     def __init__(self, dim, shift, rotate, bias=0):
+        """
+        # Introduction
+        Initializes the Weierstrass function.
+        # Args:
+        - `dim` (int): The dimensionality of the problem.
+        - `shift` (numpy.ndarray): The shift vector applied to the problem.
+        - `rotate` (numpy.ndarray): The rotation matrix applied to the problem.
+        - `bias` (float): The bias value added to the problem. Defaults to 0.
+        # Attributes:
+        - `lb` (float): The lower bound of the problem's search space. Defaults to -0.5.
+        - `ub` (float): The upper bound of the problem's search space. Defaults to 0.5.
+        """
         super().__init__(dim, shift, rotate, bias)
         self.lb = -0.5
         self.ub = 0.5
 
     def func(self, x):
+        """
+        # Introduction
+        The specific implementation of the Weierstrass's objective function.
+        # Args:
+        - `x` (numpy.ndarray): The solution of the problem.
+        # Returns:
+        - numpy.ndarray: The fitness value of the solution.
+        """
         z = self.sr_func(x, self.shift, self.rotate)
         a, b, k_max = 0.5, 3.0, 20
         sum1, sum2 = 0, 0
@@ -197,15 +381,40 @@ class Weierstrass(WCCI2020_Numpy_Problem):
         return sum1 - self.dim * sum2 + self.bias
     
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The string "W" representing the object.
+        """
         return 'W'
     
 class Schwefel(WCCI2020_Numpy_Problem):
     def __init__(self, dim, shift=None, rotate=None, bias=0):
+        """
+        # Introduction
+        Initializes the Schwefel function.
+        # Args:
+        - `dim` (int): The dimensionality of the problem.
+        - `shift` (numpy.ndarray): The shift vector applied to the problem.
+        - `rotate` (numpy.ndarray): The rotation matrix applied to the problem.
+        - `bias` (float): The bias value added to the problem. Defaults to 0.
+        # Attributes:
+        - `lb` (float): The lower bound of the problem's search space. Defaults to -500.
+        - `ub` (float): The upper bound of the problem's search space. Defaults to 500.
+        """
         super().__init__(dim, shift, rotate, bias)
         self.lb = -500
         self.ub = 500
 
     def func(self, x):
+        """
+        # Introduction
+        The specific implementation of the Schwefel's objective function.
+        # Args:
+        - `x` (numpy.ndarray): The solution of the problem.
+        # Returns:
+        - numpy.ndarray: The fitness value of the solution.
+        """
         z = self.sr_func(x, self.shift, self.rotate)
         a = 4.209687462275036e+002
         b = 4.189828872724338e+002
@@ -215,4 +424,9 @@ class Schwefel(WCCI2020_Numpy_Problem):
         return b * self.dim - np.sum(g,-1)
     
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The string "Sc" representing the object.
+        """
         return 'Sc'

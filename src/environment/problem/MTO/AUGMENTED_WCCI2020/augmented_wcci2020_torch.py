@@ -5,45 +5,8 @@ import time
 
 class AUGMENTED_WCCI2020_Torch_Problem(Basic_Problem_Torch):
     """
-    # AUGMENTED_WCCI2020_Torch_Problem
-      A Pytorch-based implementation of base class for defining basic functions in AUGMENTED WCCI2020 Multitask Optimization(MTO) benchmark problems.
     # Introduction
-      Augmented WCCI2020 proposes 127 multi-task benchmark problems to represent a wider range of multi-task optimization problems.
-    # Original Paper
-    None
-    # Official Implementation
-    None
-    # License
-    None
-    # Problem Suite Composition
-      The Augmented WCCI2020 problem suite contains a total of 127 benchmark problems, with each problem consisting of multiple different basic functions with unique transformations(shifts and rotations).
-      The number of basic functions can be specified according to the user's requirements. Defaults to 10.
-      These 127 benchmark problems are composed based on all combinations of the seven basic functions as Shpere, Rosenbrock, Rastrigin, Ackley, Griewank, Weierstrass and Schwefel.
-      For each benchmark problem, the basic functions in the correspondent combination are selected randomly and added with unique transformations(shifts and rotations) until the number of basic functions is reached.
-    # Args:
-    - `dim` (int): The dimensionality of the problem.
-    - `shift` (Union[list, numpy.ndarray, torch.Tensor]): The shift vector applied to the input space.
-    - `rotate` (Union[list, numpy.ndarray, torch.Tensor]): The rotation matrix applied to the input space.
-    - `bias` (float): A bias value added to the objective function.
-    # Attributes:
-    - `T1` (float): A timer attribute used to measure evaluation time in milliseconds.
-    - `dim` (int): The dimensionality of the problem.
-    - `shift` (torch.Tensor): The shift vector applied to the input space.
-    - `rotate` (torch.Tensor): The rotation matrix applied to the input space.
-    - `bias` (float): A bias value added to the objective function.
-    - `lb` (float): The lower bound of the problem's search space.
-    - `ub` (float): The upper bound of the problem's search space.
-    - `FES` (int): The function evaluation count.
-    - `opt` (torch.Tensor): The optimal solution in the search space.
-    - `optimum` (float): The objective function value at the optimal solution.
-    # Methods:
-    - `get_optimal() -> torch.Tensor`: Returns the optimal solution in the search space.
-    - `func(x: torch.Tensor) -> torch.Tensor`: Abstract method to define the objective function. Must be implemented in subclasses.
-    - `decode(x: torch.Tensor) -> torch.Tensor`: Decodes a solution from the constrained space [0,1] to the original search space.
-    - `sr_func(x: torch.Tensor, shift: torch.Tensor, rotate: torch.Tensor) -> torch.Tensor`: Applies shift and rotation transformations to the input.
-    - `eval(x: torch.Tensor) -> torch.Tensor`: Evaluates the objective function for a given solution or population. Supports both individual and population evaluations.
-    # Raises:
-    - `NotImplementedError`: Raised if the `func` method is not implemented in a subclass.
+      The class is the Pytorch version of the AUGMENTED_WCCI2020_Numpy_Problem.
     """
     def __init__(self, dim, shift, rotate, bias):
         self.T1 = 0

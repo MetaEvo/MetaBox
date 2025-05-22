@@ -5,55 +5,8 @@ import torch
 
 class WCCI2020_Torch_Problem(Basic_Problem_Torch):
     """
-    # WCCI2020_Torch_Problem
-      A Pytorch-based implementation of base class for defining basic functions in WCCI2020 Multitask Optimization(MTO) benchmark problems.
     # Introduction
-      WCCI2020 proposes 10 multi-task benchmark problems to represent a wider range of multi-task optimization problems.
-    # Original Paper
-    None
-    # Official Implementation
-      [WCCI2020](http://www.bdsc.site/websites/MTO_competition_2020/MTO_Competition_WCCI_2020.html)
-    # License
-    None
-    # Problem Suite Composition
-      The WCCI2020 problem suite contains a total of 10 benchmark problems, each consisting of 50 different basic functions with unique transformations(shifts and rotations).
-      For each benchmark problem, fifty basic functions are added sequentially and cyclically to constitute the problem.
-      These ten benchmark problems are classified according to the specific combination of different types of basic functions:
-        P1: Shpere
-        P2: Rosenbrock
-        P3: Rastrigin
-        P4: Shpere, Rosenbrock, Ackley
-        P5: Rastrigin, Griewank, Weierstrass
-        P6: Rosenbrock, Griewank, Schwefel
-        P7: Rastrigin, Ackley, Weierstrass
-        P8: Rosenbrock, Rastrigin, Ackley, Griewank, Weierstrass
-        P9: Rosenbrock, Rastrigin, Ackley, Griewank, Weierstrass, Schwefel
-        P10:Rastrigin, Ackley, Griewank, Weierstrass, Schwefel
-    # Args:
-    - `dim` (int): Dimensionality of the problem.
-    - `shift` (Union[list, torch.Tensor]): Shift vector for the problem. Can be a list or a PyTorch tensor.
-    - `rotate` (Union[list, torch.Tensor]): Rotation matrix for the problem. Can be a list or a PyTorch tensor.
-    - `bias` (float): Bias value added to the objective function.
-    # Attributes:
-    - `T1` (float): Accumulated time in milliseconds for evaluations.
-    - `dim` (int): Dimensionality of the problem.
-    - `shift` (torch.Tensor): Shift vector converted to a PyTorch tensor.
-    - `rotate` (torch.Tensor): Rotation matrix converted to a PyTorch tensor.
-    - `bias` (float): Bias value for the problem.
-    - `lb` (float): Lower bound of the search space.
-    - `ub` (float): Upper bound of the search space.
-    - `FES` (int): Function evaluation count.
-    - `opt` (torch.Tensor): Optimal solution (shift vector).
-    - `optimum` (float): Optimal objective value.
-    # Methods:
-    - `get_optimal() -> torch.Tensor`: Returns the optimal solution (shift vector).
-    - `func(x: torch.Tensor) -> torch.Tensor`: Abstract method to define the objective function. Must be implemented in subclasses.
-    - `decode(x: torch.Tensor) -> torch.Tensor`: Decodes a solution from the normalized space [0,1] to the original search space.
-    - `sr_func(x: torch.Tensor, shift: torch.Tensor, rotate: torch.Tensor) -> torch.Tensor`: Applies shift and rotation transformations to the input.
-    - `eval(x: Union[torch.Tensor, list]) -> torch.Tensor`: Evaluates the objective function for an individual or a population. Handles decoding and timing.
-    # Raises:
-    - `NotImplementedError`: Raised if the `func` method is not implemented in a subclass.
-
+      The class is the Pytorch version of the WCCI2020_Numpy_Problem.
     """
     def __init__(self, dim, shift, rotate, bias):
         self.T1 = 0

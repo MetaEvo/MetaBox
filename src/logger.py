@@ -2133,26 +2133,23 @@ class MMO_Logger(Basic_Logger):
 #logger
 # class basic_Logger:
 class MTO_Logger(Basic_Logger):
+    """
+    # Introduction
+    The customized logger for multi-task optimization(MTO) scenario.
+    """
     def __init__(self, config):
         super().__init__(config)
 
     def draw_avg_train_return(self, data: list, output_dir: str) -> None: 
         """
         # Introduction
-
         Plots and saves the average training return over learning steps using the provided data.
-
         # Args:
-
         - data (list): A list of lists or arrays containing return values for each epoch and environment.
         - output_dir (str): The directory path where the output plot image will be saved.
-
         # Returns:
-
         - None
-
         # Notes:
-
         - The plot is saved as 'avg_mto_return.png' in the specified output directory.
         """
         plt.figure()
@@ -2318,6 +2315,18 @@ class MTO_Logger(Basic_Logger):
         plt.close()
     
     def draw_test_cost(self, data: dict, output_dir: str):
+        """
+        # Introduction
+        Plots and saves the performance metrics of different algorithms and problems.
+        # Args:
+        - data (dict): A dict contains a 3D list or an array-like structure for each algorithm and problem with shape (test_epoch, log_point, task), containing metric values.
+        - output_dir (str): The directory path where the generated plot images will be saved.
+        # Returns:
+        - None
+        # Notes:
+        - For each algorithm and problem, a separate plot is generated showing the metric values.
+        - Plots are saved as PNG files in the specified output directory, with filenames indicating the corresponding task.
+        """
         for problem_name in data.keys():
             for algorithm_name in data[problem_name].keys():
                 arr = np.array(data[problem_name][algorithm_name])          #(2,63,2) [test_run, log_points,tasks]
@@ -2332,6 +2341,15 @@ class MTO_Logger(Basic_Logger):
                 plt.savefig(output_dir + f'mto_test_cost_{problem_name}_{algorithm_name}.png', bbox_inches='tight')
 
     def post_processing_test_statics(self, log_dir: str) -> None:
+        """
+        # Introduction
+        Post-processes test statistics by loading results, generating summary tables, and creating visualizations for algorithm performance evaluation.
+        # Args:
+        - log_dir (str): The directory path where the plot images generated from test datas will be saved.
+        # Returns:
+        - None
+        """
+
         print('Post processing & drawing')
         with open(log_dir + 'test_results.pkl', 'rb') as f:
             results = pickle.load(f)
@@ -2353,12 +2371,39 @@ class MTO_Logger(Basic_Logger):
     
     @staticmethod
     def data_wrapper_mto_cost_rollout(data):
+        """
+        # Introduction
+        Reshape the MTO rollout datas from 3D to 2D. 
+        # Args:
+        - data (list): A 3D list or array-like structure containing rollout datas to be reshaped.
+        # Returns:
+        - numpy.ndarray: A 2D reshaped rollout datas.
+        """
         res = np.array(data)
         res = np.mean(res, axis=-1)
         return res[:, -1]
 
     def draw_train_logger(self, data_type: str, steps: list, data: dict, agent_for_rollout: str, output_dir: str, ylabel: str = None, norm: bool = False, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
-       
+        """
+        # Introduction
+        Plots and saves the training curve for a given data type, applying smoothing and displaying mean and standard deviation shading. Supports normalization and custom data processing.
+        # Args:
+        - data_type (str): The type of data being plotted. e.g. cost
+        - steps (list): List of step values (x-axis) corresponding to the data points.
+        - agent_for_rollout (str): A string represents the agent during the rollout process. 
+        - data (dict): Part of the result data,the result[data_type]. Also a nested dictionary containing experimental datas structured as `dict[problem][algo][run]`.
+        - output_dir (str): Directory path where the output figure will be saved.
+        - ylabel (str, optional): Label for the y-axis. If None, uses `data_type` as the label. Defaults to None.
+        - norm (bool, optional): Whether to normalize the data before plotting. Defaults to False.
+        - pdf_fig (bool, optional): Whether to save the figure as a PDF (if True) or PNG (if False). Defaults to True.
+        - data_wrapper (Callable, optional): Optional function to preprocess or wrap the data before averaging. Defaults to None.
+        # Returns:
+        - None
+        # Notes:
+        - The function applies a smoothing operation to the plotted curve based on the configuration.
+        - The mean and standard deviation are visualized, with the standard deviation shown as a shaded region.
+        - The color arrangement for each agent is managed to ensure consistent coloring across plots.
+        """
         means, stds = self.get_average_data(data, norm=norm, data_wrapper=data_wrapper)
         plt.figure()
 
@@ -2393,6 +2438,15 @@ class MTO_Logger(Basic_Logger):
         plt.close()
 
     def post_processing_rollout_statics(self, log_dir: str, pdf_fig: bool = True) -> None:
+        """
+        # Introduction
+        Processes rollout statistics after the rollout process, generates plots for return and cost, and saves them to the specified directory.
+        # Args:
+        - log_dir (str): The directory path where the rollout statistics file ('rollout.pkl') is located and where the output plots will be saved.
+        - pdf_fig (bool, optional): Whether to save the generated plots as PDF files. Defaults to True.
+        # Returns:
+        - None
+        """
         print('Post processing & drawing')
         with open(log_dir+'rollout.pkl', 'rb') as f:
             results = pickle.load(f)
