@@ -1,4 +1,4 @@
-# Train one MetaBox's algorithm on MetaBox's one Dataset
+# Train
 
 ```{note}
 **The following code demonstrates the core training logic.**
