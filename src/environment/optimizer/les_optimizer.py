@@ -4,6 +4,19 @@ from .learnable_optimizer import Learnable_Optimizer
 import torch.nn as nn
 
 def vector2nn(x,net,device):
+    """
+    # Introduction
+    Maps a flat parameter vector to the parameters of a given neural network, updating the network's weights in-place.
+    # Args:
+    - x (list or numpy.ndarray): A 1D array or list containing all the parameters to be assigned to the network.
+    - net (torch.nn.Module): The neural network whose parameters will be updated.
+    - device (torch.device or str): The device on which the parameters should be allocated (e.g., 'cpu' or 'cuda').
+    # Returns:
+    - torch.nn.Module: The neural network with updated parameters.
+    # Raises:
+    - AssertionError: If the length of `x` does not match the total number of parameters in `net`.
+    """
+    
     assert len(x) == sum([param.nelement() for param in net.parameters()]), 'dim of x and net not match!'
     params = net.parameters()
     ptr = 0
@@ -18,12 +31,36 @@ def vector2nn(x,net,device):
 class SelfAttn(nn.Module):
     
     def __init__(self):
+        """
+        # Introduction
+        Initializes the optimizer class and sets up the linear transformation layers for query, key, and value projections.
+        # Built-in Attribute:
+        - Wq (nn.Linear): Linear layer mapping input of size 3 to output of size 8 for query projection.
+        - Wk (nn.Linear): Linear layer mapping input of size 3 to output of size 8 for key projection.
+        - Wv (nn.Linear): Linear layer mapping input of size 3 to output of size 1 for value projection.
+        # Raises:
+        - None
+        """
+        
         super().__init__()
         self.Wq = nn.Linear(3,8)
         self.Wk = nn.Linear(3,8)
         self.Wv = nn.Linear(3,1)
     
     def forward(self, X):
+        """
+        # Introduction
+        Computes the output of a single-head self-attention mechanism using the input tensor `X`.
+        Applies learned linear projections to obtain queries, keys, and values, computes attention scores,
+        and returns the attended output.
+        # Args:
+        - X (torch.Tensor): Input tensor of shape (batch_size, input_dim).
+        # Returns:
+        - torch.Tensor: The output tensor after applying self-attention and softmax, with the last singleton dimension removed.
+        # Raises:
+        - None
+        """
+        
         Q = self.Wq(X)
         K = self.Wk(X)
         V = self.Wv(X)
@@ -32,11 +69,33 @@ class SelfAttn(nn.Module):
 
 class LrNet(nn.Module):
     def __init__(self):
+        """
+        # Introduction
+        Initializes the optimizer neural network with two linear layers and a sigmoid activation function.
+        # Built-in Attribute:
+        - ln1 (nn.Linear): First linear layer transforming input of size 19 to 8.
+        - ln2 (nn.Linear): Second linear layer transforming input of size 8 to 2.
+        - sm (nn.Sigmoid): Sigmoid activation function applied to the output.
+        # Returns:
+        - None
+        """
+        
         super().__init__()
         self.ln1 = nn.Linear(19,8)
         self.ln2 = nn.Linear(8,2)
         self.sm = nn.Sigmoid()
     def forward(self, X):
+        """
+        # Introduction
+        Applies two sequential linear transformations with normalization and a softmax activation to the input tensor.
+        # Args:
+        - X (torch.Tensor): The input tensor to be processed.
+        # Returns:
+        - torch.Tensor: The output tensor after normalization, linear transformation, and softmax activation.
+        # Raises:
+        - None
+        """
+        
         X = self.ln1(X)
         return self.sm(self.ln2(X))
 
@@ -48,33 +107,38 @@ class LES_Optimizer(Learnable_Optimizer):
     "[**Discovering evolution strategies via meta-black-box optimization**](https://iclr.cc/virtual/2023/poster/11005)." The Eleventh International Conference on Learning Representations. (2023).
     # Official Implementation
     [LES](https://github.com/RobertTLange/evosax/blob/main/evosax/strategies/les.py)
-    # Attributes:
-    - device (str or torch.device): The device on which neural network modules are allocated.
-    - max_fes (int): Maximum number of function evaluations allowed.
-    - attn (nn.Module): Neural network module for computing attention weights over the population.
-    - mlp (nn.Module): Neural network module for computing adaptive learning rates for mean and standard deviation updates.
-    - alpha (list of float): List of time-scale parameters for evolution path updates.
-    - timestamp (np.ndarray): Array of time steps for timestamp embedding.
-    - save_time (int): Counter for saving intermediate results (if used).
-    - NP (int): Population size.
-    - sigma_ratio (float): Ratio for initializing standard deviation relative to the upper bound.
-    - fes (int): Current number of function evaluations.
-    - cost (list): List of best costs recorded at logging intervals.
-    - log_index (int): Index for logging progress.
-    - log_interval (int): Interval (in function evaluations) for logging progress.
-    - evolution_info (dict): Dictionary containing current population, costs, evolution paths, and statistical parameters.
-    - meta_X (list, optional): List of population snapshots for meta data logging.
-    - meta_Cost (list, optional): List of cost snapshots for meta data logging.
-    # Methods:
-    - __str__(): Returns the string representation of the optimizer.
-    - init_population(problem): Initializes the population and evolution information based on the problem's bounds and dimension.
-    - cal_attn_feature(): Computes attention features for the current population, including z-score, shifted normalized ranking, and improvement indicator.
-    - cal_mlp_feature(W): Calculates MLP features based on evolution paths and timestamp embeddings, given attention weights W.
-    - update(action, problem): Performs one or more evolutionary optimization steps using the provided action (model parameters) and problem instance, updating the optimizer's state and logging progress.
-    - The optimizer assumes the presence of a random number generator (`self.rng`) and that neural network modules (`SelfAttn`, `LrNet`) and utility functions (`vector2nn`) are defined elsewhere.
-    - The optimizer is designed for use in meta-learning or reinforcement learning settings, where the neural network modules are updated externally.
     """
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the optimizer with the given configuration, setting up neural network components, device, and various hyperparameters for the optimization process.
+        # Args:
+        - config (object): Config object containing optimizer settings.
+            - Attributes needed for the LES_Optimizer are the following:
+                - device (str or torch.device): Device on which computations will be performed.Default is 'cpu'.
+                - maxFEs (int): Maximum number of function evaluations allowed.
+                - log_interval (int): Interval for logging progress.Default is 100.
+                - n_logpoint (int): Number of log points for logging.Default is 50.
+        # Built-in Attribute:
+        - self.device (torch.device): Device on which computations will be performed.
+        - self.max_fes (int): Maximum number of function evaluations allowed.
+        - self.attn (SelfAttn): Self-attention neural network module.
+        - self.mlp (LrNet): Multi-layer perceptron neural network module.
+        - self.alpha (list of float): List of alpha time-scale values.
+        - self.timestamp (np.ndarray): Array of timestamps for tracking progress.
+        - self.save_time (int): Counter for save operations.Default is 0.
+        - self.NP (int): Population size or related parameter.Default is 16.
+        - self.sigma_ratio (float): Ratio used for sigma calculation. Default is 0.2.
+        - self.fes (int or None): Current function evaluation count. Default is None.
+        - self.cost (any): Variable for recording cost or loss. Default is None.
+        - self.log_index (any): Index for logging. Default is None.
+        - self.log_interval (int): Interval for logging progress.
+        # Returns:
+        - None
+        # Raises:
+        - None
+        """
+        
         super().__init__(config)
         self.__config = config
         self.device = self.__config.device
@@ -96,6 +160,13 @@ class LES_Optimizer(Learnable_Optimizer):
         self.log_interval = config.log_interval
     
     def __str__(self):
+        """
+        # Introduction
+        Returns a string representation of the LES_Optimizer object.
+        # Returns:
+        - str: The string "LES_Optimizer", representing the class name.
+        """
+        
         return "LES_Optimizer"
     
     def init_population(self, problem):
@@ -103,7 +174,17 @@ class LES_Optimizer(Learnable_Optimizer):
         # Introduction
         Initializes the population for the optimizer using a normal distribution based on the problem's bounds and dimension. Sets up initial evolution information, including parent solutions, their costs, and statistical parameters for the optimization process.
         # Args:
-        - problem (object): An object representing the optimization problem, which must have attributes `ub` (upper bounds), `lb` (lower bounds), `dim` (problem dimensionality), and a method `eval` for evaluating a population.
+        - problem (object): The optimization problem object, which has attributes `ub` (upper bounds), `lb` (lower bounds), `dim` (problem dimensionality), and a method `eval` for evaluating a population.
+        # Built-in Attributes:
+        - self.ub (np.ndarray): Upper bounds for the variables.
+        - self.lb (np.ndarray): Lower bounds for the variables.
+        - self.problem (object): The optimization problem instance.
+        - self.evolution_info (dict): Dictionary to store evolution information, including parents, costs, and generation counter.
+        - self.cost (list): List to store the best costs found during the optimization process.
+        - self.log_index (int): Index for logging progress.Default is 1.
+        - self.fes (int): Total number of function evaluations performed.Default is 0.
+        - self.meta_X (list, optional): List to store population snapshots for meta data logging.Default is empty.
+        - self.meta_Cost (list, optional): List to store cost snapshots for meta data logging.Default is empty.
         # Returns:
         - None
         # Side Effects:
@@ -169,10 +250,9 @@ class LES_Optimizer(Learnable_Optimizer):
         # Args:
         - W (np.ndarray): Weight vector or matrix used to compute weighted sums of evolutionary information.
         # Returns:
-        - Tuple[torch.Tensor, np.ndarray, np.ndarray]: 
-            - A torch tensor containing the concatenated feature vector (shape: [dim, 19]).
-            - Numpy array of updated evolution paths for the mean (`c`, shape: [3, dim]).
-            - Numpy array of updated evolution paths for the standard deviation (`s`, shape: [3, dim]).
+        - A torch tensor containing the concatenated feature vector (shape: [dim, 19]).
+        - Numpy array of updated evolution paths for the mean (`c`, shape: [3, dim]).
+        - Numpy array of updated evolution paths for the standard deviation (`s`, shape: [3, dim]).
         # Notes:
         The function computes updated evolution paths (`Pc` and `Ps`) for each alpha value, generates a timestamp embedding, and concatenates these features for use in an MLP. The output tensor is suitable for input into a neural network.
         """
@@ -201,13 +281,12 @@ class LES_Optimizer(Learnable_Optimizer):
         Updates the optimizer's internal state by performing one or more evolutionary optimization steps using the provided action and problem. The method adapts model parameters, generates new populations, evaluates them, and logs progress until a stopping criterion is met.
         # Args:
         - action (dict): Dictionary containing new model parameters for attention and MLP networks, and optionally a 'skip_step' key to limit the number of steps.
-        - problem (object): The optimization problem instance, which must provide a `dim` attribute and an `eval` method for evaluating populations.
+        - problem (object): The optimization problem object, which has a `dim` attribute and an `eval` method for evaluating populations.
         # Returns:
-        - tuple:
-            - float: The best cost (fitness) found in the current optimization run.
-            - float: The normalized improvement from the initial to the best cost.
-            - bool: Whether the stopping criterion was met.
-            - dict: Additional information (currently empty).
+        - float: The best cost (fitness) found in the current optimization run.
+        - float: The normalized improvement from the initial to the best cost.
+        - bool: Whether the stopping criterion was met.
+        - dict: Additional information (currently empty).
         # Raises:
         - None explicitly, but may raise exceptions if the action or problem objects are malformed or if numerical errors occur during optimization.
         """

@@ -1,0 +1,1 @@
+from .wcci2020_dataset import *

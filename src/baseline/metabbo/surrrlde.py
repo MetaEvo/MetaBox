@@ -11,56 +11,28 @@ class SurrRLDE(DDQN_Agent):
 	# Official Implementation
 	[Surr-RLDE](https://github.com/MetaEvo/Surr-RLDE)
 	# Application Scenario
-	single-object optimization problems(SOOP)
-	# Args:
-		`config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
-	# Attributes:
-		config (object): Stores the configuration object.
-		device (str): Device to be used for computation ('cpu' or 'cuda').
-		memory_size (int): Size of the replay buffer.
-		n_act (int): Number of possible actions.
-		epsilon (float): Initial epsilon value for epsilon-greedy policy.
-		gamma (float): Discount factor for future rewards.
-		max_learning_step (int): Maximum number of learning steps.
-		cur_checkpoint (int): Current checkpoint index for saving the model.
-		replay_buffer (ReplayBuffer_torch): Replay buffer for storing experiences.
-		model (MLP): Neural network model for Q-value prediction.
-	# Methods:
-		__str__():
-			Returns the string representation of the class.
-		get_epsilon(step, start=0.5, end=0.05):
-			Calculates the epsilon value for epsilon-greedy policy based on the current step.
-			Args:
-				step (int): Current training step.
-				start (float): Starting epsilon value.
-				end (float): Minimum epsilon value.
-			Returns:
-				float: Epsilon value.
-		get_action(state, epsilon_greedy=False):
-			Selects an action based on the current state using epsilon-greedy policy.
-			Args:
-				state (array-like): Current state.
-				epsilon_greedy (bool): Whether to use epsilon-greedy policy.
-			Returns:
-				numpy.ndarray: Selected action(s).
-		train_episode(envs, seeds, para_mode='dummy', compute_resource={}, tb_logger=None, required_info={}):
-			Trains the agent for one episode.
-			Args:
-				envs (list): List of environments.
-				seeds (int, list, or np.ndarray): Seeds for environment initialization.
-				para_mode (str): Parallelization mode ('dummy', 'subproc', 'ray', 'ray-subproc').
-				compute_resource (dict): Dictionary specifying computational resources.
-				tb_logger (object): TensorBoard logger for logging training metrics.
-				required_info (dict): Additional information required from the environment.
-			Returns:
-				tuple: A boolean indicating if training has ended and a dictionary with training information.
-	# Returns:
-		None for methods that do not explicitly return values.
-		Specific return types for methods like `get_epsilon`, `get_action`, and `train_episode`.
+	single-object optimization problems(SOOP), in this implementation, the built-in DDQN_Agent is used as the parent class, since SurrRLDE is based on DDQN. 
 	# Raises:
-		None explicitly raised in the provided code, but potential exceptions may occur during tensor operations, environment interactions, or model updates.
+	None explicitly raised in the provided code, but potential exceptions may occur during tensor operations, environment interactions, or model updates.
 	"""
 	def __init__(self, config):
+		"""
+        # Args:
+        -config: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+		# Built-in Attributes:
+		-config (object): Stores the configuration object.
+		-device (str): Device to be used for computation ('cpu' or 'cuda').
+		-memory_size (int): Size of the replay buffer.
+		-n_act (int): Number of possible actions.
+		-epsilon (float): Initial epsilon value for epsilon-greedy policy.
+		-gamma (float): Discount factor for future rewards.
+		-max_learning_step (int): Maximum number of learning steps.
+		-cur_checkpoint (int): Current checkpoint index for saving the model.
+		-replay_buffer (ReplayBuffer_torch): Replay buffer for storing experiences.
+		-model (MLP): Neural network model for Q-value prediction.
+        """
+
+ 
 		self.config = config
 		self.config.state_size = 9
 		self.config.n_act = 15
@@ -111,10 +83,21 @@ class SurrRLDE(DDQN_Agent):
 		return "Surr_RLDE"
 
 	def get_epsilon(self, step, start=0.5, end=0.05):
+		"""
+  		Calculates the epsilon value for epsilon-greedy policy based on the current step.
+		-step (int): Current training step.
+		-start (float): Starting epsilon value.
+		-end (float): Minimum epsilon value.
+  		"""
 		total_steps = self.config.max_learning_step
 		return max(end, start - (start - end) * (step / total_steps))
 
 	def get_action(self, state, epsilon_greedy=False):
+		"""
+  		Selects an action based on the current state using epsilon-greedy policy.
+		-state (array-like): Current state.
+		-epsilon_greedy (bool): Whether to use epsilon-greedy policy.
+  		"""
 		state = torch.Tensor(state).to(self.device)
 		self.epsilon = self.get_epsilon(self.learning_time)
 		with torch.no_grad():
@@ -136,6 +119,15 @@ class SurrRLDE(DDQN_Agent):
 					  compute_resource = {},
 					  tb_logger = None,
 					  required_info = {}):
+		"""
+  		Trains the agent for one episode.
+		-envs (list): List of environments.
+		-seeds (int, list, or np.ndarray): Seeds for environment initialization.
+		-para_mode (str): Parallelization mode ('dummy', 'subproc', 'ray', 'ray-subproc').
+		-compute_resource (dict): Dictionary specifying computational resources.
+		-tb_logger (object): TensorBoard logger for logging training metrics.
+		-required_info (dict): Additional information required from the environment.
+  		"""
 		num_cpus = None
 		num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
 		if 'num_cpus' in compute_resource.keys():

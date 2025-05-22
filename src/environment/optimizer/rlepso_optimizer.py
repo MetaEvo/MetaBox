@@ -8,47 +8,33 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
     RLEPSO is a new particle swarm optimization algorithm that combines reinforcement learning.
     # Original paper
     "[**RLEPSO: Reinforcement learning based Ensemble particle swarm optimizer**](https://dl.acm.org/doi/abs/10.1145/3508546.3508599)." Proceedings of the 2021 4th International Conference on Algorithms, Computing and Artificial Intelligence. (2021).
-    # Official Implementation
-    None
-
-    # Args:
-    - config (object): Configuration object containing all necessary hyperparameters and settings for the optimizer, such as population size, dimensionality, maximum function evaluations, logging intervals, and meta-data options.
-    # Attributes:
-    - __config: Stores the configuration object.
-    - __dim (int): Dimensionality of the optimization problem.
-    - __w_decay (bool): Whether to use weight decay in velocity update.
-    - __w (float): Inertia weight for velocity update.
-    - __NP (int): Number of particles in the swarm.
-    - __pci (np.ndarray): Probability coefficients for learning from other particles.
-    - __n_group (int): Number of groups for parameter adaptation.
-    - __no_improve (int): Counter for global no-improvement steps.
-    - __per_no_improve (np.ndarray): Counter for per-particle no-improvement steps.
-    - fes (int): Current number of function evaluations.
-    - cost (list): History of global best costs.
-    - log_index (int): Current logging index.
-    - log_interval (int): Interval for logging progress.
-    - __max_fes (int): Maximum number of function evaluations.
-    - __is_done (bool): Flag indicating if optimization is complete.
-    - meta_X (list): History of particle positions (if full_meta_data is enabled).
-    - meta_Cost (list): History of particle costs (if full_meta_data is enabled).
-    # Methods:
-    - __str__(): Returns the string representation of the optimizer.
-    - init_population(problem): Initializes the particle population and velocities.
-    - update(action, problem): Updates the swarm based on the given action and problem, returning the next state, reward, done flag, and info.
-    - __get_costs(problem, position): Computes the cost for a set of positions.
-    - __get_v_clpso(): Computes the velocity component based on CLPSO strategy.
-    - __tournament_selection(): Performs tournament selection among particles.
-    - __get_v_fdr(): Computes the velocity component based on Fitness-Distance-Ratio.
-    - __get_coe(actions): Computes the coefficients for velocity update based on actions.
-    - __reinit(filter, problem): Reinitializes particles that meet certain criteria.
-    - __get_state(): Returns the current state representation for reinforcement learning.
-    # Returns:
-    - The optimizer provides methods to initialize the population, update the swarm, and retrieve optimization progress and meta-data.
-    # Raises:
-    - AssertionError: If the shape of the actions array does not match the expected size in __get_coe.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the RL-EPSO optimizer with the provided configuration, setting up key hyperparameters and internal state variables.
+        # Args:
+        - config (object): Configuration object containing optimizer settings such as population size, weight decay, logging interval, and maximum function evaluations.
+        # Built-in Attribute:
+        - self.__config (object): Stores the configuration object.
+        - self.__w_decay (bool): Indicates whether weight decay is enabled.
+        - self.__w (float): Inertia weight, set based on weight decay.
+        - self.__NP (int): Number of particles in the population.Default is 100.
+        - self.__pci (np.ndarray): Array of learning probabilities for each particle.
+        - self.__n_group (int): Number of groups for grouping particles.
+        - self.__no_improve (int): Counter for iterations with no improvement.
+        - self.__per_no_improve (np.ndarray): Array tracking no-improvement counts per particle.
+        - self.fes (Any): Function evaluation state (initialized as None).
+        - self.cost (Any): Cost state (initialized as None).
+        - self.log_index (Any): Logging index (initialized as None).
+        - self.log_interval (int): Interval for logging progress.
+        - self.__max_fes (int): Maximum number of function evaluations.
+        - self.__is_done (bool): Flag indicating if optimization is complete.
+        # Returns:
+        - None
+        """
+        
         super().__init__(config)
 
         config.w_decay = True
@@ -79,6 +65,12 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         self.__is_done = False
 
     def __str__(self):
+        """
+        Returns a string representation of the RLEPSO_Optimizer instance.
+        # Returns:
+            str: The name of the optimizer ("RLEPSO_Optimizer").
+        """
+        
         return "RLEPSO_Optimizer"
 
     def init_population(self, problem):
@@ -132,6 +124,19 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
 
     # calculate costs of solutions
     def __get_costs(self, problem, position):
+        """
+        # Introduction
+        Computes the cost(s) of a given position for the specified optimization problem, accounting for the number of function evaluations and the problem's optimum if available.
+        # Args:
+        - problem: An object representing the optimization problem, expected to have `eval(position)` and `optimum` attributes.
+        - position: The candidate solution(s) whose cost is to be evaluated.
+        # Built-in Attribute:
+        - self.fes (int): Increments by the number of particles (`self.__NP`) to track function evaluations.
+        # Returns:
+        - cost: The evaluated cost(s) for the given position(s), adjusted by the problem's optimum if it exists.
+        # Raises:
+        - Any exception raised by `problem.eval(position)` if evaluation fails.
+        """
         self.fes += self.__NP
         if problem.optimum is None:
             cost = problem.eval(position)
@@ -140,6 +145,22 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         return cost
 
     def __get_v_clpso(self):
+        """
+        # Introduction
+        Computes the velocity update for particles using the CLPSO (Comprehensive Learning Particle Swarm Optimization) strategy.
+        # Args:
+        None
+        # Built-in Attribute:
+        - self.rng: Random number generator for reproducibility.
+        - self.__NP (int): Number of particles in the swarm.
+        - self.__dim (int): Dimensionality of the search space.
+        - self.__pci (np.ndarray): Learning probability for each particle.
+        - self.__particles (dict): Contains 'pbest_position' and 'current_position' arrays for all particles.
+        # Returns:
+        - np.ndarray: The updated velocity matrix for all particles according to the CLPSO strategy.
+        # Raises:
+        None
+        """
         rand = self.rng.rand(self.__NP, self.__dim)
         filter = rand > self.__pci[:, None]
         # tournament selection 2
@@ -150,6 +171,21 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         return v_clpso
 
     def __tournament_selection(self):
+        """
+        # Introduction
+        Performs tournament selection among particle personal bests to select target positions for each particle and dimension in the swarm.
+        # Args:
+        None
+        # Built-in Attribute:
+        - self.rng: Random number generator for reproducibility.
+        - self.__NP: Number of particles in the swarm.
+        - self.__dim: Dimensionality of the problem.
+        - self.__particles: Dictionary containing particle information, including 'pbest_position' and 'pbest'.
+        # Returns:
+        - np.ndarray: Selected target positions for each particle and dimension, shape (self.__NP, self.__dim).
+        # Raises:
+        None
+        """
         nsel = 2
         rand_index = self.rng.randint(low = 0, high = self.__NP, size = (self.__NP, self.__dim, nsel))
 
@@ -161,6 +197,22 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         return target_pos
 
     def __get_v_fdr(self):
+        """
+        # Introduction
+        Computes the velocity update component based on the Fitness-Distance-Ratio (FDR) for each particle in the swarm. This method is typically used in particle swarm optimization algorithms to guide particles towards promising regions in the search space.
+        # Args:
+        None
+        # Built-in Attribute:
+        - self.__particles (dict): Contains particle information, including 'pbest_position' and 'pbest'.
+        - self.__NP (int): Number of particles in the swarm.
+        - self.__dim (int): Dimensionality of the search space.
+        - self.rng (np.random.Generator): Random number generator for stochastic operations.
+        # Returns:
+        - np.ndarray: An array of shape (self.__NP, self.__dim) representing the FDR-based velocity component for each particle.
+        # Raises:
+        None
+        """
+        
         pos = self.__particles['pbest_position']
         distance_per_dim = np.abs(pos[None, :, :].repeat(self.__NP, axis = 0) - pos[:, None, :].repeat(self.__NP, axis = 1))
         fitness = self.__particles['pbest']
@@ -176,6 +228,26 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
 
     # return coes
     def __get_coe(self, actions):
+        """
+        # Introduction
+        Computes and returns coefficient arrays for each group based on the provided `actions` array.
+        The coefficients include inertia weight, mutation coefficient, and four additional coefficients (c1, c2, c3, c4),
+        which are calculated for each group of particles in the optimizer.
+        # Args:
+        - actions (np.ndarray): A 1D numpy array of shape (self.__n_group * 7,) containing action values for each group.
+          Each group is associated with 7 action values.
+        # Returns:
+        - dict: A dictionary containing the following keys and their corresponding numpy arrays:
+            - 'w': Inertia weights, shape (self.__NP, 1)
+            - 'c_mutation': Mutation coefficients, shape (self.__NP,)
+            - 'c1': First coefficient, shape (self.__NP, 1)
+            - 'c2': Second coefficient, shape (self.__NP, 1)
+            - 'c3': Third coefficient, shape (self.__NP, 1)
+            - 'c4': Fourth coefficient, shape (self.__NP, 1)
+        # Raises:
+        - AssertionError: If the shape of `actions` does not match (self.__n_group * 7,).
+        """
+        
         assert actions.shape[-1] == self.__n_group * 7, 'actions size is not right!'
         ws = np.zeros(self.__NP)
         c_mutations = np.zeros_like(ws)
@@ -198,6 +270,21 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
                 'c4': c4s[:, None]}
 
     def __reinit(self, filter, problem):
+        """
+        # Introduction
+        Reinitializes selected particles in the swarm based on a filter mask, updating their positions, velocities, and personal/global bests as part of the RL-EPSO optimization process.
+        # Args:
+        - filter (np.ndarray): Boolean mask indicating which particles to reinitialize.
+        - problem (object): Optimization problem instance containing lower and upper bounds (`lb`, `ub`) and other problem-specific attributes.
+        # Returns:
+        - None
+        # Side Effects:
+        - Updates the internal state of the optimizer, including particle positions, velocities, personal bests, global best, and function evaluation count (`fes`).
+        # Notes:
+        - If no particles are selected by the filter, the method returns immediately.
+        - The method uses random number generation for reinitialization, which depends on the optimizer's RNG state.
+        """
+        
         if not np.any(filter):
             return
         rand_pos = self.rng.uniform(low = problem.lb, high = problem.ub, size = (self.__NP, self.__dim))
@@ -234,6 +321,15 @@ class RLEPSO_Optimizer(Learnable_Optimizer):
         self.__particles = new_particles
 
     def __get_state(self):
+        """
+        # Introduction
+        Returns the current state of the optimizer as a normalized value.
+        # Returns:
+        - np.ndarray: A NumPy array containing a single float value representing the ratio of the current function evaluations (`self.fes`) to the maximum allowed function evaluations (`self.__max_fes`).
+        # Notes:
+        - This method is intended for internal use to track the progress of the optimizer.
+        """
+        
         return np.array([self.fes / self.__max_fes])
 
     def update(self, action, problem):

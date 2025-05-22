@@ -10,53 +10,37 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
     A reinforcement learning-based evolutionary multi-modal optimizer (RLEMMO) that extends `Learnable_Optimizer`. This optimizer is designed for multi-modal optimization problems and leverages a population-based approach with multiple mutation strategies, neighborhood structures, and reward mechanisms.
     # Introduction
     RLEMMO_Optimizer maintains a population of candidate solutions and applies various evolutionary operators (actions) to explore and exploit the search space. It uses neighborhood information, clustering, and reinforcement learning-inspired mechanisms to adaptively guide the search process. The optimizer is suitable for problems with multiple global optima and supports meta-data collection for analysis.
-    # Args:
-    - config (object): Configuration object containing optimizer parameters and settings.
-    # Attributes:
-    - ps (int): Population size.
-    - k_neighbors (int): Number of neighbors for each individual.
-    - n_action (int): Number of available mutation actions.
-    - FF (float): Differential evolution scaling factor.
-    - CR (float): Crossover rate.
-    - eps (float): DBSCAN clustering epsilon parameter.
-    - min_samples (int): Minimum samples for DBSCAN clustering.
-    - reward_scale (float): Scaling factor for reward normalization.
-    - fes (int): Current number of function evaluations.
-    - cost (list): History of global best costs.
-    - pr (list): History of peak ratios.
-    - sr (list): History of success rates.
-    - log_index (int): Current logging index.
-    - log_interval (int): Interval for logging progress.
-    - individuals (dict): Dictionary holding current population and related information.
-    - gbest_val (float): Current global best value.
-    # Methods:
-    - __str__(): Returns the string representation of the optimizer.
-    - get_costs(position, problem): Calculates the costs of given solutions.
-    - find_nei(pop_dist): Finds the neighborhood matrix based on population distances.
-    - act1(pop_choice): Applies the first mutation strategy to selected individuals.
-    - act2(pop_choice): Applies the second mutation strategy using neighborhood bests.
-    - act3(pop_choice): Applies the third mutation strategy using three neighbors.
-    - act4(pop_choice): Applies the fourth mutation strategy with random and neighborhood bests.
-    - act5(pop_choice): Applies the fifth mutation strategy with random individuals.
-    - cal_pr_sr(problem): Calculates peak ratio and success rate for the current population.
-    - initialize_individuals(problem): Initializes the population and related structures.
-    - init_population(problem): Resets the optimizer and initializes the population.
-    - observe(): Encodes the current state of the population for learning or analysis.
-    - mydbscan(problem): Applies DBSCAN clustering to the normalized population.
-    - cal_reward(problem): Calculates the reward based on clustering and solution quality.
-    - update(action, problem): Applies actions to the population, updates states, and computes reward.
-    # Returns:
-    Most methods return updated population states, costs, rewards, or encoded features depending on their purpose.
-    # Raises:
-    - ValueError: If an invalid action is provided to the `update` method.
-    - AssertionError: If unexpected NaN values are encountered in state encoding.
-    # Notes:
-    - The optimizer is designed for use in reinforcement learning or meta-optimization frameworks.
-    - Meta-data collection is supported if enabled in the configuration.
-    - Requires external dependencies such as `numpy`, `scipy.spatial.distance`, and `sklearn.cluster.DBSCAN`.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the RLEMmoOptimizer with the provided configuration and sets default hyperparameters and attributes.
+        # Args:
+        - config (dict): Configuration dictionary containing optimizer settings.
+            - The attributes needed for the RLEMMO are the following:
+                
+        # Attributes:
+        - ps (int): Population size, default is 100.
+        - k_neighbors (int): Number of neighbors for local search, default is 4.
+        - n_action (int): Number of possible actions, default is 5.
+        - FF (float): Differential evolution scaling factor, default is 0.5.
+        - CR (float): Crossover probability, default is 0.9.
+        - eps (float): Epsilon value for exploration, default is 0.2.
+        - min_samples (int): Minimum samples for clustering or selection, default is 3.
+        - reward_scale (int): Scaling factor for rewards, default is 1000.
+        - fes (Any): Function evaluation counter, initialized as None.
+        - cost (Any): Cost value, initialized as None.
+        - pr (Any): Probability-related attribute, initialized as None.
+        - sr (Any): Success rate or similar metric, initialized as None.
+        - log_index (Any): Logging index, initialized as None.
+        - log_interval (Any): Logging interval, initialized as None.
+        - archive (Any): Archive for storing solutions, initialized as None.
+        - archive_val (Any): Archive for storing solution values, initialized as None.
+        # Raises:
+        - None
+        """
+        
         super().__init__(config)
         self.__config = config
 
@@ -80,16 +64,49 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         self.archive_val = None
 
     def __str__(self):
+        """
+        # Introduction
+        Returns a string representation of the RLEMMO_Optimizer object.
+        # Returns:
+        - str: The name of the optimizer, "RLEMMO_Optimizer".
+        """
+        
         return "RLEMMO_Optimizer"
 
     # calculate costs of solutions
     def get_costs(self,position, problem):
+        """
+        # Introduction
+        Calculates the cost values for a given set of positions using the provided optimization problem.
+        # Args:
+        - position (np.ndarray): An array representing one or more candidate solutions (positions) to be evaluated.
+        - problem (object): An optimization problem instance that must have `eval` and `optimum` attributes.
+        # Built-in Attribute:
+        - self.fes (int): Increments the function evaluation counter by the number of positions evaluated.
+        # Returns:
+        - np.ndarray: The cost values for each position, computed as the difference between the evaluated value and the problem's optimum.
+        # Raises:
+        - AttributeError: If `problem` does not have the required `eval` method or `optimum` attribute.
+        """
         ps=position.shape[0]
         self.fes+=ps
         cost= problem.eval(position) - problem.optimum
         return cost
 
     def find_nei(self, pop_dist):
+        """
+        # Introduction
+        Constructs a neighbor matrix for a population based on pairwise distances, marking the k-nearest neighbors for each individual.
+        # Args:
+        - pop_dist (np.ndarray): A 2D square numpy array of shape (ps, ps) representing pairwise distances between population members.
+        # Returns:
+        - np.ndarray: A binary matrix of shape (ps, ps) where entry (i, j) is 1 if individual j is among the k-nearest neighbors of individual i, otherwise 0.
+        # Notes:
+        - The diagonal of `pop_dist` is set to infinity to exclude self-neighbors.
+        - The number of neighbors considered is determined by `self.k_neighbors`.
+        - The population size is determined by `self.ps`.
+        """
+        
         pop_dist[range(self.ps), range(self.ps)] = np.inf
         pop_dist_arg = np.argsort(pop_dist.copy(), axis = -1)
 
@@ -302,6 +319,23 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
     
     # feature encoding
     def observe(self):
+        """
+        # Introduction
+        Computes and returns a set of state features for each individual in the population, capturing various statistics and relationships relevant to the optimizer's environment. These features are used for monitoring or further decision-making in the optimization process.
+        # Returns:
+        - np.ndarray: A 2D array of shape (ps, 22), where each row corresponds to an individual and each column represents a specific feature describing the individual's state in the population.
+        # Built-in Attribute:
+        - self.individuals (dict): Contains arrays for current positions, costs, distances, neighbor matrices, best positions, and improvement counters for all individuals.
+        - self.ps (int): Population size.
+        - self.max_fes (int): Maximum number of function evaluations.
+        - self.fes (int): Current number of function evaluations.
+        - self.max_dist (float): Maximum possible distance in the search space.
+        - self.max_cost (float): Maximum possible cost value.
+        - self.k_neighbors (int): Number of neighbors considered for each individual.
+        # Raises:
+        - AssertionError: If the neighbor count does not match `self.k_neighbors` or if any NaN values are present in the resulting state array.
+        """
+        
         pop = self.individuals['current_position'].copy()
         val = self.individuals['c_cost'].copy()
         all_dist = self.individuals['pop_dist'].copy()
@@ -357,6 +391,18 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         return states
 
     def mydbscan(self,problem):
+        """
+        # Introduction
+        Applies the DBSCAN clustering algorithm to the current population of individuals, normalized within the problem bounds.
+        # Args:
+        - problem: The optimization problem object, which has `lb` (lower bounds) and `ub` (upper bounds) attributes.
+        # Returns:
+        - numpy.ndarray: An array of cluster labels assigned to each individual in the population.
+        # Raises:
+        - AttributeError: If `problem` does not have `lb` or `ub` attributes.
+        - ValueError: If the population shape is incompatible with the problem bounds.
+        """
+        
         pop = self.individuals['current_position'].copy()
         pop = (pop - problem.lb) / (problem.ub -problem.lb)
         clustering = DBSCAN(eps = self.eps, min_samples = self.min_samples).fit(pop)

@@ -109,27 +109,30 @@ class RLHPSDE_Optimizer(Learnable_Optimizer):
     The `RLHPSDE_Optimizer` class extends `Learnable_Optimizer` and implements a self-adaptive differential evolution algorithm enhanced with reinforcement learning.  
     It utilizes random walk sampling and landscape analysis (fitness distance correlation and information entropy ruggedness) to determine the current state of the optimization landscape, which is then used to select appropriate mutation strategies.  
     The optimizer maintains a population of candidate solutions and iteratively updates them to minimize a given objective function.
-    # Args:
-    - config (object): Configuration object containing algorithm parameters such as dimension, maximum function evaluations, logging interval, and other DE-specific settings.
-    # Methods:
-    - `__init__(self, config)`: Initializes the optimizer with the provided configuration.
-    - `__str__(self)`: Returns the string representation of the optimizer.
-    - `init_population(self, problem)`: Initializes the population and evaluates initial costs.
-    - `__simple_random_walk(self, lb, ub)`: Performs a simple random walk in the search space for landscape analysis.
-    - `__progressive_random_walk(self, lb, ub)`: Performs a progressive random walk in the search space for landscape analysis.
-    - `__DFDC(self, sample, cost)`: Computes the Dynamic Fitness Distance Correlation to assess problem difficulty.
-    - `__DRIE(self, cost)`: Computes the Dynamic Ruggedness of Information Entropy to assess landscape ruggedness.
-    - `__get_state(self, problem)`: Determines the current state of the optimization landscape using random walk analysis.
-    - `update(self, action, problem)`: Applies the selected mutation strategy, updates the population, and returns the new state, reward, done flag, and additional info.
-    # Returns:
-    - Various methods return internal state representations, rewards, and status flags as part of the reinforcement learning loop.
-    # Raises:
-    - ValueError: Raised if an invalid action is provided or if landscape analysis metrics are out of expected bounds.
-    # Usage:
-    Instantiate with a configuration object and use in a reinforcement learning loop to optimize a given problem.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the optimizer with the provided configuration, setting up algorithm-specific parameters and internal state variables.
+        # Args:
+        - config (object): Configuration object containing optimizer parameters such as mutation factor, crossover rate, minimum population size, memory factor, random walk steps, step size, maximum function evaluations, and logging interval.
+            - The Attributes needed for the RLHPSDE_Optimizer:
+                    
+        # Built-in Attribute:
+        - self.__config: Stores the configuration object.
+        - self.__population: Placeholder for the population, initialized as None.
+        - self.__rw_steps: Number of random walk steps, taken from config.
+        - self.__step_size: Step size for the optimizer, taken from config.
+        - self.__maxFEs: Maximum number of function evaluations, taken from config.
+        - self.fes: Counter for function evaluations, initialized as None.
+        - self.cost: Placeholder for the cost value, initialized as None.
+        - self.log_index: Index for logging, initialized as None.
+        - self.log_interval: Interval for logging, taken from config.
+        # Raises:
+        - AttributeError: If required attributes are missing from the config object.
+        """
+        
         super().__init__(config)
         config.F = 0.5
         config.Cr = 0.5
@@ -149,6 +152,12 @@ class RLHPSDE_Optimizer(Learnable_Optimizer):
         self.log_interval = config.log_interval
 
     def __str__(self):
+        """
+        Returns a string representation of the RLHPSDE optimizer.
+        # Returns:
+            str: The name of the optimizer, "RLHPSDE".
+        """
+        
         return "RLHPSDE"
 
     def init_population(self, problem):
@@ -181,6 +190,22 @@ class RLHPSDE_Optimizer(Learnable_Optimizer):
         return self.__get_state(problem)
 
     def __simple_random_walk(self, lb, ub):
+        """
+        # Introduction
+        Generates a sequence of samples using a simple random walk within specified lower and upper bounds.
+        # Args:
+        - lb (np.ndarray): Lower bounds for each dimension of the random walk (shape: [dim,]).
+        - ub (np.ndarray): Upper bounds for each dimension of the random walk (shape: [dim,]).
+        # Built-in Attribute:
+        - self.__rw_steps (int): Number of random walk steps to perform.
+        - self.__dim (int): Dimensionality of the search space.
+        - self.__step_size (float): Maximum step size for each random walk move.
+        - self.rng (np.random.Generator): Random number generator used for sampling.
+        # Returns:
+        - np.ndarray: Array of shape (self.__rw_steps + 1, self.__dim) containing the random walk samples.
+        # Raises:
+        - None
+        """
         samples = np.zeros((self.__rw_steps + 1, self.__dim))
         samples[0] = lb + self.rng.random(self.__dim) * (ub - lb)
         for step in range(1, self.__rw_steps + 1):
@@ -198,6 +223,17 @@ class RLHPSDE_Optimizer(Learnable_Optimizer):
         return samples
 
     def __progressive_random_walk(self, lb, ub):
+        """
+        # Introduction
+        Generates a sequence of samples using a progressive random walk within specified lower and upper bounds. The walk starts from a randomly initialized point and iteratively updates the position, reflecting off the boundaries when exceeded.
+        # Args:
+        - lb (float or np.ndarray): The lower bound(s) for each dimension of the random walk.
+        - ub (float or np.ndarray): The upper bound(s) for each dimension of the random walk.
+        # Returns:
+        - np.ndarray: An array of shape (self.__rw_steps + 1, self.__dim) containing the sequence of sampled points during the random walk.
+        # Raises:
+        - None
+        """
         samples = np.zeros((self.__rw_steps + 1, self.__dim))
         startingZone = self.rng.rand(self.__dim)
         startingZone[startingZone < 0.5] = -1
@@ -222,6 +258,18 @@ class RLHPSDE_Optimizer(Learnable_Optimizer):
 
     # Dynamic Fitness Distance Correlation
     def __DFDC(self, sample, cost):
+        """
+        # Introduction
+        Calculate the Dynamic Fitness Distance Correlation.
+        # Args:
+        - sample (np.ndarray): Array of candidate solutions, where the first element is excluded from analysis.
+        - cost (np.ndarray): Array of cost values corresponding to each sample, with the first element excluded from analysis.
+        # Returns:
+        - bool: `True` if the sample is classified as "easy" (correlation coefficient between 0.15 and 1), `False` if "difficult" (between -1 and 0.15).
+        # Raises:
+        - ValueError: If the computed correlation coefficient is outside the expected range [-1, 1] or if standard deviations are zero.
+        """
+        
         sample = sample[1:]
         cost = cost[1:]
         gbest_solution = self.__population.gbest_solution
@@ -236,6 +284,20 @@ class RLHPSDE_Optimizer(Learnable_Optimizer):
 
     # Dynamic Ruggedness of Information Entropy
     def __DRIE(self, cost):
+        """
+        # Introduction
+        Determines the difficulty of a cost sequence using the DRIE (Difficulty Rating Index Estimator) method based on entropy of symbol transitions.
+        # Args:
+        - cost (np.ndarray): 1D array of cost values representing a sequence of steps.
+        # Built-in Attribute:
+        - self.__rw_steps (int): Number of random walk steps used for windowing the cost sequence.
+        # Returns:
+        - bool: 
+            - True if the sequence is classified as "easy" (0.5 <= r <= 1).
+            - False if the sequence is classified as "difficult" (0 <= r < 0.5).
+        # Raises:
+        - ValueError: If the computed DRIE value `r` falls outside the expected range [0, 1].
+        """
         diff = cost[1:] - cost[:self.__rw_steps]
         e_star = np.max(np.abs(diff))
         r = None
@@ -269,6 +331,18 @@ class RLHPSDE_Optimizer(Learnable_Optimizer):
             raise ValueError(f"DRIE error: {r}")
 
     def __get_state(self, problem):
+        """
+        # Introduction
+        Generates the current state representation for the optimizer by performing a random walk within the problem's bounds, evaluating the sampled solutions, and combining feature extraction methods.
+        # Args:
+        - problem (object): An optimization problem instance that must have attributes `lb` (lower bounds), `ub` (upper bounds), and `optimum` (optional), as well as an `eval` method for evaluating solutions.
+        # Returns:
+        - np.ndarray or float: The computed state representation, which is a combination of features extracted from the sampled solutions and their costs.
+        # Notes:
+        - Increments the function evaluation counter (`self.fes`) by the number of samples evaluated.
+        - Uses either a simple or progressive random walk to generate samples.
+        - Applies feature extraction methods `__DFDC` and `__DRIE` to the sampled data.
+        """
         # random walk
         # sample = self.simple_random_walk(lb=problem.lb, ub=problem.ub)
         sample = self.__progressive_random_walk(lb=problem.lb, ub=problem.ub)
@@ -288,11 +362,10 @@ class RLHPSDE_Optimizer(Learnable_Optimizer):
         - action (int): The action index specifying which mutation and crossover strategy to use.
         - problem (object): The problem instance providing evaluation, lower/upper bounds, and optimum value.
         # Returns:
-        - tuple: A tuple containing:
-            - state (object): The updated state representation for the RL agent.
-            - reward (float): The reward signal based on the proportion of improved solutions.
-            - done (bool): Whether the optimization process has reached its termination condition.
-            - info (dict): Additional information (currently empty).
+        - state (object): The updated state representation for the RL agent.
+        - reward (float): The reward signal based on the proportion of improved solutions.
+        - done (bool): Whether the optimization process has reached its termination condition.
+        - info (dict): Additional information (currently empty).
         # Raises:
         - ValueError: If the provided `action` is not a valid index for the available strategies.
         """
@@ -385,12 +458,16 @@ def binomial(x: np.ndarray, v: np.ndarray, Cr: Union[np.ndarray, float], rng) ->
 
 def generate_random_int(NP: int, cols: int, rng: np.random.RandomState = None) -> np.ndarray:
     """
-    Generate a matrix of random integers used by mutation.
-
-    :param NP: Population size.
-    :param cols: The number of random integers generated for each individual.
-    :return: A random integers matrix in shape[''NP'', ''cols''], and elements are in a range of [0, ''NP''-1].
-             The ''cols'' elements at dimension[1] are different from each other.
+    # Introduction
+    Generates a matrix of random integers for use in mutation operations, ensuring that each row contains unique values and no value matches its row index.
+    # Args:
+    - NP (int): Population size, determines the number of rows and the range of random integers [0, NP-1].
+    - cols (int): Number of random integers to generate for each individual (number of columns).
+    - rng (np.random.RandomState, optional): Random number generator instance. If None, a default RNG should be used.
+    # Returns:
+    - np.ndarray: A (NP, cols) shaped matrix of random integers, where each row contains unique values and no value equals its row index.
+    # Raises:
+    - ValueError: If NP or cols is not a positive integer.
     """
     r = rng.randint(low = 0, high = NP, size = (NP, cols))
     # validity checking and modification for r
