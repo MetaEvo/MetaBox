@@ -1,4 +1,4 @@
-# MetaBox-V2's Running Logic
+# Running Logic
 Based on MetaBox’s fully automatic train-test-log workflow, **Unification, Efficiency and Flexible** are the core concepts of MetaBox-v2.0
 - **Unification:** MetaBox-v2.0 provides a unified interface for various MetaBBO (MetaBBO-RL、MetaBBO-SL、MetaBBO-ICL、MetaBBO-NE) and test suites for different types of problems.
 - **Efficiency:**  Parallelization enables MetaBox-v2.0 to train and test efficiently. As the first development exemplar to enable parallel training for MetaBBO, MetaBox-v2.0 supports training speeds up to 10 times faster than MetaBox-v1.0. Various Ray-based parallel modes allow users to fully utilize their computing resources to accelerate testing.
