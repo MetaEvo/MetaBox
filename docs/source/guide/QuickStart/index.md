@@ -4,10 +4,10 @@
 
 :maxdepth: 1
 
-Core_Concept_of_MetaBBO
-MetaBox-V2's_Running_Logic
+Core Concept
+Running Logic
 Installation
-Common_Usage
+Common Usage
 Config
 ```
 
