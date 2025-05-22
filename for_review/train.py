@@ -31,5 +31,6 @@ for baseline in baseline_list:
     trainer.train()
     dir_results.append(tmp_config.train_name)
 
+# we have saved trained model checkpoints of all baselines, the save_path is printed in your cmd.
 for i in range(len(dir_results)):
     print(f"MetaBBO {baseline_list[i]}: {dir_results[i]}")
