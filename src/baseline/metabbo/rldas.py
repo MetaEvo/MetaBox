@@ -171,7 +171,11 @@ class RLDAS(PPO_Agent):
                         optimizer_num = self.config.optim_num,
                         feature_dim = self.config.feature_dim,
                         device = self.config.device)
-        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.train_name + '/'
+        self.config.agent_save_dir = os.path.join(
+            self.config.agent_save_dir,
+            self.__str__(),
+            self.config.train_name
+        )
         super().__init__(self.config, {'actor': actor, 'critic': critic}, self.config.lr)
 
     def __str__(self):

@@ -58,7 +58,11 @@ class DEDQN(DQN_Agent):
         model = MLP(self.config.mlp_config).to(self.config.device)
 
         # self.__cur_checkpoint=0
-        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.train_name + '/'
+        self.config.agent_save_dir = os.path.join(
+            self.config.agent_save_dir,
+            self.__str__(),
+            self.config.train_name
+        )
         super().__init__(self.config, {'model': model}, self.config.lr_model)
 
     def __str__(self):

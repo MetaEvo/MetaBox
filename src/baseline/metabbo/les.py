@@ -73,7 +73,11 @@ class LES(Basic_Agent):
 
         self.cur_checkpoint=0
         # save init agent
-        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.train_name + '/'
+        self.config.agent_save_dir = os.path.join(
+            self.config.agent_save_dir,
+            self.__str__(),
+            self.config.train_name
+        )
         save_class(self.config.agent_save_dir,'checkpoint-'+str(self.cur_checkpoint),self)
         self.cur_checkpoint+=1
 

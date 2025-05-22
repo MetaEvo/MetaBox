@@ -110,7 +110,11 @@ class MADAC(VDN_Agent):
             {'name': 'weight_agent', 'n_actions': 4, 'n_valid_actions': 2}
         ]
         model = MultiAgentQNet(input_shape = 22, agent_configs = agent_configs)
-        config.agent_save_dir = config.agent_save_dir + self.__str__() + '/' + config.train_name + '/'
+        config.agent_save_dir = os.path.join(
+            config.agent_save_dir,
+            self.__str__(),
+            config.train_name
+        )
         super().__init__(config, {'model': model}, 0.001)
 
     def __str__(self):

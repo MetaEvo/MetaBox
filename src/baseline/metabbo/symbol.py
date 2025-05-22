@@ -149,7 +149,11 @@ class SYMBOL(PPO_Agent):
         critic = Critic(fea_dim = self.config.fea_dim,
                         value_dim = self.config.value_dim)
 
-        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.train_name + '/'
+        self.config.agent_save_dir = os.path.join(
+            self.config.agent_save_dir,
+            self.__str__(),
+            self.config.train_name
+        )
         super().__init__(self.config, {'actor': actor, 'critic': critic}, [self.config.lr, self.config.lr_critic])
 
     def __str__(self):

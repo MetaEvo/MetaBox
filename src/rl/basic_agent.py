@@ -18,7 +18,6 @@ Your own agent should have the following methods:
          'return' : total reward in this episode.
        }
 """
-
 from typing import Tuple
 from typing import Optional, Union, Literal
 class Basic_Agent:

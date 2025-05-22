@@ -1,5 +1,5 @@
 import copy
-
+import os
 import torch
 from torch import nn
 from ...rl.basic_agent import Basic_Agent
@@ -76,7 +76,11 @@ class LGA(Basic_Agent):
         self.cur_checkpoint = 0
 
         self.task_step = 0
-        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.train_name + '/'
+        self.config.agent_save_dir = os.path.join(
+            self.config.agent_save_dir,
+            self.__str__(),
+            self.config.train_name
+        )
         save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
         self.cur_checkpoint += 1
 

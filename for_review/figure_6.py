@@ -1,69 +1,42 @@
-from ..src import Tester, Config, construct_problem_set, get_baseline
-from ..src.baseline.metabbo import *
-from ..src.baseline.bbo import *
-from ..src.environment.optimizer import *
-
-import pickle
 import numpy as np
+import pandas as pd
+import pickle
+import os
 import matplotlib.pyplot as plt
-metabbo_list = ['DEDDQN', 'DEDQN', 'LDE', 'RLEPSO', 'NRLPSO', 'LES', 'GLEET', 'GLHF', 'SYMBOL', 'RLDEAFL']
-metabbo_path = [] # you trained model path
-bbo_list = ['PSO', 'DE', 'SHADE', 'JDE21', 'MADDE']
-zero_shot_problem = ['bbob-noisy-30D', 'protein', 'uav', 'hpo-b']
 
+
+zero_shot_problem = ['bbob-noisy-30D', 'protein', 'uav', 'hpo-b']
+metabbo_list = ['DEDDQN', 'DEDQN', 'LDE', 'RLEPSO', 'NRLPSO', 'LES', 'GLEET', 'GLHF', 'SYMBOL', 'RLDEAFL']
+bbo_list = ['PSO', 'DE', 'SHADE', 'JDE21', 'MADDE']
 baseline_list = metabbo_list + bbo_list
 total_result = {}
 for test_problem in zero_shot_problem:
-    config = {
-        'test_problem': test_problem,
-        'test_difficulty': 'all',
-        'test_batch_size': 16,
-        'full_meta_data': True,
-        'baselines': {},
-    }
-
-    for baseline, path in zip(metabbo_list, metabbo_path):
-        config['baselines'][baseline] = {
-            'agent': baseline,
-            'optimizer': eval(f"{baseline}_Optimizer"),
-            'model_load_path': path,
-        }
-    for baseline in bbo_list:
-        config['baselines'][baseline] = {
-            'optimizer': eval(f"{baseline}"),
-        }
-    config = Config(config)
-    config, datasets = construct_problem_set(config)
-    baselines, config = get_baseline(config)
-
-    tester = Tester(config, baselines, datasets)
-    tester.test(log = False)
-
-
     # only draw protein zero-shot curve 
-    test_dir = f"{config.test_log_dir}_{config.test_problem}_{config.test_difficulty}"
+    test_dir = f"test/{test_problem}/metadata"
+
+    # get problem_list
+    problem_list = [f for f in os.listdir(f"{test_dir}/{metabbo_list[0]}/") if f.endswith('.pkl')]
+    problem_list = [problem.split('.')[0] for problem in problem_list]
 
     result = {}
-
-    problem_list = []
     gbest = {}
-    for problem in datasets[1].data:
-        problem_list.append(problem.__str__())
-        gbest[problem.__str__()] = 1e32
 
-    if test_problem == "bbob-noisy-30D":
-        gbest['bbob-noisy-30D'] = 0.0
-
+    for problem in problem_list:
+        gbest[problem] = 1e32
+        if test_problem == "bbob-noisy-30D":
+            gbest[problem] = 0.0
+    
+    test_run = 51
     # ------------ find gbest for each problem------------
     maxlen_index = {}
     for baseline in baseline_list:
         maxlen_index[baseline] = 0
         max_len = 0
         for problem in problem_list:
-            metabbo_path = f"{test_dir}/metadata/{baseline}/{problem}.pkl"
+            metabbo_path = f"{test_dir}/{baseline}/{problem}.pkl"
             with open(metabbo_path, 'rb') as f:
                 metadata = pickle.load(f)
-            
+            test_run = len(metadata)
             for i, metarun in enumerate(metadata):
                 cost_run = metarun['Cost']
                 y_0 = np.min(cost_run[0])
@@ -84,7 +57,7 @@ for test_problem in zero_shot_problem:
             'std': [],
         }
         for problem in problem_list:
-            metadata_path = f"{test_dir}/metadata/{baseline}/{problem}.pkl"
+            metadata_path = f"{test_dir}/{baseline}/{problem}.pkl"
             with open(metadata_path, 'rb') as f:
                 metadata = pickle.load(f) # List[run]
             
@@ -93,7 +66,7 @@ for test_problem in zero_shot_problem:
                 for cost in runs:
                     result[baseline]['fes'].append(len(cost) + result[baseline]['fes'][-1] if result[baseline]['fes'] else 0)
             
-            performance_total = [[] for _ in config.test_run]
+            performance_total = [[] for _ in test_run]
 
             for i, metarun in enumerate(metadata):
                 cost_run = metarun['Cost']
@@ -118,7 +91,6 @@ for test_problem in zero_shot_problem:
         result[baseline]['mean'] = np.mean(result[baseline]['mean'], axis=0)
         result[baseline]['std'] = np.mean(result[baseline]['std'], axis=0)
     total_result[test_problem] = result
-    print(f"{test_problem} test result :{test_dir}")
 
 # plot
 fig, axes = plt.subplots(2, 2, figsize=(14, 10))

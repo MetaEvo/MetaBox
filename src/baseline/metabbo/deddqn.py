@@ -70,7 +70,11 @@ class DEDDQN(DDQN_Agent):
         self.config.criterion = 'MSELoss'
 
         model = MLP(self.config.net_config).to(self.config.device)
-        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.train_name + '/'
+        self.config.agent_save_dir = os.path.join(
+            self.config.agent_save_dir,
+            self.__str__(),
+            self.config.train_name
+        )
         super().__init__(self.config, {'model': model}, self.config.lr_model)
 
     def __str__(self):
