@@ -8,7 +8,7 @@ MetaBBO, an emerging research direction in recent years, aims to automate the de
 - Meta-level​​: A parameterized AI agent that adjusts low-level algorithms in real-time based on their optimization status info.
 
 <p align="center">
-  <img src="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/Metabox-gif.gif" alt="Metabox" width="400"/>
+  <img src="../../_static/Metabox-gif.gif" alt="Metabox" width="400"/>
 </p>
 
 In low-level optimization environment, a BBO optimizer  $\mathcal{A}$  is maintained to optimize a problem  $p$  sampled from distribution  $\mathcal{P}$ . At each optimization step  $t$ , optimization status features are extracted from the current optimization process (such as population and objective values information). Then in meta-level, an algorithm design policy  $\pi_{\theta}$  (with learnable parameters  $\theta$) outputs a desired design  $\omega_{i}^{t}$  by  $\omega_{i}^{t}=\pi_{\theta}\left(s_{i}^{t}\right)$.  $\mathcal{A}$  optimizes  $p$  by  $\omega_{i}^{t}$  for one step. A performance measurement function  $r_{t}$  is used to evaluate the performance gain obtained by this algorithm design decision. Suppose  $T$  optimization steps are allowed for the low-level optimization process, then  $\pi_{\theta}$  is meta-trained to maximize a meta-objective formulated as:  $J(\theta)$ = $E_{p \in \mathcal{P}}$ \[ $\sum_{t=1}^{T} r_{t}$ \] , which is expectation of accumulated single step performance gain over all problem instances in  $\mathcal{P}$. In practice, a training problem set serves as
