@@ -1,8 +1,9 @@
 # Flexibly Integrate other EC Libraries
 
 ```{tip}
-There are many excellent libraries in our community that have significantly accelerated our research. \ 
-MetaBOX pays tribute to these outstanding libraries and supports their flexible integration.
+There are many excellent libraries in our community that provide either testsuites or optimizer implementations. \ 
+MetaBOX supports their flexible integration to promote the open-source ecosystem in the community. \
+We provide following two examples to showcase such flexible usage, and hope you users come up with more novel integration ideas.
 ```
 ## EvoX
 ```{note}
