@@ -2,14 +2,14 @@ import random
 
 from torch.utils.data import Dataset
 import numpy as np
-from ....problem.MOO.MOO_synthetic.zdt_numpy import *
-from ....problem.MOO.MOO_synthetic.uf_numpy import *
-from ....problem.MOO.MOO_synthetic.dtlz_numpy import *
-from ....problem.MOO.MOO_synthetic.wfg_numpy import *
-from ....problem.MOO.MOO_synthetic.zdt_torch import *
-from ....problem.MOO.MOO_synthetic.uf_torch import *
-from ....problem.MOO.MOO_synthetic.dtlz_torch import *
-from ....problem.MOO.MOO_synthetic.wfg_torch import *
+from .zdt_numpy import *
+from .uf_numpy import *
+from .wfg_numpy import *
+from .dtlz_numpy import *
+from .zdt_torch import *
+from .uf_torch import *
+from .dtlz_torch import *
+from .wfg_torch import *
 
 
 class MOO_Synthetic_Dataset(Dataset):
