@@ -1,3 +1,5 @@
+# Single-Object Optimization
+
 ```{toctree}
 :maxdepth: 1
 
@@ -9,4 +11,3 @@ Protein-Docking
 UAV
 CEC2013LSGO
 ```
-# Single-Object Optimization
