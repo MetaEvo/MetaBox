@@ -40,7 +40,6 @@ class LES(Basic_Agent):
     - train_episode(...): Evaluates the current population on the environment(s) and updates performance records.
     - train_epoch(): Aggregates meta-performances, updates optimizer, and tracks the best solution.
     - rollout_episode(env, seed, required_info): Evaluates the best solution on a single environment.
-    - rollout_batch_episode(envs, seeds, para_mode, compute_resource, required_info): Evaluates the best solution on a batch of environments.
     - log_to_tb_train(tb_logger, mini_step, gbest, extra_info): Logs training metrics and extra information to TensorBoard.
     # Returns:
     Varies by method. Core methods return training status, performance metrics, or evaluation results.
@@ -201,49 +200,7 @@ class LES(Basic_Agent):
 
         return results
 
-    def rollout_batch_episode(self,
-                              envs,
-                              seeds = None,
-                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                              # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                              # num_cpus: Optional[Union[int, None]] = 1,
-                              # num_gpus: int = 0,
-                              compute_resource = {},
-                              required_info = {}) :
-        num_cpus = None
-        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
-        if 'num_cpus' in compute_resource.keys():
-            num_cpus = compute_resource['num_cpus']
-        if 'num_gpus' in compute_resource.keys():
-            num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
-        env.seed(seeds)
-
-        R = np.zeros(len(env))
-        # use best_x to rollout
-        env.reset()
-        action = {'attn':self.best_x[:68],
-                      'mlp':self.best_x[68:],}
-        action = [copy.deepcopy(action) for _ in range(len(env))]
-        gbest, r, _, _ = env.step(action)
-        R += np.array(r).squeeze().tolist()
-
-        env_cost = env.get_env_attr('cost')
-        env_fes = env.get_env_attr('fes')
-        results = {'cost': env_cost, 'fes': env_fes, 'return': R}
-        if self.config.full_meta_data:
-            meta_X = env.get_env_attr('meta_X')
-            meta_Cost = env.get_env_attr('meta_Cost')
-            metadata = {'X': meta_X, 'Cost': meta_Cost}
-            results['metadata'] = metadata
-
-
-        for key in required_info.keys():
-            results[key] = env.get_env_attr(required_info[key])
-
-        return results
-
-        # return {'cost':env.optimizer.cost,'fes': env.optimizer.FEs, 'return': R}
+    
 
     def log_to_tb_train(self, tb_logger, mini_step,gbest,
                         extra_info = {}):

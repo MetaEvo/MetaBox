@@ -68,6 +68,10 @@ class UAV_Numpy_Problem(Basic_Problem):
     """
 
     def __init__(self):
+        """
+        # Introduction
+        Initialize the UAV path planning problem.
+        """
         self.terrain_model = None
         self.FES = 0
         self.optimum = None
@@ -78,9 +82,23 @@ class UAV_Numpy_Problem(Basic_Problem):
         self.n_obj = 5
 
     def __str__(self):
+        """
+        # Introduction
+        Return a string description of the problem.
+
+        # Returns
+        - str: Terrain ID string.
+        """
         return f"Terrain {self.problem_id}"
 
     def __boundaries__(self):
+        """
+        # Introduction
+        Set the lower and upper bounds for decision variables based on the terrain model.
+
+        # Returns
+        - None: Modifies self.lb and self.ub in-place.
+        """
         model = self.terrain_model
 
         nVar = model['n']
@@ -129,6 +147,18 @@ class UAV_Numpy_Problem(Basic_Problem):
         self.ub = bounds[:, 1]
 
     def spherical_to_cart_vec(self, solve):
+        """
+        # Introduction
+        Convert a population of solutions from spherical (r, psi, phi) to Cartesian (x, y, z) coordinates.
+
+        # Args
+        - solve (np.ndarray): Array of shape [NP, 3*n] representing decision variables.
+
+        # Returns
+        - x (np.ndarray): X-coordinates of shape [NP, n].
+        - y (np.ndarray): Y-coordinates of shape [NP, n].
+        - z (np.ndarray): Z-coordinates of shape [NP, n].
+        """
         # solve : 2D [NP, 3 * n]
         # Extracting r, phi, and psi from the solution row
         r = solve[:, 0::3]  # r values are in indices 0, 3, 6, ...
@@ -165,6 +195,18 @@ class UAV_Numpy_Problem(Basic_Problem):
         return x, y, z
 
     def DistP2S(self, xs, a, b):
+        """
+        # Introduction
+        Compute the shortest distance from a 2D point to multiple 2D line segments.
+
+        # Args
+        - xs (np.ndarray): Array of shape [2,] representing the point.
+        - a (np.ndarray): Array of shape [2, N] representing start points of line segments.
+        - b (np.ndarray): Array of shape [2, N] representing end points of line segments.
+
+        # Returns
+        - dist (np.ndarray): Array of shape [N] representing distances to each segment.
+        """
         # xs: 1D array [2], a: 2D array [2, NP], b: 2D array [2, NP]
 
         # Convert x to a 2D array of shape [2, 1] to match the other input arrays
@@ -194,7 +236,31 @@ class UAV_Numpy_Problem(Basic_Problem):
         return dist
 
 class Terrain(UAV_Numpy_Problem):
+    """
+    # Introduction
+    Multi-objective UAV path planning problem over a 3D terrain map with obstacles and threats.Evaluates five objectives: path length, threat avoidance, altitude penalty, smoothness, and terrain clearance.
+
+    # Args
+    - terrain_model (dict): Dictionary containing terrain data, UAV configuration, threats, and parameters.
+    - problem_id (int): Unique identifier for the problem instance.
+
+    # Attributes
+    - terrain_model (dict): Terrain configuration and UAV parameters.
+    - dim (int): Dimension of the problem, equals 3 times the number of waypoints.
+    - problem_id (int): Problem ID for identification.
+    - optimum (None): Placeholder for true Pareto front (if known).
+    """
     def __init__(self, terrain_model, problem_id):
+        """
+        # Introduction
+        - Initialize a UAV path planning problem with given terrain model and problem ID.
+        - Sets up internal attributes and boundary constraints for the optimization problem.
+
+        # Args
+        - terrain_model (dict): Contains UAV start/end points, threats, height map, parameters like 'n', 'zmin', 'zmax', etc.
+        - problem_id (int): Integer ID used to distinguish this problem instance.
+
+        """
         super(Terrain, self).__init__()
         self.terrain_model = terrain_model
         self.dim = 3 * terrain_model['n']
@@ -205,6 +271,17 @@ class Terrain(UAV_Numpy_Problem):
 
 
     def func(self, solve):
+        """
+        # Introduction
+        - Compute five objective values for a batch of UAV paths encoded in spherical coordinates.
+        - Objectives include path length, threat cost, altitude penalty, smoothness, and terrain violation penalty.
+
+        # Args
+        - solve (np.ndarray): 2D array of shape [NP, 3 * nv], each row is a solution representing waypoints in spherical coordinates.
+
+        # Returns
+        - np.ndarray: 2D array of shape [NP, 5], each row represents the five objective values of one solution.
+        """
         # solve : 2D [NP, 3 * nv]
         model = self.terrain_model
 
@@ -332,6 +409,20 @@ class Terrain(UAV_Numpy_Problem):
         return np.array([b1 * J1, b2 * J2, b3 * J3, b4 * J4, b5 * J5]).T
 
     def are_paths_clear(self, x_all, y_all, z_abs, H, num_samples = 12):
+        """
+        # Introduction
+        - Check whether all UAV path segments are completely above the terrain.
+
+        # Args
+        - x_all (np.ndarray): (NP, N) x-coordinates for each point of each path.
+        - y_all (np.ndarray): (NP, N) y-coordinates for each point of each path.
+        - z_abs (np.ndarray): (NP, N) absolute altitude for each point of each path.
+        - H (np.ndarray): Terrain height map (2D array).
+        - num_samples (int): Number of interpolation samples per segment.
+
+        # Returns
+        - np.ndarray: Boolean array of shape (NP,), indicating whether each path is above terrain.
+        """
         """
         Check if all the line segments connecting adjacent points of NP paths are completely above the terrain H.
         :param x_all: (NP, N) shaped array, x coordinates of N points for each of NP paths

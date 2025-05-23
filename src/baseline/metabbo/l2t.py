@@ -131,18 +131,6 @@ class L2T(PPO_Agent):
                 dict: Results of the rollout including return, cost, and other metadata.
             # Raises:
                 None.
-        rollout_batch_episode(envs, seeds=None, para_mode='dummy', compute_resource={}, required_info={}):
-            Executes a batch of rollout episodes in parallel environments.
-            # Args:
-                envs (list): List of environments for rollouts.
-                seeds (Optional[Union[int, List[int], np.ndarray]]): Seeds for environment initialization.
-                para_mode (str): Parallelization mode for environments.
-                compute_resource (dict): Resources for computation (e.g., CPUs, GPUs).
-                required_info (dict): Additional information required from the environment.
-            # Returns:
-                dict: Results of the rollouts including returns, costs, and other metadata.
-            # Raises:
-                None.
     # Returns:
         None.
     # Raises:
@@ -432,50 +420,5 @@ class L2T(PPO_Agent):
                 results[key] = getattr(env, required_info[key])
             return results
     
-    def rollout_batch_episode(self, 
-                              envs, 
-                              seeds=None,
-                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
-                              # asynchronous: Literal[None, 'idle', 'restart', 'continue']=None,
-                              # num_cpus: Optional[Union[int, None]]=1,
-                              # num_gpus: int=0,
-                              compute_resource = {},
-                              required_info={}):
-        num_cpus = None
-        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
-        if 'num_cpus' in compute_resource.keys():
-            num_cpus = compute_resource['num_cpus']
-        if 'num_gpus' in compute_resource.keys():
-            num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
-
-        env.seed(seeds)
-        state = env.reset()
-        try:
-            state = torch.Tensor(state).to(self.device)
-        except:
-            pass
-        
-        _R = torch.zeros(len(env))
-        # sample trajectory
-        while not env.all_done():
-            with torch.no_grad():
-                action = self.actor(state)[0]
-            
-            # state transient
-            state, rewards, is_end, info = env.step(action)
-            # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            _R += torch.Tensor(rewards)
-            # store info
-            try:
-                state = torch.Tensor(state).to(self.device)
-            except:
-                pass
-        _Rs = _R.detach().numpy().tolist()
-        env_cost = env.get_env_attr('cost')
-        env_fes = env.get_env_attr('fes')
-        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
-        for key in required_info.keys():
-            results[key] = env.get_env_attr(required_info[key])
-        return results
+    
 

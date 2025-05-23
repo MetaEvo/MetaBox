@@ -4,51 +4,36 @@ from ....problem.basic_problem import Basic_Problem_Torch
 import math
 def find_non_dominated_indices(Point):
     """
-    此函数用于找出种群中的支配解
-    :param population_list: 种群的目标值的列表，列表中的每个元素是一个代表单个解目标值的列表
-    :return: 支配解的列表
+    # Introduction
+    Find the indices of non-dominated solutions in a population.
+
+    A solution is said to be non-dominated if no other solution in the population
+    dominates it. This function performs a pairwise comparison between all solutions.
+
+    # Args:
+    - Point (np.ndarray): A 2D array of shape (n_points, n_objectives), where each row 
+                          represents the objective values of a solution.
+
+    # Returns:
+    - non_dominated_indices (np.ndarray): Indices of the non-dominated solutions.
     """
-    # 将列表转换为 numpy 数组
     n_points = Point.shape[0]
-    is_dominated = th.zeros(n_points, dtype=bool)
+    is_dominated = np.zeros(n_points, dtype = bool)
 
     for i in range(n_points):
         for j in range(n_points):
             if i != j:
-                # 检查是否存在解 j 支配解 i
-                if th.all(Point[j] <= Point[i]) and th.any(Point[j] < Point[i]):
+                if np.all(Point[j] <= Point[i]) and np.any(Point[j] < Point[i]):
                     is_dominated[i] = True
                     break
 
-    # 找出非支配解的索引
-    non_dominated_indices = th.where(~is_dominated)[0]
+    non_dominated_indices = np.where(~is_dominated)[0]
     return non_dominated_indices
 
 class ZDT_Torch(Basic_Problem_Torch):
     """
     # Introduction
-    The `ZDT_Torch` class represents a Pytorch-based synthetic multi-objective optimization problem from the ZDT problem suite, implemented using PyTorch. This class is designed to define the problem's structure, including the number of variables, objectives, and bounds for the decision variables.
-    # Original paper
-    "[Comparison of multiobjective evolutionary algorithms: Empirical results](https://ieeexplore.ieee.org/abstract/document/6787994)." Evolutionary computation 8.2 (2000): 173-195.
-    # Official Implementation
-    [pymoo](https://github.com/anyoptimization/pymoo)
-    # License
-    Apache-2.0
-    # Problem Suite Composition
-    The ZDT problem suite consists of a set of benchmark problems commonly used in multi-objective optimization research. These problems are designed to evaluate the performance of optimization algorithms in terms of convergence and diversity. The suite includes problems with varying levels of complexity and characteristics, such as convex, non-convex, and discontinuous Pareto fronts.
-    # Args:
-    - `n_var` (int, optional): The number of decision variables in the problem. Defaults to 30.
-    - `**kwargs`: Additional keyword arguments for customization.
-    # Attributes:
-    - `n_var` (int): The number of decision variables.
-    - `n_obj` (int): The number of objectives in the problem. Defaults to 2.
-    - `vtype` (type): The type of decision variables. Defaults to `float`.
-    - `lb` (torch.Tensor): A tensor representing the lower bounds of the decision variables.
-    - `ub` (torch.Tensor): A tensor representing the upper bounds of the decision variables.
-    # Methods:
-    - `__str__() -> str`: Returns a string representation of the problem, including the class name, number of objectives, and number of decision variables.
-    # Raises:
-    - No specific exceptions are raised by this class. However, errors may occur if invalid arguments are provided during initialization.
+    A PyTorch version of the ZDT test suite for multi-objective optimization problems.
     """
 
     def __init__(self, n_var=30, **kwargs):
@@ -74,7 +59,7 @@ class ZDT1_Torch(ZDT_Torch):
         out = th.column_stack([f1, f2])
         return out
 
-    def get_ref_set(self,n_ref_points=1000):  # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
+    def get_ref_set(self,n_ref_points=1000):  
         N = n_ref_points #
         ObjV1 = th.linspace(0, 1, N)
         ObjV2 = 1 - th.sqrt(ObjV1)
@@ -95,7 +80,7 @@ class ZDT2_Torch(ZDT_Torch):
         out = th.column_stack([f1, f2])
         return out
 
-    def get_ref_set(self,n_ref_points=1000):  # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
+    def get_ref_set(self,n_ref_points=1000):  # 
         N = n_ref_points
         ObjV1 = th.linspace(0, 1, N)
         ObjV2 = 1 - ObjV1 ** 2
@@ -116,7 +101,7 @@ class ZDT3_Torch(ZDT_Torch):
         out = th.column_stack([f1, f2])
         return out
 
-    def get_ref_set(self,n_ref_points=1000):  # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
+    def get_ref_set(self,n_ref_points=1000):  # 
         N = n_ref_points
         ObjV1 = th.linspace(0, 1, N)
         ObjV2 = 1 - ObjV1 ** 0.5 - ObjV1 * th.sin(10 * math.pi * ObjV1)
@@ -153,7 +138,7 @@ class ZDT4_Torch(ZDT_Torch):
         out = th.column_stack([f1, f2])
         return out
 
-    def get_ref_set(self,n_ref_points=1000):  # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
+    def get_ref_set(self,n_ref_points=1000):  
         N = n_ref_points
         ObjV1 = th.linspace(0, 1, N)
         ObjV2 = 1 - th.sqrt(ObjV1)
@@ -217,7 +202,7 @@ class ZDT6_Torch(ZDT_Torch):
         out= th.column_stack([f1, f2])
         return out
 
-    def get_ref_set(self,n_ref_points=1000):  # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
+    def get_ref_set(self,n_ref_points=1000):  
         N = n_ref_points
         ObjV1 = th.linspace(0.280775, 1, N)
         ObjV2 = 1 - ObjV1 ** 2;

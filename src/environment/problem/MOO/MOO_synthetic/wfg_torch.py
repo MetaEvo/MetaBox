@@ -6,27 +6,49 @@ import numpy as np
 from scipy.special import comb
 
 
-def crtup(n_obj, n_ref_points = 1000):
+def crtup(n_obj, n_ref_points=1000):
+    """
+    # Introduction
+    Generates a set of uniformly distributed reference points (weight vectors) for a given number of objectives.
+    This function is typically used in multi-objective optimization algorithms such as NSGA-III and RVEA,
+    where reference points are required to guide the selection process.
+
+    # Args:
+    - n_obj (int): Number of objectives (i.e., the dimensionality of the reference points).
+    - n_ref_points (int): Approximate number of desired reference points (default: 1000).
+
+    # Returns:
+    - W (np.ndarray): A 2D array of shape (n_comb, n_obj) representing the generated reference vectors.
+    - n_comb (int): Actual number of generated reference vectors.
+    """
     def find_H_for_closest_points(N, M):
         """
-        根据目标点数 N 和维数 M，找到最接近的 H，使得生成的点数不超过 N。
+        # Introduction
+        Finds the closest integer H such that the number of combinations C(H+M-1, M-1)
+        is as close as possible to N without exceeding it.
+
+        # Args:
+        - N (int): Desired number of reference points.
+        - M (int): Number of objectives.
+
+        # Returns:
+        - closest_H (int): The value of H that generates the closest number of points ≤ N.
+        - closest_N (int): The actual number of points generated using closest_H.
         """
-        # 设定初始搜索范围
-        H_min, H_max = 1, 100000  # 假设 H 的范围在 1 到 100 之间，具体可根据实际情况调整
+        H_min, H_max = 1, 100000
         closest_H = H_min
         closest_diff = float('inf')
         closest_N = 0
-        # 搜索最接近 N 的 H
-        for H in range(H_min, H_max + 1):
-            generated_points = int(comb(H + M - 1, M - 1))  # 计算生成的点数
 
-            # 如果生成的点数超过目标 N，跳过此 H
+        for H in range(H_min, H_max + 1):
+            generated_points = int(comb(H + M - 1, M - 1))
+
+
             if generated_points > N:
                 break
 
-            diff = abs(generated_points - N)  # 计算与目标 N 的差异
+            diff = abs(generated_points - N) 
 
-            # 如果当前差异更小，则更新最接近的 H 和差异
             if diff < closest_diff:
                 closest_H = H
                 closest_diff = diff
@@ -42,86 +64,55 @@ def crtup(n_obj, n_ref_points = 1000):
     if len(combinations) == len(temp):
         result = []
         for combination, arr in zip(combinations, temp):
-            # 元组元素与数组元素相减
             sub_result = np.array(combination) - arr - 1
             result.append(sub_result)
     else:
-        print("两个列表长度不一致，无法相减。")
+        print("Length mismatch between combinations and temp array. Cannot compute reference points.")
     result = np.array(result)
     W = np.zeros((n_comb, M))
-    W[:, 0] = result[:, 0] - 0  # 第一列直接是 Temp 的第一列
+    W[:, 0] = result[:, 0] - 0
     for i in range(1, M - 1):
-        W[:, i] = result[:, i] - result[:, i - 1]  # 后续列是 Temp 当前列减去前一列
-    W[:, -1] = H - result[:, -1]  # 最后一列是 H - Temp 最后一列
+        W[:, i] = result[:, i] - result[:, i - 1]
+    W[:, -1] = H - result[:, -1]
 
     W = W / H
     return W, n_comb
 
 
+
+
 def find_non_dominated_indices(Point):
     """
-    此函数用于找出种群中的支配解
-    :param population_list: 种群的目标值的列表，列表中的每个元素是一个代表单个解目标值的列表
-    :return: 支配解的列表
+    # Introduction
+    Find the indices of non-dominated solutions in a population.
+
+    A solution is said to be non-dominated if no other solution in the population
+    dominates it. This function performs a pairwise comparison between all solutions.
+
+    # Args:
+    - Point (np.ndarray): A 2D array of shape (n_points, n_objectives), where each row 
+                          represents the objective values of a solution.
+
+    # Returns:
+    - non_dominated_indices (np.ndarray): Indices of the non-dominated solutions.
     """
-    # 将列表转换为 numpy 数组
     n_points = Point.shape[0]
-    is_dominated = th.zeros(n_points, dtype = bool)
+    is_dominated = np.zeros(n_points, dtype = bool)
 
     for i in range(n_points):
         for j in range(n_points):
             if i != j:
-                # 检查是否存在解 j 支配解 i
-                if th.all(Point[j] <= Point[i]) and th.any(Point[j] < Point[i]):
+                if np.all(Point[j] <= Point[i]) and np.any(Point[j] < Point[i]):
                     is_dominated[i] = True
                     break
 
-    # 找出非支配解的索引
-    non_dominated_indices = th.where(~is_dominated)[0]
+    non_dominated_indices = np.where(~is_dominated)[0]
     return non_dominated_indices
-
 
 class WFG_Torch(Basic_Problem_Torch):
     """
     # Introduction
-    The `WFG_Torch` class is an Pytorch-based implementation of the WFG (Walking Fish Group) test problems for multi-objective optimization using PyTorch. These problems are widely used in the field of evolutionary computation to evaluate the performance of optimization algorithms. The class provides functionality to define and validate the problem parameters, generate optimal solutions, and calculate the objective values.
-    # Original paper
-    "[A review of multiobjective test problems and a scalable test problem toolkit](https://ieeexplore.ieee.org/abstract/document/1705400)." IEEE Transactions on Evolutionary Computation 10.5 (2006): 477-506.
-    # Official Implementation
-    [pymoo](https://github.com/anyoptimization/pymoo)
-    # License
-    Apache-2.0
-    # Problem Suite Composition
-    The WFG problem suite consists of a set of scalable multi-objective optimization problems. These problems are designed to test the performance of optimization algorithms under various conditions, such as different numbers of objectives, decision variables, and problem complexities. The problems are parameterized by the number of objectives (`n_obj`), the number of decision variables (`n_var`), and two additional parameters: `k` (position-related parameters) and `l` (distance-related parameters).
-    # Args:
-    - `n_var` (int): Number of decision variables.
-    - `n_obj` (int): Number of objectives.
-    - `k` (int, optional): Position-related parameter. Defaults to `2 * (n_obj - 1)` if not provided.
-    - `l` (int, optional): Distance-related parameter. Defaults to `n_var - k` if not provided.
-    - `**kwargs`: Additional keyword arguments.
-    # Attributes:
-    - `n_obj` (int): Number of objectives.
-    - `n_var` (int): Number of decision variables.
-    - `lb` (torch.Tensor): Lower bounds of the decision variables.
-    - `ub` (torch.Tensor): Upper bounds of the decision variables.
-    - `vtype` (torch.dtype): Data type of the decision variables.
-    - `S` (torch.Tensor): Scaling constants for the objective functions.
-    - `A` (torch.Tensor): Constants used in the transformation of objectives.
-    - `k` (int): Position-related parameter.
-    - `l` (int): Distance-related parameter.
-    # Methods:
-    - `validate(l, k, n_obj)`: Validates the problem parameters.
-    - `_post(t, a)`: Transforms the decision variables using a post-processing function.
-    - `_calculate(x, s, h)`: Calculates the objective values based on the decision variables and scaling constants.
-    - `_rand_optimal_position(n)`: Generates random optimal positions for the decision variables.
-    - `_positional_to_optimal(K)`: Converts positional variables to optimal decision variables.
-    - `__str__()`: Returns a string representation of the problem instance.
-    # Raises:
-    - `ValueError`: Raised in the `validate` method if:
-        - The number of objectives (`n_obj`) is less than 2.
-        - The position parameter (`k`) is not divisible by the number of objectives minus one.
-        - The position parameter (`k`) is less than 4.
-        - The sum of the position and distance parameters (`k + l`) is less than the number of objectives (`n_obj`).
+    A PyTorch version of the WFG test suite for multi-objective optimization problems.
     """
 
     def __init__(self, n_var, n_obj, k = None, l = None, **kwargs):
@@ -226,9 +217,9 @@ class WFG1_Torch(WFG_Torch):
         out = self._calculate(y, self.S, h)
         return out
 
-    def get_ref_set(self, n_ref_points = 1000):  # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
-        N = n_ref_points  # 设置所要生成的全局最优解的个数
-        Point, num = crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
+    def get_ref_set(self, n_ref_points = 1000):  
+        N = n_ref_points  # 
+        Point, num = crtup(self.n_obj, N)  
         Point = th.tensor(Point)
         M = self.n_obj
         c = th.ones((num, M))
@@ -298,8 +289,8 @@ class WFG2_Torch(WFG_Torch):
         return out
 
     def get_ref_set(self, n_ref_points = 1000):
-        N = n_ref_points  # 设置所要生成的全局最优解的个数
-        Point, num = crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
+        N = n_ref_points  # 
+        Point, num = crtup(self.n_obj, N)  # N
         Point = th.tensor(Point)
         M = self.n_obj
         c = th.ones((num, M))
@@ -316,9 +307,9 @@ class WFG2_Torch(WFG_Torch):
             x[i, 0] = a[th.min(rank[0: 10])]
         Point = convex(x)
         Point[:, [M - 1]] = disc(x)
-        # [levels, criLevel] = ea.ndsortESS(Point.numpy(), None, 1)  # 非支配分层，只分出第一层即可
+        # [levels, criLevel] = ea.ndsortESS(Point.numpy(), None, 1)  # 
         # levels = th.tensor(levels)
-        # Point = Point[th.where(levels == 1)[0], :]  # 只保留点集中的非支配点
+        # Point = Point[th.where(levels == 1)[0], :]  # 
         index = find_non_dominated_indices(Point)
         Point = Point[index]
         referenceObjV = th.tile(th.tensor([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
@@ -351,7 +342,7 @@ class WFG3_Torch(WFG_Torch):
         return out
 
     def get_ref_set(self, n_ref_points = 1000):
-        N = n_ref_points  # 设置所要生成的全局最优解的个数
+        N = n_ref_points  
         X = th.hstack([th.linspace(0, 1, N).unsqueeze(1), th.zeros((N, self.n_obj - 2)) + 0.5, th.zeros((N, 1))])
         Point = linear(X)
         referenceObjV = th.tile(th.tensor([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
@@ -385,8 +376,8 @@ class WFG4_Torch(WFG_Torch):
         return out
 
     def get_ref_set(self, n_ref_points = 1000):
-        N = n_ref_points  # 设置所要生成的全局最优解的个数
-        Point, num = crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
+        N = n_ref_points  
+        Point, num = crtup(self.n_obj, N) 
         Point = th.tensor(Point)
         Point = Point / th.tile(th.sqrt(th.sum(Point ** 2, dim = 1, keepdim = True)), (1, self.n_obj))
 
@@ -419,8 +410,8 @@ class WFG5_Torch(WFG_Torch):
         return out
 
     def get_ref_set(self, n_ref_points = 1000):
-        N = n_ref_points  # 设置所要生成的全局最优解的个数
-        Point, num = crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
+        N = n_ref_points  
+        Point, num = crtup(self.n_obj, N)  
         Point = th.tensor(Point)
         Point = Point / th.tile(th.sqrt(th.sum(Point ** 2, dim = 1, keepdim = True)), (1, self.n_obj))
         referenceObjV = th.tile(th.tensor([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
@@ -455,8 +446,8 @@ class WFG6_Torch(WFG_Torch):
         return out
 
     def get_ref_set(self, n_ref_points = 1000):
-        N = n_ref_points  # 设置所要生成的全局最优解的个数
-        Point, num = crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
+        N = n_ref_points  
+        Point, num = crtup(self.n_obj, N) 
         Point = th.tensor(Point)
         Point = Point / th.tile(th.sqrt(th.sum(Point ** 2, dim = 1, keepdim = True)), (1, self.n_obj))
         referenceObjV = th.tile(th.tensor([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
@@ -487,8 +478,8 @@ class WFG7_Torch(WFG_Torch):
         return out
 
     def get_ref_set(self, n_ref_points = 1000):
-        N = n_ref_points  # 设置所要生成的全局最优解的个数
-        Point, num = crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
+        N = n_ref_points  
+        Point, num = crtup(self.n_obj, N)  
         Point = th.tensor(Point)
         Point = Point / th.tile(th.sqrt(th.sum(Point ** 2, dim = 1, keepdim = True)), (1, self.n_obj))
         referenceObjV = th.tile(th.tensor([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
@@ -534,8 +525,8 @@ class WFG8_Torch(WFG_Torch):
         return ret
 
     def get_ref_set(self, n_ref_points = 1000):
-        N = n_ref_points  # 设置所要生成的全局最优解的个数
-        Point, num = crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
+        N = n_ref_points  
+        Point, num = crtup(self.n_obj, N)  
         Point = th.tensor(Point)
         Point = Point / th.tile(th.sqrt(th.sum(Point ** 2, dim = 1, keepdim = True)), (1, self.n_obj))
         referenceObjV = th.tile(th.tensor([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point
@@ -594,8 +585,8 @@ class WFG9_Torch(WFG_Torch):
         return ret
 
     def get_ref_set(self, n_ref_points = 1000):
-        N = n_ref_points  # 设置所要生成的全局最优解的个数
-        Point, num = crtup(self.n_obj, N)  # 生成N个在各目标的单位维度上均匀分布的参考点
+        N = n_ref_points 
+        Point, num = crtup(self.n_obj, N) 
         Point = th.tensor(Point)
         Point = Point / th.tile(th.sqrt(th.sum(Point ** 2, dim = 1, keepdim = True)), (1, self.n_obj))
         referenceObjV = th.tile(th.tensor([list(range(2, 2 * self.n_obj + 1, 2))]), (Point.shape[0], 1)) * Point

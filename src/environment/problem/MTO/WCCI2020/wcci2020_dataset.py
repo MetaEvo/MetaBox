@@ -56,16 +56,6 @@ class WCCI2020_Dataset(Dataset):
         P8: Rosenbrock, Rastrigin, Ackley, Griewank, Weierstrass
         P9: Rosenbrock, Rastrigin, Ackley, Griewank, Weierstrass, Schwefel
         P10:Rastrigin, Ackley, Griewank, Weierstrass, Schwefel
-    # Args:
-    - `data` (list): A list of task datasets, where each dataset contains multiple tasks.
-    - `batch_size` (int, optional): The size of each batch when retrieving data. Defaults to 1.
-    # Attributes:
-    - `data` (list): The dataset containing tasks.
-    - `batch_size` (int): The size of each batch.
-    - `maxdim` (int): The maximum dimensionality across all tasks in the dataset.
-    - `N` (int): The total number of task datasets.
-    - `ptr` (list): A list of indices for batching.
-    - `index` (numpy.ndarray): An array of indices for shuffling and accessing data.
     # Methods:
     - `__getitem__(item)`: Retrieves a batch of tasks based on the given index.
     - `__len__()`: Returns the total number of task datasets.
@@ -81,6 +71,20 @@ class WCCI2020_Dataset(Dataset):
     def __init__(self,
                  data,
                  batch_size=1):
+        """
+        # Introduction
+        Initializes the WCCI2020 Dataset with datas.
+        # Args:
+        - `data` (list): A list of task datasets, where each dataset contains multiple tasks.
+        - `batch_size` (int, optional): The size of each batch when retrieving data. Defaults to 1.
+        # Attributes:
+        - `data` (list): The dataset containing tasks.
+        - `batch_size` (int): The size of each batch. Defaults to 1.
+        - `maxdim` (int): The maximum dimensionality across all tasks in the dataset.
+        - `N` (int): The total number of task datasets.
+        - `ptr` (list): A list of indices for batching.
+        - `index` (numpy.ndarray): An array of indices for shuffling and accessing data.
+        """
         super().__init__()
         self.data = data
         self.batch_size = batch_size
@@ -93,7 +97,14 @@ class WCCI2020_Dataset(Dataset):
         self.index = np.arange(self.N)
 
     def __getitem__(self, item):
-        
+        """
+        # Introduction
+        Retrieves a batch of tasks of the the WCCI2020 benchmark suite based on the given index.
+        # Args:
+        - `item` (int, optional): Specifies which batch of tasks of the WCCI2020 benchmark is selected.
+        # Returns:
+        - list: A list containing a batch of tasks of the WCCI2020 benchmark.
+        """
         ptr = self.ptr[item]
         index = self.index[ptr: min(ptr + self.batch_size, self.N)]
         res = []
@@ -102,13 +113,29 @@ class WCCI2020_Dataset(Dataset):
         return res
     
     def __len__(self):
+        """
+        # Introduction
+        Returns the total number of tasks in the WCCI2020 benchmark suite.
+        # Returns:
+        - int: The size of the WCCI2020 benchmark suite.
+        """
         return self.N
 
     
     def __add__(self, other: 'WCCI2020_Dataset'):
+        """
+        # Introduction
+        Combines two datasets into a single dataset.
+        # Returns:
+        - Object: The combined new dataset of the WCCI2020 benchmark suite.
+        """
         return WCCI2020_Dataset(self.data + other.data, self.batch_size)
 
     def shuffle(self):
+        """
+        # Introduction
+        Randomly shuffles the order of tasks in the dataset.
+        """
         self.index = np.random.permutation(self.N)
 
     @staticmethod
@@ -118,6 +145,26 @@ class WCCI2020_Dataset(Dataset):
                      difficulty=None,
                      user_train_list=None,
                      user_test_list=None):
+        """
+        # Introduction
+        Generates training and testing datasets for the WCCI2020 benchmark suite based on specified difficulty or user-defined function lists.
+        # Args:
+        - `version` (str, optional): Specifies the implementation version to use for function instances. 
+          Accepts 'numpy' or any other string for alternative (e.g., 'torch'). Defaults to 'numpy'.
+        - `train_batch_size` (int, optional): Batch size for the training dataset. Defaults to 1.
+        - `test_batch_size` (int, optional): Batch size for the testing dataset. Defaults to 1.
+        - `difficulty` (str, optional): Difficulty level for dataset split. Accepts 'easy', 'difficult', 'all', or None. 
+          If None, `user_train_list` and `user_test_list` must be provided.
+        - `user_train_list` (list of int, optional): List of function IDs to include in the training set. Used if `difficulty` is None.
+        - `user_test_list` (list of int, optional): List of function IDs to include in the testing set. Used if `difficulty` is None.
+        # Returns:
+        - tuple: A tuple containing two `WCCI2020_Dataset` objects:
+            - The first is the training dataset.
+            - The second is the testing dataset.
+        # Raises:
+        - `ValueError`: If neither `difficulty` nor both `user_train_list` and `user_test_list` are provided.
+        - `ValueError`: If an invalid `difficulty` value is specified.
+        """
         if difficulty == None and user_test_list == None and user_train_list == None:
             raise ValueError('Please set difficulty or user_train_list and user_test_list.')
         if difficulty not in ['easy', 'difficult', 'all', None]:

@@ -4,27 +4,49 @@ from scipy.special import comb
 from ....problem.basic_problem import Basic_Problem
 
 
-def crtup(n_obj, n_ref_points = 1000):
+def crtup(n_obj, n_ref_points=1000):
+    """
+    # Introduction
+    Generates a set of uniformly distributed reference points (weight vectors) for a given number of objectives.
+    This function is typically used in multi-objective optimization algorithms such as NSGA-III and RVEA,
+    where reference points are required to guide the selection process.
+
+    # Args:
+    - n_obj (int): Number of objectives (i.e., the dimensionality of the reference points).
+    - n_ref_points (int): Approximate number of desired reference points (default: 1000).
+
+    # Returns:
+    - W (np.ndarray): A 2D array of shape (n_comb, n_obj) representing the generated reference vectors.
+    - n_comb (int): Actual number of generated reference vectors.
+    """
     def find_H_for_closest_points(N, M):
         """
-        根据目标点数 N 和维数 M，找到最接近的 H，使得生成的点数不超过 N。
+        # Introduction
+        Finds the closest integer H such that the number of combinations C(H+M-1, M-1)
+        is as close as possible to N without exceeding it.
+
+        # Args:
+        - N (int): Desired number of reference points.
+        - M (int): Number of objectives.
+
+        # Returns:
+        - closest_H (int): The value of H that generates the closest number of points ≤ N.
+        - closest_N (int): The actual number of points generated using closest_H.
         """
-        # 设定初始搜索范围
-        H_min, H_max = 1, 100000  # 假设 H 的范围在 1 到 100 之间，具体可根据实际情况调整
+        H_min, H_max = 1, 100000
         closest_H = H_min
         closest_diff = float('inf')
         closest_N = 0
-        # 搜索最接近 N 的 H
-        for H in range(H_min, H_max + 1):
-            generated_points = int(comb(H + M - 1, M - 1))  # 计算生成的点数
 
-            # 如果生成的点数超过目标 N，跳过此 H
+        for H in range(H_min, H_max + 1):
+            generated_points = int(comb(H + M - 1, M - 1))
+
+
             if generated_points > N:
                 break
 
-            diff = abs(generated_points - N)  # 计算与目标 N 的差异
+            diff = abs(generated_points - N) 
 
-            # 如果当前差异更小，则更新最接近的 H 和差异
             if diff < closest_diff:
                 closest_H = H
                 closest_diff = diff
@@ -40,28 +62,28 @@ def crtup(n_obj, n_ref_points = 1000):
     if len(combinations) == len(temp):
         result = []
         for combination, arr in zip(combinations, temp):
-            # 元组元素与数组元素相减
             sub_result = np.array(combination) - arr - 1
             result.append(sub_result)
     else:
-        print("两个列表长度不一致，无法相减。")
+        print("Length mismatch between combinations and temp array. Cannot compute reference points.")
     result = np.array(result)
     W = np.zeros((n_comb, M))
-    W[:, 0] = result[:, 0] - 0  # 第一列直接是 Temp 的第一列
+    W[:, 0] = result[:, 0] - 0
     for i in range(1, M - 1):
-        W[:, i] = result[:, i] - result[:, i - 1]  # 后续列是 Temp 当前列减去前一列
-    W[:, -1] = H - result[:, -1]  # 最后一列是 H - Temp 最后一列
+        W[:, i] = result[:, i] - result[:, i - 1]
+    W[:, -1] = H - result[:, -1]
 
     W = W / H
     return W, n_comb
+
+
 
 
 # Basic_Problem
 class UF1(Basic_Problem):
     """
     # Introduction
-    The `UF1` class represents a numpy-based synthetic multi-objective optimization problem from the UF (Unconstrained Functions) problem suite. The UF dataset include 10 problems (UF1-UF10),others are similar to UF1.
-    It is designed to evaluate optimization algorithms on a two-objective problem with a specific mathematical formulation.
+    UF1 is a numpy-based implementation of the UF1 benchmark problem from the UF suite,a two-objective unconstrained multi-objective optimization problem.
     # Original paper
     "[Multiobjective optimization test instances for the CEC 2009 special session and competition](https://www.al-roomi.org/multimedia/CEC_Database/CEC2009/MultiObjectiveEA/CEC2009_MultiObjectiveEA_TechnicalReport.pdf)." (2008): 1-30.
     # Official Implementation
@@ -71,31 +93,26 @@ class UF1(Basic_Problem):
     # Problem Suite Composition
     The UF problem suite contains a set of unconstrained multi-objective optimization problems designed for benchmarking optimization algorithms. 
     Each problem in the suite has a specific number of objectives and variables, with known theoretical Pareto fronts.
-    # Args:
-    None
-    # Attributes:
-    - `n_obj` (int): Number of objectives for the problem (default is 2).
-    - `n_var` (int): Number of decision variables for the problem (default is 30).
-    - `lb` (numpy.ndarray): Lower bounds for the decision variables.
-    - `ub` (numpy.ndarray): Upper bounds for the decision variables.
-    - `vtype` (type): Data type of the decision variables (default is `float`).
-    # Methods:
-    - `func(x)`: Computes the objective values for a given decision variable matrix `x`.
-        - **Args**:
-            - `x` (numpy.ndarray): Decision variable matrix.
-        - **Returns**:
-            - `ObjV` (numpy.ndarray): Objective values for the input decision variables.
-    - `get_ref_set(n_ref_points=1000)`: Generates a reference set of points on the theoretical Pareto front.
-        - **Args**:
-            - `n_ref_points` (int): Number of reference points to generate (default is 1000).
-        - **Returns**:
-            - `referenceObjV` (numpy.ndarray): Reference points on the Pareto front.
-    - `__str__()`: Returns a string representation of the problem instance.
-    # Raises:
-    - `ValueError`: Raised if the input `x` to the `func` method has an invalid dimension.
+
+   # Attributes
+    - n_obj (int): Number of objectives (default 2).
+    - n_var (int): Number of decision variables (default 30).
+    - lb (np.ndarray): Lower bounds for decision variables.
+    - ub (np.ndarray): Upper bounds for decision variables.
+    - vtype (type): Variable type, default float.
+
+    # Methods
+    - __init__(): Initialize problem parameters.
+    - func(x): Calculate objective values from decision variables.
+    - get_ref_set(n_ref_points=1000): Generate theoretical Pareto front samples.
+    - __str__(): Return problem description string.
     """
 
     def __init__(self):
+        """
+        # Introduction
+        Initialize UF1 problem parameters.
+        """
         self.n_obj = 2
         self.n_var = 30
         self.lb = np.array([-1] * self.n_var)
@@ -103,10 +120,20 @@ class UF1(Basic_Problem):
         self.ub = np.array([1] * self.n_var)
         self.vtype = float
 
-    def func(self, x):  # 目标函数
+    def func(self, x):
+        """
+        # Introduction
+        Evaluate the UF1 objective functions for the input decision variables.
+
+        # Args
+        - x (np.ndarray): 2D array of shape (n_samples, n_var) representing decision variables.
+
+        # Returns
+        - np.ndarray: 2D array of shape (n_samples, n_obj) representing objective values.
+        """
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
-        Vars = x  # 得到决策变量矩阵
+        Vars = x  
         x1 = Vars[:, [0]]
         J1 = np.array(list(range(2, self.n_var, 2)))
         J2 = np.array(list(range(1, self.n_var, 2)))
@@ -117,7 +144,17 @@ class UF1(Basic_Problem):
         ObjV = np.hstack([f1, f2])
         return ObjV
 
-    def get_ref_set(self, n_ref_points = 1000):  # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
+    def get_ref_set(self, n_ref_points = 1000):
+        """
+        # Introduction
+        Generate a reference set approximating the theoretical Pareto front for UF1.
+
+        # Args
+        - n_ref_points (int): Number of reference points to generate (default 1000).
+
+        # Returns
+        - np.ndarray: Reference set of shape (n_ref_points, n_obj).
+        """
         N = n_ref_points
         ObjV1 = np.linspace(0, 1, N)
         ObjV2 = 1 - np.sqrt(ObjV1)
@@ -125,22 +162,61 @@ class UF1(Basic_Problem):
         return referenceObjV
 
     def __str__(self):
+        """
+        # Introduction
+        Return a string representation of the problem class.
+        
+        # Returns
+        - str: A string describing the problem's name, number of objectives, and variables.
+        """
         return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF2(Basic_Problem):
+    """
+    # Introduction
+    UF2 is a numpy-based implementation of the UF2 benchmark problem from the UF suite,a two-objective unconstrained multi-objective optimization problem.
+    
+    # Attributes
+    - n_obj (int): Number of objectives (default 2).
+    - n_var (int): Number of decision variables (default 30).
+    - lb (np.ndarray): Lower bounds for decision variables.
+    - ub (np.ndarray): Upper bounds for decision variables.
+    - vtype (type): Variable type, default float.
+
+    # Methods
+    - __init__(): Initialize problem parameters.
+    - func(x): Calculate objective values from decision variables.
+    - get_ref_set(n_ref_points=1000): Generate theoretical Pareto front samples.
+    - __str__(): Return problem description string.
+    """
     def __init__(self):
-        self.n_obj = 2  # 初始化（目标维数）
-        self.n_var = 30  # 初始化（决策变量维数）
+        """
+        # Introduction
+        Initialize UF2 problem parameters.
+        
+        """
+        self.n_obj = 2  
+        self.n_var = 30  
         self.lb = np.array([-1] * self.n_var)
         self.lb[0] = 0
         self.ub = np.array([1] * self.n_var)
         self.vtype = float
 
-    def func(self, x):  # 目标函数
+    def func(self, x): 
+        """
+        # Introduction
+        Evaluate the UF2 objective functions for the input decision variables.
+
+        # Args
+        - x (np.ndarray): 2D array of shape (n_samples, n_var) representing decision variables.
+
+        # Returns
+        - np.ndarray: 2D array of shape (n_samples, n_obj) representing objective values.
+        """
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
-        Vars = x  # 得到决策变量矩阵
+        Vars = x 
         x1 = Vars[:, [0]]
         J1 = np.array(list(range(2, self.n_var, 2)))
         J2 = np.array(list(range(1, self.n_var, 2)))
@@ -155,7 +231,17 @@ class UF2(Basic_Problem):
         ObjV = np.hstack([f1, f2])
         return ObjV
 
-    def get_ref_set(self, n_ref_points = 1000):  # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
+    def get_ref_set(self, n_ref_points = 1000):
+        """
+        # Introduction
+        Generate a reference set approximating the theoretical Pareto front for UF2.
+
+        # Args
+        - n_ref_points (int): Number of reference points to generate (default 1000).
+
+        # Returns
+        - np.ndarray: Reference set of shape (n_ref_points, n_obj).
+        """  
         N = n_ref_points
         ObjV1 = np.linspace(0, 1, N)
         ObjV2 = 1 - np.sqrt(ObjV1)
@@ -163,21 +249,64 @@ class UF2(Basic_Problem):
         return referenceObjV
 
     def __str__(self):
+        """
+        # Introduction
+        Return a string representation of the problem class.
+
+        # Returns
+        - str: A string describing the problem's name, number of objectives, and variables.
+        """
         return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
-class UF3(Basic_Problem):  # 继承Problem的父类
+class UF3(Basic_Problem):  
+    """
+    # Introduction
+    UF3 is a numpy-based implementation of the UF3 benchmark problem from the UF suite,
+    a two-objective unconstrained multi-objective optimization problem.
+
+    # Reference
+    Deb, K., et al. "Multiobjective optimization test instances for the CEC 2009 special session and competition" (2008).
+
+    # Attributes
+    - n_obj (int): Number of objectives (default 2).
+    - n_var (int): Number of decision variables (default 30).
+    - lb (np.ndarray): Lower bounds for decision variables.
+    - ub (np.ndarray): Upper bounds for decision variables.
+    - vtype (type): Variable type, default float.
+
+    # Methods
+    - __init__(): Initialize problem parameters.
+    - func(x): Calculate objective values from decision variables.
+    - get_ref_set(n_ref_points=1000): Generate theoretical Pareto front samples.
+    - __str__(): Return problem description string.
+    """
+
     def __init__(self):
-        self.n_obj = 2  # 目标维数
-        self.n_var = 30  # 决策变量维数
+        """
+        # Introduction
+        Initialize UF3 problem parameters.
+        """
+        self.n_obj = 2  
+        self.n_var = 30  
         self.lb = np.array([0] * self.n_var)
         self.ub = np.array([1] * self.n_var)
         self.vtype = float
 
-    def func(self, x):  # 目标函数
+    def func(self, x): 
+        """
+        # Introduction
+        Evaluate the UF3 objective functions for the input decision variables.
+
+        # Args
+        - x (np.ndarray): 2D array of shape (n_samples, n_var) representing decision variables.
+
+        # Returns
+        - np.ndarray: 2D array of shape (n_samples, n_obj) representing objective values.
+        """
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
-        Vars = x  # 决策变量矩阵
+        Vars = x  
         x1 = Vars[:, [0]]
         J1 = np.array(list(range(2, self.n_var, 2)))
         J2 = np.array(list(range(1, self.n_var, 2)))
@@ -194,7 +323,17 @@ class UF3(Basic_Problem):  # 继承Problem的父类
         ObjV = np.hstack([f1, f2])
         return ObjV
 
-    def get_ref_set(self, n_ref_points = 1000):  # 理论最优值
+    def get_ref_set(self, n_ref_points = 1000):
+        """
+        # Introduction
+        Generate a reference set approximating the theoretical Pareto front for UF3.
+
+        # Args
+        - n_ref_points (int): Number of reference points to generate (default 1000).
+
+        # Returns
+        - np.ndarray: Reference set of shape (n_ref_points, n_obj).
+        """ 
         N = n_ref_points
         ObjV1 = np.linspace(0, 1, N)
         ObjV2 = 1 - np.sqrt(ObjV1)
@@ -202,23 +341,66 @@ class UF3(Basic_Problem):  # 继承Problem的父类
         return referenceObjV
 
     def __str__(self):
+        """
+        # Introduction
+        Return a string representation of the problem class.
+
+        # Returns
+        - str: A string describing the problem's name, number of objectives, and variables.
+        """
         return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF4(Basic_Problem):
+    """
+    # Introduction
+    UF4 is a numpy-based implementation of the UF4 benchmark problem from the UF suite,
+    a two-objective unconstrained multi-objective optimization problem.
+
+    # Reference
+    Deb, K., et al. "Multiobjective optimization test instances for the CEC 2009 special session and competition" (2008).
+
+    # Attributes
+    - n_obj (int): Number of objectives (default 2).
+    - n_var (int): Number of decision variables (default 30).
+    - lb (np.ndarray): Lower bounds for decision variables.
+    - ub (np.ndarray): Upper bounds for decision variables.
+    - vtype (type): Variable type, default float.
+
+    # Methods
+    - __init__(): Initialize problem parameters.
+    - func(x): Calculate objective values from decision variables.
+    - get_ref_set(n_ref_points=1000): Generate theoretical Pareto front samples.
+    - __str__(): Return problem description string.
+    """
     def __init__(self):
-        self.n_obj = 2  # 初始化（目标维数）
-        self.n_var = 30  # 初始化Dim（决策变量维数）
+        """
+        # Introduction
+        Initialize UF4 problem parameters.
+
+        """
+        self.n_obj = 2  
+        self.n_var = 30  
         self.lb = np.array([-2] * self.n_var)
         self.lb[0] = 0
         self.ub = np.array([2] * self.n_var)
         self.ub[0] = 1
         self.vtype = float
 
-    def func(self, x):  # 目标函数
+    def func(self, x):
+        """
+        # Introduction
+        Evaluate the UF4 objective functions for the input decision variables.
+
+        # Args
+        - x (np.ndarray): A 2D array of shape (n_samples, n_var), each row representing a decision vector.
+
+        # Returns
+        - np.ndarray: A 2D array of shape (n_samples, n_obj), each row representing the objective values.
+        """ 
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
-        Vars = x  # 决策变量矩阵
+        Vars = x  
         x1 = Vars[:, [0]]
         J1 = np.array(list(range(2, self.n_var, 2)))
         J2 = np.array(list(range(1, self.n_var, 2)))
@@ -233,7 +415,17 @@ class UF4(Basic_Problem):
         ObjV = np.hstack([f1, f2])
         return ObjV
 
-    def get_ref_set(self, n_ref_points = 1000):  # 理论最优值
+    def get_ref_set(self, n_ref_points = 1000):
+        """
+        # Introduction
+        Generate a reference set approximating the theoretical Pareto front for UF4.
+
+        # Args
+        - n_ref_points (int): Number of reference points to generate (default 1000).
+
+        # Returns
+        - np.ndarray: Reference set of shape (n_ref_points, n_obj).
+        """
         N = n_ref_points
         ObjV1 = np.linspace(0, 1, N)
         ObjV2 = 1 - ObjV1 ** 2
@@ -241,22 +433,64 @@ class UF4(Basic_Problem):
         return referenceObjV
 
     def __str__(self):
+        """
+        # Introduction
+        Return a string representation of the problem class.
+
+        # Returns
+        - str: A string describing the problem's name, number of objectives, and variables.
+        """
         return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class UF5(Basic_Problem):
+    """
+    # Introduction
+    UF5 is a numpy-based implementation of the UF5 benchmark problem from the UF suite,
+    characterized by a challenging Pareto set with discontinuities and multimodality.
+
+    # Reference
+    Deb, K., et al. "Multiobjective optimization test instances for the CEC 2009 special session and competition" (2008).
+
+    # Attributes
+    - n_obj (int): Number of objectives (default 2).
+    - n_var (int): Number of decision variables (default 30).
+    - lb (np.ndarray): Lower bounds for decision variables.
+    - ub (np.ndarray): Upper bounds for decision variables.
+    - vtype (type): Variable type, default float.
+
+    # Methods
+    - __init__(): Initialize problem parameters.
+    - func(x): Calculate objective values from decision variables.
+    - get_ref_set(n_ref_points=1000): Generate theoretical Pareto front samples.
+    - __str__(): Return problem description string.
+    """
     def __init__(self):
-        self.n_obj = 2  # 初始化M（目标维数）
-        self.n_var = 30  # 初始化Dim（决策变量维数）
+        """
+        # Introduction
+        Initialize UF5 problem parameters.
+        """
+        self.n_obj = 2  
+        self.n_var = 30  
         self.lb = np.array([-1] * self.n_var)
         self.lb[0] = 0
         self.ub = np.array([1] * self.n_var)
         self.vtype = float
 
-    def func(self, x):  # 目标函数
+    def func(self, x):
+        """
+        # Introduction
+        Evaluate the UF5 objective functions for the input decision variables.
+
+        # Args
+        - x (np.ndarray): A 2D array of shape (n_samples, n_var), each row representing a decision vector.
+
+        # Returns
+        - np.ndarray: A 2D array of shape (n_samples, n_obj), each row representing the objective values.
+        """ 
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
-        Vars = x  # 决策变量矩阵
+        Vars = x 
         x1 = Vars[:, [0]]
         J1 = np.array(list(range(2, self.n_var, 2)))
         J2 = np.array(list(range(1, self.n_var, 2)))
@@ -264,7 +498,6 @@ class UF5(Basic_Problem):
         J = J[np.newaxis, :]
         y = Vars - np.sin(6 * np.pi * x1 + (J * np.pi) / self.n_var)
         hy = 2 * y ** 2 - np.cos(4 * np.pi * y) + 1
-        # print(hy)
         hy1 = hy[:, J1]
         hy2 = hy[:, J2]
         f1 = x1 + (1 / 20 + 0.1) * np.abs(np.sin(20 * np.pi * x1)) + 2 * (np.mean(hy1, 1, keepdims = True))
@@ -272,30 +505,82 @@ class UF5(Basic_Problem):
         ObjV = np.hstack([f1, f2])
         return ObjV
 
-    def get_ref_set(self, n_ref_points = 1000):  # 理论最优值
-        N = n_ref_points  # 生成10000个参考点
+    def get_ref_set(self, n_ref_points = 1000):
+        """
+        # Introduction
+        Generate a reference set approximating the theoretical Pareto front for UF5.
+
+        # Args
+        - n_ref_points (int): Number of reference points to generate (default 1000).
+
+        # Returns
+        - np.ndarray: Reference set of shape (n_ref_points, n_obj).
+        """ 
+        N = n_ref_points 
         ObjV1 = np.linspace(0, 1, N)
         ObjV2 = 1 - ObjV1
         referenceObjV = np.array([ObjV1, ObjV2]).T
         return referenceObjV
 
     def __str__(self):
+        """
+        # Introduction
+        Return a string representation of the problem class.
+
+        # Returns
+        - str: A string describing the problem's name, number of objectives, and variables.
+        """
         return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
-class UF6(Basic_Problem):  # 继承Problem父类
+class UF6(Basic_Problem):
+    """
+    # Introduction
+    UF6 is a numpy-based implementation of the UF6 benchmark problem from the UF suite,
+    designed to test an optimizer's ability to handle disconnected and deceptive Pareto fronts
+    with multimodal landscape and discontinuities.
+
+
+    # Attributes
+    - n_obj (int): Number of objectives (default 2).
+    - n_var (int): Number of decision variables (default 30).
+    - lb (np.ndarray): Lower bounds for decision variables.
+    - ub (np.ndarray): Upper bounds for decision variables.
+    - vtype (type): Variable type, default float.
+
+    # Methods
+    - __init__(): Initialize problem parameters.
+    - func(x): Calculate objective values from decision variables.
+    - get_ref_set(n_ref_points=1000): Generate theoretical Pareto front samples.
+    - __str__(): Return problem description string.
+    """
     def __init__(self):
-        self.n_obj = 2  # 初始化M（目标维数）
-        self.n_var = 30  # 初始化Dim（决策变量维数）
+        """
+        # Introduction
+        Initialize UF6 problem parameters.
+
+        """
+        self.n_obj = 2 
+        self.n_var = 30 
         self.lb = np.array([-1] * self.n_var)
         self.lb[0] = 0
         self.ub = np.array([1] * self.n_var)
         self.vtype = float
 
-    def func(self, x):  # 目标函数
+    def func(self, x):
+        """
+        # Introduction
+        Evaluate the UF6 objective functions for the input decision variables.
+
+        # Args
+        - x (np.ndarray): A 2D array of shape (n_samples, n_var), each row representing a decision vector.
+
+        # Returns
+        - np.ndarray: A 2D array of shape (n_samples, n_obj), each row representing the objective values.
+        """
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
-        Vars = x  # 决策变量矩阵
+        Vars = x
         x1 = Vars[:, [0]]
         J1 = np.array(list(range(2, self.n_var, 2)))
         J2 = np.array(list(range(1, self.n_var, 2)))
@@ -304,10 +589,6 @@ class UF6(Basic_Problem):  # 继承Problem父类
         y = Vars - np.sin(6 * np.pi * x1 + (J * np.pi) / self.n_var)
         yJ1 = y[:, J1]
         yJ2 = y[:, J2]
-        # hy    = 2*y**2 - np.cos(4*np.pi*y) + 1
-        # print(hy)
-        # hy1   = hy[:, J1]
-        # hy2   = hy[:, J2]
         f1 = x1 + np.maximum(0, 2 * (1 / 4 + 0.1) * np.sin(4 * np.pi * x1)) + \
              (2 / len(J1)) * (4 * np.sum(yJ1 ** 2, 1, keepdims = True) - \
                               2 * (np.prod(np.cos((20 * yJ1 * np.pi) / (np.sqrt(J1))), 1, keepdims = True)) + 2)
@@ -317,7 +598,18 @@ class UF6(Basic_Problem):  # 继承Problem父类
         ObjV = np.hstack([f1, f2])
         return ObjV
 
-    def get_ref_set(self, n_ref_points = 1000):  # 理论最优值
+    def get_ref_set(self, n_ref_points = 1000):
+        """
+        # Introduction
+        Generate a reference set approximating the theoretical Pareto front for UF6.
+        The Pareto front is discontinuous, consisting of two valid segments in [0,0.25] and [0.75,1].
+
+        # Args
+        - n_ref_points (int): Number of reference points to generate (default 1000).
+
+        # Returns
+        - np.ndarray: Reference set of shape (n_points, n_obj).
+        """
         N = n_ref_points
         ObjV1 = np.linspace(0, 1, N)
         idx = ((ObjV1 > 0) & (ObjV1 < 1 / 4)) | ((ObjV1 > 1 / 2) & (ObjV1 < 3 / 4))
@@ -327,22 +619,64 @@ class UF6(Basic_Problem):  # 继承Problem父类
         return referenceObjV
 
     def __str__(self):
+        """
+        # Introduction
+        Return a string representation of the problem class.
+
+        # Returns
+        - str: A string describing the problem's name, number of objectives, and variables.
+        """
         return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
-class UF7(Basic_Problem):  # 继承Problem父类
+class UF7(Basic_Problem):
+    """
+    # Introduction
+    UF7 is a numpy-based implementation of the UF7 benchmark problem from the UF suite,
+    designed to evaluate the capability of optimization algorithms to handle non-convex and
+    non-uniform Pareto fronts with variable linkage and multimodal landscapes.
+
+    # Attributes
+    - n_obj (int): Number of objectives (default 2).
+    - n_var (int): Number of decision variables (default 30).
+    - lb (np.ndarray): Lower bounds for decision variables.
+    - ub (np.ndarray): Upper bounds for decision variables.
+    - vtype (type): Variable type, default float.
+
+    # Methods
+    - __init__(): Initialize problem parameters.
+    - func(x): Calculate objective values from decision variables.
+    - get_ref_set(n_ref_points=1000): Generate theoretical Pareto front samples.
+    - __str__(): Return problem description string.
+    """
+
     def __init__(self):
-        self.n_obj = 2  # 初始化M（目标维数）
-        self.n_var = 30  # 初始化Dim（决策变量维数）
+        """
+        # Introduction
+        Initialize UF7 problem parameters.
+
+        """
+        self.n_obj = 2 
+        self.n_var = 30 
         self.lb = np.array([-1] * self.n_var)
         self.lb[0] = 0
         self.ub = np.array([1] * self.n_var)
         self.vtype = float
 
-    def func(self, x):  # 目标函数
+    def func(self, x):
+        """
+        # Introduction
+        Evaluate the UF7 objective functions for the input decision variables.
+
+        # Args
+        - x (np.ndarray): A 2D array of shape (n_samples, n_var), each row representing a decision vector.
+
+        # Returns
+        - np.ndarray: A 2D array of shape (n_samples, n_obj), each row representing the objective values.
+        """
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
-        Vars = x  # 决策变量矩阵
+        Vars = x 
         x1 = Vars[:, [0]]
         J1 = np.array(list(range(2, self.n_var, 2)))
         J2 = np.array(list(range(1, self.n_var, 2)))
@@ -356,7 +690,17 @@ class UF7(Basic_Problem):  # 继承Problem父类
         ObjV = np.hstack([f1, f2])
         return ObjV
 
-    def get_ref_set(self, n_ref_points = 1000):  # 理论最优值
+    def get_ref_set(self, n_ref_points = 1000):
+        """
+        # Introduction
+        Generate a reference set approximating the theoretical Pareto front for UF7.
+
+        # Args
+        - n_ref_points (int): Number of reference points to generate (default 1000).
+
+        # Returns
+        - np.ndarray: Reference set of shape (n_points, n_obj).
+        """
         N = n_ref_points
         ObjV1 = np.linspace(0, 1, N)
         ObjV2 = 1 - ObjV1
@@ -364,21 +708,63 @@ class UF7(Basic_Problem):  # 继承Problem父类
         return referenceObjV
 
     def __str__(self):
+        """
+        # Introduction
+        Return a string representation of the problem class.
+
+        # Returns
+        - str: A string describing the problem's name, number of objectives, and variables.
+        """
         return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
-class UF8(Basic_Problem):  # 继承Problem父类
+class UF8(Basic_Problem):
+    """
+    # Introduction
+    UF8 is a numpy-based implementation of the UF8 benchmark problem from the UF suite.
+    It is a three-objective problem designed to test an algorithm's ability to handle
+    multi-objective landscapes with complex variable linkage and diverse Pareto sets.
+
+
+    # Attributes
+    - n_obj (int): Number of objectives (default 3).
+    - n_var (int): Number of decision variables (default 30).
+    - lb (np.ndarray): Lower bounds for decision variables.
+    - ub (np.ndarray): Upper bounds for decision variables.
+    - vtype (type): Variable type, default float.
+
+    # Methods
+    - __init__(): Initialize problem parameters.
+    - func(x): Calculate objective values from decision variables.
+    - get_ref_set(n_ref_points=1000): Generate theoretical Pareto front samples.
+    - __str__(): Return problem description string.
+    """
     def __init__(self):
-        self.n_obj = 3  # 初始化M（目标维数）
-        self.n_var = 30  # 初始化Dim（决策变量维数）
+        """
+        # Introduction
+        Initialize UF8 problem parameters, including bounds and variable types.
+
+        """
+        self.n_obj = 3 
+        self.n_var = 30 
         self.lb = np.array([0] * 2 + [-2] * (self.n_var - 2))
         self.ub = np.array([1] * 2 + [2] * (self.n_var - 2))
         self.vtype = float
 
-    def func(self, x):  # 目标函数
+    def func(self, x):
+        """
+        # Introduction
+        Evaluate the UF8 objective functions for the input decision variables.
+
+        # Args
+        - x (np.ndarray): A 2D array of shape (n_samples, n_var), each row representing a decision vector.
+
+        # Returns
+        - np.ndarray: A 2D array of shape (n_samples, n_obj), each row representing the objective values.
+        """ 
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
-        Vars = x  # 决策变量矩阵
+        Vars = x 
         x1 = Vars[:, [0]]
         x2 = Vars[:, [1]]
         J1 = np.array(list(range(3, self.n_var, 3)))
@@ -396,7 +782,17 @@ class UF8(Basic_Problem):  # 继承Problem父类
         ObjV = np.hstack([f1, f2, f3])
         return ObjV
 
-    def get_ref_set(self, n_ref_points = 1000):  # 理论最优值
+    def get_ref_set(self, n_ref_points = 1000):
+        """
+        # Introduction
+        Generate a reference set approximating the theoretical Pareto front for UF8.
+
+        # Args
+        - n_ref_points (int): Number of reference points to generate (default 1000).
+
+        # Returns
+        - np.ndarray: Reference set of shape (n_points, n_obj), normalized to the unit hypersphere.
+        """
         N = n_ref_points
         ObjV, N = crtup(self.n_obj, N)  # ObjV.shape=N,3
         ObjV = ObjV / np.sqrt(np.sum(ObjV ** 2, 1, keepdims = True))
@@ -404,22 +800,61 @@ class UF8(Basic_Problem):  # 继承Problem父类
         return referenceObjV
 
     def __str__(self):
+        """
+        # Introduction
+        Return a string representation of the problem class.
+
+        # Returns
+        - str: A string describing the problem's name, number of objectives, and variables.
+        """
         return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
-class UF9(Basic_Problem):  # 继承Problem父类
+class UF9(Basic_Problem):
+    """
+    # Introduction
+    UF9 is a numpy-based implementation of the UF9 benchmark problem from the UF suite.It is a three-objective problem designed to evaluate the capability of algorithms in handling complex variable linkages and partially disconnected Pareto fronts.
+
+    # Attributes
+    - n_obj (int): Number of objectives (default 3).
+    - n_var (int): Number of decision variables (default 30).
+    - lb (np.ndarray): Lower bounds for decision variables.
+    - ub (np.ndarray): Upper bounds for decision variables.
+    - vtype (type): Variable type, default float.
+
+    # Methods
+    - __init__(): Initialize problem parameters.
+    - func(x): Calculate objective values from decision variables.
+    - get_ref_set(n_ref_points=1000): Generate theoretical Pareto front samples.
+    - __str__(): Return problem description string.
+    """ 
     def __init__(self):
-        self.n_obj = 3  # 初始化M（目标维数）
-        self.n_var = 30  # 初始化Dim（决策变量维数）
+        """
+        # Introduction
+        Initialize UF9 problem parameters, including bounds and variable types.
+
+        """
+        self.n_obj = 3  
+        self.n_var = 30  
         self.lb = np.array([0] * 2 + [-2] * (self.n_var - 2))
         self.ub = np.array([1] * 2 + [2] * (self.n_var - 2))
-        # 调用父类构造方法完成实例化
+
         self.vtype = float
 
-    def func(self, x):  # 目标函数
+    def func(self, x):
+        """
+        # Introduction
+        Evaluate the UF9 objective functions for the input decision variables.
+
+        # Args
+        - x (np.ndarray): A 2D array of shape (n_samples, n_var), each row representing a decision vector.
+
+        # Returns
+        - np.ndarray: A 2D array of shape (n_samples, n_obj), each row representing the objective values.
+        """ 
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
-        Vars = x  # 决策变量矩阵
+        Vars = x 
         x1 = Vars[:, [0]]
         x2 = Vars[:, [1]]
         J1 = np.array(list(range(3, self.n_var, 3)))
@@ -437,30 +872,80 @@ class UF9(Basic_Problem):  # 继承Problem父类
         ObjV = np.hstack([f1, f2, f3])
         return ObjV
 
-    def get_ref_set(self, n_ref_points = 1000):  # 理论最优值
-        N = n_ref_points  # 生成10000个参考点
+    def get_ref_set(self, n_ref_points = 1000):
+        """
+        # Introduction
+        Generate a reference set that approximates the Pareto front of UF9.
+
+        # Args
+        - n_ref_points (int): Number of reference points to generate (default 1000).
+
+        # Returns
+        - np.ndarray: A 2D array of reference points on the approximated Pareto front.
+        """ 
+        N = n_ref_points  
         ObjV, N = crtup(self.n_obj, N)  # ObjV.shape=N,3
         idx = (ObjV[:, 0] > (1 - ObjV[:, 2]) / 4) & (ObjV[:, 0] < (1 - ObjV[:, 2]) * 3 / 4)
         referenceObjV = ObjV[~idx]
         return referenceObjV
 
     def __str__(self):
+        """
+        # Introduction
+        Return a string representation of the problem class.
+
+
+        # Returns
+        - str: A string describing the problem's name, number of objectives, and variables.
+        """
         return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
-class UF10(Basic_Problem):  # 继承Problem父类
+class UF10(Basic_Problem):
+    """
+    # Introduction
+    UF10 is a numpy-based implementation of the UF10 benchmark problem from the UF suite.It is a three-objective test problem with complex linkages, designed to evaluate optimization algorithms on multi-objective problems with diverse Pareto fronts.
+
+    # Attributes
+    - n_obj (int): Number of objectives (default 3).
+    - n_var (int): Number of decision variables (default 30).
+    - lb (np.ndarray): Lower bounds for decision variables.
+    - ub (np.ndarray): Upper bounds for decision variables.
+    - vtype (type): Variable type, default float.
+
+    # Methods
+    - __init__(): Initialize problem parameters.
+    - func(x): Calculate objective values from decision variables.
+    - get_ref_set(n_ref_points=1000): Generate theoretical Pareto front samples.
+    - __str__(): Return problem description string.
+    """ 
 
     def __init__(self):
-        self.n_obj = 3  # 初始化M（目标维数）
-        self.n_var = 30  # 初始化Dim（决策变量维数）
+        """
+        # Introduction
+        Initialize UF10 problem parameters, including bounds and variable types.
+
+        """
+        self.n_obj = 3  
+        self.n_var = 30  
         self.lb = np.array([0] * 2 + [-2] * (self.n_var - 2))
         self.ub = np.array([1] * 2 + [2] * (self.n_var - 2))
         self.vtype = float
 
-    def func(self, x):  # 目标函数
+    def func(self, x):
+        """
+        # Introduction
+        Evaluate the UF10 objective functions for the input decision variables.
+
+        # Args
+        - x (np.ndarray): A 2D array of shape (n_samples, n_var), or a 1D array of shape (n_var,).
+
+        # Returns
+        - np.ndarray: A 2D array of shape (n_samples, n_obj), each row containing objective values.
+        """  
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
-        Vars = x  # 决策变量矩阵
+        Vars = x  
         x1 = Vars[:, [0]]
         x2 = Vars[:, [1]]
         J1 = np.array(list(range(3, self.n_var, 3)))
@@ -476,14 +961,31 @@ class UF10(Basic_Problem):  # 继承Problem父类
         ObjV = np.hstack([f1, f2, f3])
         return ObjV
 
-    def get_ref_set(self, n_ref_points = 1000):  # 理论最优值
-        N = n_ref_points  # 生成10000个参考点
+    def get_ref_set(self, n_ref_points = 1000):
+        """
+        # Introduction
+        Generate a set of uniformly distributed reference points on the unit sphere in 3D.
+
+        # Args
+        - n_ref_points (int): Number of reference points to generate (default 1000).
+
+        # Returns
+        - np.ndarray: A 2D array of shape (n_ref_points, n_obj), representing Pareto front samples.
+        """  
+        N = n_ref_points  
         ObjV, N = crtup(self.n_obj, N)  # ObjV.shape=N,3
         ObjV = ObjV / np.sqrt(np.sum(ObjV ** 2, 1, keepdims = True))
         referenceObjV = ObjV
         return referenceObjV
 
     def __str__(self):
+        """
+        # Introduction
+        Return a string representation of the problem class.
+
+        # Returns
+        - str: A string describing the problem's name, number of objectives, and variables.
+        """
         return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 

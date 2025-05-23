@@ -1181,7 +1181,38 @@ class Basic_Logger:
 
     
 class MOO_Logger(Basic_Logger):
+    """
+    # Introduction
+    Custormized logger for Moo scenary.
+    # Attributes
+    - config (argparse.Namespace): Configuration namespace with parameters like maxFEs, indicators, agents.
+    - color_arrangement (dict): Mapping of agents to colors for consistent plotting.
+    - arrange_index (int): Index to track color assignment order.
+    - indicators (list): List of performance indicators to log and plot.
+
+    # Methods
+    - __init__(config): Initializes logger with configuration.
+    - is_pareto_efficient(points): Computes Pareto-efficient points from a set.
+    - draw_pareto_fronts(data, output_dir, Name): Plots Pareto fronts for given problems.
+    - draw_test_indicator(data, output_dir, indicator, Name, categorized, pdf_fig): Plots test indicator curves.
+    - draw_named_average_test_indicator(data, output_dir, named_agents, indicator, pdf_fig): Plots average indicator curves for named agent groups.
+    - draw_concrete_performance_hist(data, output_dir, indicator, Name, pdf_fig): Draws bar charts for final performance values.
+    - draw_boxplot(data, output_dir, indicator, Name, ignore, pdf_fig): Generates boxplots for agent performances on each problem.
+    - draw_overall_boxplot(data, output_dir, indicator, ignore, pdf_fig): Generates combined boxplot across all problems.
+    - draw_train_logger(data_type, steps, data, agent_for_rollout, output_dir, ylabel, norm, pdf_fig, data_wrapper): Plots training metric curves with smoothing.
+    - post_processing_test_statics(log_dir, include_random_baseline, pdf_fig): Processes test results and generates summary tables and figures.
+    - post_processing_rollout_statics(log_dir, pdf_fig): Processes rollout statistics and generates plots.
+    """
     def __init__(self, config: argparse.Namespace) -> None:
+        """
+        # Introduction
+        Initializes the logger with the given configuration.
+        # Args:
+        - config (argparse.Namespace): Configuration namespace containing parameters like maxFEs, indicators, and agents.
+        # Returns:
+        - None
+        """
+        super().__init__(config)
         self.config = config
         self.color_arrangement = {}
         self.arrange_index = 0
@@ -1201,7 +1232,6 @@ class MOO_Logger(Basic_Logger):
         # Raises:
         - None
         """
-        """计算帕累托前沿"""
         
         points = np.array(points)
         pareto_mask = np.ones(points.shape[0], dtype=bool)
@@ -1226,7 +1256,6 @@ class MOO_Logger(Basic_Logger):
         - The function uses `self.is_pareto_efficient` to extract Pareto-efficient solutions.
         - Plots are saved as PNG files named `{problem}_pareto_fronts.png` in the specified output directory.
         """
-        # 输入的数据格式为：dict[problem][algo][run][generation][objective]
         
         for problem in list(data.keys()):
             if Name is not None and ((isinstance(Name, str) and problem != Name) or (isinstance(Name, list) and problem not in Name)):
@@ -1234,11 +1263,10 @@ class MOO_Logger(Basic_Logger):
             else:
                 name = problem
 
-            fig = plt.figure(figsize=(8, 6))  # 更小的画布尺寸
+            fig = plt.figure(figsize=(8, 6))  
             is_3d = False
             algo_obj_dict = {}
 
-            # 收集每个算法所有回合的最后一代目标值
             for algo, runs in data[problem].items():
                 all_obj_values = []
                 for generations in runs:
@@ -1249,10 +1277,10 @@ class MOO_Logger(Basic_Logger):
                     all_obj_values.append(obj_values)
                 algo_obj_dict[algo] = np.vstack(all_obj_values)
 
-            # 初始化画布
+
             if is_3d:
                 ax = fig.add_subplot(111, projection='3d')
-                ax.view_init(elev=40, azim=135)  # 更改视角
+                ax.view_init(elev=40, azim=135)  
                 ax.set_proj_type('persp')
             else:
                 ax = fig.add_subplot(111)
@@ -1272,30 +1300,27 @@ class MOO_Logger(Basic_Logger):
                                 label=label, color=color, edgecolors='k')
 
             if is_3d:
-                # 更改坐标轴标签为简写，并减小Z轴标签字体
+
                 ax.set_xlabel('X', fontsize=12, labelpad=10)
                 ax.set_ylabel('Y', fontsize=12, labelpad=10)
-                ax.set_zlabel('Z', fontsize=12, labelpad=-0.5,color='black')  # 减小labelpad
+                ax.set_zlabel('Z', fontsize=12, labelpad=-0.5,color='black')  
                 
 
-                # 微调Z轴标签的位置，使其靠近坐标轴
-                ax.zaxis.set_label_coords(1.05, 0.5)  # 调整位置使标签更靠近右侧
+                ax.zaxis.set_label_coords(1.05, 0.5)  
 
-                # 设置3D比例并调整图形位置
-                ax.set_box_aspect([1.2, 1.1, 0.9])  # 将Z轴比例稍微缩小，增加Z轴的空间
+
+                ax.set_box_aspect([1.2, 1.1, 0.9])
 
             else:
                 ax.set_xlabel('X', fontsize=14, labelpad=20)
                 ax.set_ylabel('Y', fontsize=14, labelpad=20)
 
-            # 调整图形与边缘的距离，特别是右边的边距
             plt.subplots_adjust(right=0.85)
 
             plt.legend()
             plt.grid(True)
             plt.title(f'Pareto Fronts of Algorithms on {problem}', fontsize=14)
 
-            # 增加边距来确保Z轴标签能显示
             plt.savefig(output_dir + f'{name}_pareto_fronts.png', dpi=300, bbox_inches='tight', pad_inches=0.1)
             plt.show()
     
@@ -1418,13 +1443,13 @@ class MOO_Logger(Basic_Logger):
             ax.set_title(title, fontsize=25)
             Y = {}
             for problem in list(data.keys()):
-                # 计算全局最大值和最小值
+               
                 all_values = []
                 for agent in data[problem].keys():
                     all_values.append(np.array(data[problem][agent]))
-                all_values = np.concatenate(all_values, axis=0)  # 拼接所有数据
-                global_min = np.min(all_values)  # 计算全局最小值
-                global_max = np.max(all_values)  # 计算全局最大值
+                all_values = np.concatenate(all_values, axis=0)  
+                global_min = np.min(all_values)  
+                global_max = np.max(all_values)  
                 
                 for agent in list(data[problem].keys()):
                     if agent not in named_agents[title]:
@@ -1435,7 +1460,7 @@ class MOO_Logger(Basic_Logger):
                     if agent not in Y.keys():
                         Y[agent] = {'mean': [], 'std': []}
                     values = np.array(data[problem][agent])
-                    values = (values - global_min) / (global_max - global_min + 1e-8)  # 避免除零
+                    values = (values - global_min) / (global_max - global_min + 1e-8)  
                 
                     std = np.std(values, 0)
                     mean = np.mean(values, 0)
@@ -1484,7 +1509,6 @@ class MOO_Logger(Basic_Logger):
         D = {}
         X = []
         
-        # 遍历所有问题
         for problem in list(data.keys()):
             if Name is not None and (isinstance(Name, str) and problem != Name) or (isinstance(Name, list) and problem not in Name):
                 continue
@@ -1497,7 +1521,6 @@ class MOO_Logger(Basic_Logger):
                 values = np.array(data[name][agent])
                 D[agent].append(values[:, -1])
 
-        # 绘制图表
         for agent in D.keys():
             plt.figure()
             D[agent] = np.mean(np.array(D[agent]), -1)
@@ -1685,7 +1708,6 @@ class MOO_Logger(Basic_Logger):
         metabbo = results['config'].baselines['metabbo']
         bbo = results['config'].baselines['bbo']
         
-        # 可选地读取 random_search_baseline.pkl
         if include_random_baseline:
             with open(log_dir + 'random_search_baseline.pkl', 'rb') as f:
                 random = pickle.load(f)
@@ -1704,6 +1726,21 @@ class MOO_Logger(Basic_Logger):
                 {'MetaBBO-RL': metabbo, 'Classic Optimizer': bbo}, indicator, pdf_fig=pdf_fig)
     
     def post_processing_rollout_statics(self, log_dir: str, pdf_fig: bool = True) -> None:
+        """
+        # Introduction
+        Processes and visualizes the rollout statistics after training or evaluation.Loads the `rollout.pkl` log file and generates plots for return and specified indicators.
+
+        # Args
+        - log_dir (str): Directory path where the `rollout.pkl` file is stored.
+        - pdf_fig (bool): Whether to save plots as PDF (True) or PNG (False). Default is True.
+
+        # Returns
+        - None
+
+        # Notes
+        - Saves all generated plots into a `pics/` subdirectory inside the given `log_dir`.
+        - Uses `Basic_Logger.data_wrapper_cost_rollout` to wrap non-return indicators.
+        """
         with open(log_dir+'rollout.pkl', 'rb') as f:
             results = pickle.load(f)
         agent_for_rollout = results['agent_for_rollout']
@@ -2133,26 +2170,23 @@ class MMO_Logger(Basic_Logger):
 #logger
 # class basic_Logger:
 class MTO_Logger(Basic_Logger):
+    """
+    # Introduction
+    The customized logger for multi-task optimization(MTO) scenario.
+    """
     def __init__(self, config):
         super().__init__(config)
 
     def draw_avg_train_return(self, data: list, output_dir: str) -> None: 
         """
         # Introduction
-
         Plots and saves the average training return over learning steps using the provided data.
-
         # Args:
-
         - data (list): A list of lists or arrays containing return values for each epoch and environment.
         - output_dir (str): The directory path where the output plot image will be saved.
-
         # Returns:
-
         - None
-
         # Notes:
-
         - The plot is saved as 'avg_mto_return.png' in the specified output directory.
         """
         plt.figure()
@@ -2318,6 +2352,18 @@ class MTO_Logger(Basic_Logger):
         plt.close()
     
     def draw_test_cost(self, data: dict, output_dir: str):
+        """
+        # Introduction
+        Plots and saves the performance metrics of different algorithms and problems.
+        # Args:
+        - data (dict): A dict contains a 3D list or an array-like structure for each algorithm and problem with shape (test_epoch, log_point, task), containing metric values.
+        - output_dir (str): The directory path where the generated plot images will be saved.
+        # Returns:
+        - None
+        # Notes:
+        - For each algorithm and problem, a separate plot is generated showing the metric values.
+        - Plots are saved as PNG files in the specified output directory, with filenames indicating the corresponding task.
+        """
         for problem_name in data.keys():
             for algorithm_name in data[problem_name].keys():
                 arr = np.array(data[problem_name][algorithm_name])          #(2,63,2) [test_run, log_points,tasks]
@@ -2332,6 +2378,15 @@ class MTO_Logger(Basic_Logger):
                 plt.savefig(output_dir + f'mto_test_cost_{problem_name}_{algorithm_name}.png', bbox_inches='tight')
 
     def post_processing_test_statics(self, log_dir: str) -> None:
+        """
+        # Introduction
+        Post-processes test statistics by loading results, generating summary tables, and creating visualizations for algorithm performance evaluation.
+        # Args:
+        - log_dir (str): The directory path where the plot images generated from test datas will be saved.
+        # Returns:
+        - None
+        """
+
         print('Post processing & drawing')
         with open(log_dir + 'test_results.pkl', 'rb') as f:
             results = pickle.load(f)
@@ -2353,12 +2408,39 @@ class MTO_Logger(Basic_Logger):
     
     @staticmethod
     def data_wrapper_mto_cost_rollout(data):
+        """
+        # Introduction
+        Reshape the MTO rollout datas from 3D to 2D. 
+        # Args:
+        - data (list): A 3D list or array-like structure containing rollout datas to be reshaped.
+        # Returns:
+        - numpy.ndarray: A 2D reshaped rollout datas.
+        """
         res = np.array(data)
         res = np.mean(res, axis=-1)
         return res[:, -1]
 
     def draw_train_logger(self, data_type: str, steps: list, data: dict, agent_for_rollout: str, output_dir: str, ylabel: str = None, norm: bool = False, pdf_fig: bool = True, data_wrapper: Callable = None) -> None:
-       
+        """
+        # Introduction
+        Plots and saves the training curve for a given data type, applying smoothing and displaying mean and standard deviation shading. Supports normalization and custom data processing.
+        # Args:
+        - data_type (str): The type of data being plotted. e.g. cost
+        - steps (list): List of step values (x-axis) corresponding to the data points.
+        - agent_for_rollout (str): A string represents the agent during the rollout process. 
+        - data (dict): Part of the result data,the result[data_type]. Also a nested dictionary containing experimental datas structured as `dict[problem][algo][run]`.
+        - output_dir (str): Directory path where the output figure will be saved.
+        - ylabel (str, optional): Label for the y-axis. If None, uses `data_type` as the label. Defaults to None.
+        - norm (bool, optional): Whether to normalize the data before plotting. Defaults to False.
+        - pdf_fig (bool, optional): Whether to save the figure as a PDF (if True) or PNG (if False). Defaults to True.
+        - data_wrapper (Callable, optional): Optional function to preprocess or wrap the data before averaging. Defaults to None.
+        # Returns:
+        - None
+        # Notes:
+        - The function applies a smoothing operation to the plotted curve based on the configuration.
+        - The mean and standard deviation are visualized, with the standard deviation shown as a shaded region.
+        - The color arrangement for each agent is managed to ensure consistent coloring across plots.
+        """
         means, stds = self.get_average_data(data, norm=norm, data_wrapper=data_wrapper)
         plt.figure()
 
@@ -2393,6 +2475,15 @@ class MTO_Logger(Basic_Logger):
         plt.close()
 
     def post_processing_rollout_statics(self, log_dir: str, pdf_fig: bool = True) -> None:
+        """
+        # Introduction
+        Processes rollout statistics after the rollout process, generates plots for return and cost, and saves them to the specified directory.
+        # Args:
+        - log_dir (str): The directory path where the rollout statistics file ('rollout.pkl') is located and where the output plots will be saved.
+        - pdf_fig (bool, optional): Whether to save the generated plots as PDF files. Defaults to True.
+        # Returns:
+        - None
+        """
         print('Post processing & drawing')
         with open(log_dir+'rollout.pkl', 'rb') as f:
             results = pickle.load(f)

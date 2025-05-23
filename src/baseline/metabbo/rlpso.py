@@ -81,18 +81,6 @@ class RLPSO(REINFORCE_Agent):
             Returns:
                 is_train_ended (bool): Whether the training has reached the maximum learning steps.
                 return_info (dict): Dictionary containing training metrics and environment attributes.
-        rollout_batch_episode(envs, seeds=None, para_mode='dummy', asynchronous=None, num_cpus=1, num_gpus=0, required_info={}):
-            Executes a batch rollout of episodes without training.
-            Args:
-                envs (list): List of environments for rollout.
-                seeds (Optional[Union[int, List[int], np.ndarray]]): Seed(s) for environment randomization.
-                para_mode (Literal['dummy', 'subproc', 'ray', 'ray-subproc']): Parallelization mode for environments.
-                asynchronous (Literal[None, 'idle', 'restart', 'continue']): Asynchronous mode for environment execution.
-                num_cpus (Optional[Union[int, None]]): Number of CPUs to use.
-                num_gpus (int): Number of GPUs to use.
-                required_info (dict): Additional information to retrieve from the environment.
-            Returns:
-                results (dict): Dictionary containing rollout metrics and environment attributes.
     # Returns:
         None
     # Raises:
@@ -191,45 +179,3 @@ class RLPSO(REINFORCE_Agent):
 
         return is_train_ended, return_info
 
-    def rollout_batch_episode(self,
-                              envs,
-                              seeds=None,
-                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                              asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                              num_cpus: Optional[Union[int, None]] = 1,
-                              num_gpus: int = 0,
-                              required_info={}):
-        if self.device != 'cpu':
-            num_gpus = max(num_gpus, 1)
-        env = ParallelEnv(envs, para_mode, asynchronous, num_cpus, num_gpus)
-
-        env.seed(seeds)
-        state = env.reset()
-        try:
-            state = torch.Tensor(state).to(self.device)
-        except:
-            pass
-
-        R = torch.zeros(len(env))
-        # sample trajectory
-        while not env.all_done():
-            with torch.no_grad():
-                action, _ = self.model(state)
-            action = action.reshape(len(env))
-            action = action.cpu().numpy()
-            # state transient
-            state, rewards, is_end, info = env.step(action)
-            # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            R += torch.Tensor(rewards).squeeze()
-            # store info
-            try:
-                state = torch.Tensor(state).to(self.device)
-            except:
-                pass
-        _Rs = R.detach().numpy().tolist()
-        env_cost = env.get_env_attr('cost')
-        env_fes = env.get_env_attr('fes')
-        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
-        for key in required_info.keys():
-            results[key] = env.get_env_attr(required_info[key])
-        return results
