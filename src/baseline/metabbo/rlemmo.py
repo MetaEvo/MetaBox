@@ -194,16 +194,6 @@ class RLEMMO(PPO_Agent):
             Returns:
                 is_train_ended (bool): Indicates whether training has reached the maximum learning step.
                 return_info (dict): Dictionary containing training metrics and results.
-        rollout_batch_episode(envs, seeds=None, para_mode='dummy', compute_resource={}, required_info={}):
-            Executes a batch rollout of episodes without training.
-            Args:
-                envs (list): List of environments for rollout.
-                seeds (Optional[Union[int, List[int], np.ndarray]]): Seeds for environment initialization.
-                para_mode (Literal['dummy', 'subproc', 'ray', 'ray-subproc']): Parallelization mode for environments.
-                compute_resource (dict): Dictionary specifying compute resources (e.g., num_cpus, num_gpus).
-                required_info (dict): Additional information required from the environment.
-            Returns:
-                results (dict): Dictionary containing rollout metrics and results.
         rollout_episode(env, seed=None, required_info={}):
             Executes a single rollout episode without training.
             Args:
@@ -487,67 +477,6 @@ class RLEMMO(PPO_Agent):
             return_info[key] = env.get_env_attr(required_info[key])
         env.close()
         return is_train_ended, return_info
-
-
-    def rollout_batch_episode(self,
-                              envs,
-                              seeds = None,
-                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                            #   asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                            #   num_cpus: Optional[Union[int, None]] = 1,
-                            #   num_gpus: int = 0,
-                              compute_resource = {},
-                              required_info = {}):
-        num_cpus = None
-        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
-        if 'num_cpus' in compute_resource.keys():
-            num_cpus = compute_resource['num_cpus']
-        if 'num_gpus' in compute_resource.keys():
-            num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
-        
-        env.seed(seeds)
-        state = env.reset()
-        try:
-            state = torch.Tensor(state).to(self.device)
-        except:
-            pass
-
-        R = torch.zeros(len(env))
-        # sample trajectory
-        while not env.all_done():
-
-            with torch.no_grad():
-                action, _, _ = self.actor(state, sampling = False)
-                
-            # state transient
-            state, rewards, is_end, info = env.step(action.cpu().numpy().squeeze())
-            # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            R += torch.Tensor(rewards).squeeze()
-            # store info
-            try:
-                state = torch.Tensor(state).to(self.device)
-            except:
-                pass
-
-        _Rs = R.detach().numpy().tolist()
-
-        env_cost = env.get_env_attr('cost')
-        env_fes = env.get_env_attr('fes')
-        env_pr = env.get_env_attr('pr')
-        env_sr = env.get_env_attr('sr')
-        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs, 'pr': env_pr, 'sr':env_sr}
-        if self.config.full_meta_data:
-            meta_X = env.get_env_attr('meta_X')
-            meta_Cost = env.get_env_attr('meta_Cost')
-            meta_Pr = env.get_env_attr('meta_Pr')
-            meta_Sr = env.get_env_attr('meta_Sr')
-            metadata = {'X': meta_X, 'Cost': meta_Cost, 'Pr': meta_Pr, 'Sr': meta_Sr}
-            results['metadata'] = metadata
-
-        for key in required_info.keys():
-            results[key] = env.get_env_attr(required_info[key])
-        return results
 
     def rollout_episode(self,
                         env,

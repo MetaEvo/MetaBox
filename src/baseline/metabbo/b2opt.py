@@ -168,14 +168,6 @@ class B2OPT(Basic_Agent):
         - seed (Optional[int]): Random seed.
         - required_info (dict): Additional environment attributes to log.
         - Returns: results (dict) with evaluation metrics.
-    - rollout_batch_episode(envs, seeds=None, para_mode='dummy', compute_resource={}, required_info={}):
-        Evaluates the agent across a batch of environments.
-        - envs: List of environments.
-        - seeds (Optional[int, List[int], np.ndarray]): Random seeds.
-        - para_mode (str): Parallelization mode.
-        - compute_resource (dict): Resource allocation.
-        - required_info (dict): Additional environment attributes to log.
-        - Returns: results (dict) with evaluation metrics.
     - log_to_tb_train(tb_logger, mini_step, grad_norms, loss, Return, extra_info={}):
         Logs training metrics to TensorBoard.
         - tb_logger: TensorBoard logger.
@@ -342,44 +334,6 @@ class B2OPT(Basic_Agent):
             for key in required_info.keys():
                 results[key] = getattr(env, required_info[key])
             return results
-
-    def rollout_batch_episode(self,
-                              envs,
-                              seeds = None,
-                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                              # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                              # num_cpus: Optional[Union[int, None]] = 1,
-                              # num_gpus: int = 0,
-                              compute_resource = {},
-                              required_info = {}):
-        num_cpus = None
-        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
-        if 'num_cpus' in compute_resource.keys():
-            num_cpus = compute_resource['num_cpus']
-        if 'num_gpus' in compute_resource.keys():
-            num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
-
-        env.seed(seeds)
-        env.reset()
-
-        R = torch.zeros(len(env))
-        TS = len(env)
-        # sample trajectory
-        while not env.all_done():
-            with torch.no_grad():
-                action = [copy.deepcopy(self.Opt) for _ in range(TS)]
-
-                _, rewards, is_end, info = env.step(action)
-
-                R += rewards
-        _Rs = R.detach().numpy().tolist()
-        env_cost = env.get_env_attr('cost')
-        env_fes = env.get_env_attr('fes')
-        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
-        for key in required_info.keys():
-            results[key] = env.get_env_attr(required_info[key])
-        return results
 
     def log_to_tb_train(self, tb_logger, mini_step,
                         grad_norms,

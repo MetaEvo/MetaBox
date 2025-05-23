@@ -53,16 +53,6 @@ class PSORLNS(DQN_Agent):
                 required_info (dict): Additional information required from the environment.
             Returns:
                 results (dict): Results of the rollout, including rewards and metadata.
-        rollout_batch_episode(envs, seeds=None, para_mode='dummy', compute_resource={}, required_info={}):
-            Executes a batch of rollout episodes.
-            Args:
-                envs (list): List of environments.
-                seeds (int, list, or np.ndarray, optional): Seeds for environment initialization.
-                para_mode (str): Parallelization mode ('dummy', 'subproc', 'ray', 'ray-subproc').
-                compute_resource (dict): Resources for computation (e.g., num_cpus, num_gpus).
-                required_info (dict): Additional information required from the environment.
-            Returns:
-                results (dict): Results of the rollout batch, including rewards and metadata.
     # Returns:
         None for the class itself. Individual methods return specific outputs as described above.
     # Raises:
@@ -258,63 +248,3 @@ class PSORLNS(DQN_Agent):
             for key in required_info.keys():
                 results[key] = getattr(env, required_info[key])
             return results
-    
-    def rollout_batch_episode(self, 
-                              envs, 
-                              seeds=None,
-                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc']='dummy',
-                              # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                              # num_cpus: Optional[Union[int, None]] = 1,
-                              # num_gpus: int = 0,
-                              compute_resource = {},
-                              required_info = {}):
-        num_cpus = None
-        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
-        if 'num_cpus' in compute_resource.keys():
-            num_cpus = compute_resource['num_cpus']
-        if 'num_gpus' in compute_resource.keys():
-            num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
-        env.seed(seeds)
-        self.ps = env.get_env_attr('ps')
-        state = env.reset()
-        try:
-            state = torch.Tensor(state).to(self.device).reshape(-1, self.state_size)
-        except:
-            pass
-        
-        R = torch.zeros(len(env) * self.ps)
-        # sample trajectory
-        while not env.all_done():
-            with torch.no_grad():
-                action = self.get_action(state)
-            
-
-            # state transient
-            state, rewards, is_end, info = env.step(action.reshape(len(env), self.ps))
-            rewards = rewards.reshape(len(env)*self.ps)
-            # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            R += torch.Tensor(rewards).squeeze()
-            # store info
-            try:
-                state = torch.Tensor(state).to(self.device).reshape(-1, self.state_size)
-            except:
-                pass
-        _Rs = torch.mean(R.reshape(len(env), self.ps), dim = -1).detach().numpy().tolist()
-
-        env_cost = env.get_env_attr('cost')
-        env_fes = env.get_env_attr('fes')
-        env_pr = env.get_env_attr('pr')
-        env_sr = env.get_env_attr('sr')
-        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs, 'pr': env_pr, 'sr':env_sr}
-
-        if self.config.full_meta_data:
-            meta_X = env.get_env_attr('meta_X')
-            meta_Cost = env.get_env_attr('meta_Cost')
-            meta_Pr = env.get_env_attr('meta_Pr')
-            meta_Sr = env.get_env_attr('meta_Sr')
-            metadata = {'X': meta_X, 'Cost': meta_Cost, 'Pr': meta_Pr, 'Sr': meta_Sr}
-            results['metadata'] = metadata
-        for key in required_info.keys():
-            results[key] = getattr(env, required_info[key])
-        return results

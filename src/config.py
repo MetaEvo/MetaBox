@@ -117,7 +117,7 @@ def init_config(config):
 
     config.run_time = time.strftime("%Y%m%dT%H%M%S")
     config.train_name = f'{config.run_time}_{config.train_problem}_{config.train_difficulty}'
-    config.test_log_dir = config.log_dir + 'test/' + f'{config.run_time}'
+    config.test_log_dir = config.log_dir + 'test/' + f'{config.run_time}_{config.test_problem}_{config.test_difficulty}'
     config.rollout_log_dir = config.log_dir + 'rollout/' + f'{config.run_time}'
     config.mgd_test_log_dir = config.log_dir + 'mgd_test/' + f'{config.run_time}'
     config.mte_test_log_dir = config.log_dir + 'mte_test/' + f'{config.run_time}'

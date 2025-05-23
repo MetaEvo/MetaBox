@@ -58,14 +58,12 @@ class REINFORCE_Agent(Basic_Agent):
     - `update_setting(config)`: Updates the agent's configuration and resets training-related attributes.
     - `train_episode(envs, seeds, para_mode, compute_resource, tb_logger, required_info)`: Trains the agent for one episode using the REINFORCE algorithm.
     - `rollout_episode(env, seed, required_info)`: Executes a single rollout episode in a given environment without training.
-    - `rollout_batch_episode(envs, seeds, para_mode, compute_resource, required_info)`: Executes multiple rollout episodes in parallel environments without training.
     - `log_to_tb_train(tb_logger, mini_step, grad_norms, loss, Return, Reward, logprobs, extra_info)`: Logs training metrics and additional information to TensorBoard.
     # Returns
     - `train_episode`: A tuple containing:
         - `is_train_ended` (bool): Whether the training has reached the maximum number of steps.
         - `return_info` (dict): Dictionary containing training metrics such as return, learning steps, and additional requested information.
     - `rollout_episode`: A dictionary containing rollout results such as return, cost, and metadata.
-    - `rollout_batch_episode`: A dictionary containing batch rollout results such as return, cost, and additional requested information.
     # Raises
     - `AssertionError`: If required network attributes (e.g., `model` or `net`) are not set.
     - `ValueError`: If the length of the learning rates list does not match the number of networks.
@@ -247,57 +245,6 @@ class REINFORCE_Agent(Basic_Agent):
                 results[key] = getattr(env, required_info[key])
             return results
 
-    def rollout_batch_episode(self,
-                              envs,
-                              seeds=None,
-                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                              # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                              # num_cpus: Optional[Union[int, None]] = 1,
-                              # num_gpus: int = 0,
-                              compute_resource={},
-                              required_info={}):
-        num_cpus = None
-        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
-        if 'num_cpus' in compute_resource.keys():
-            num_cpus = compute_resource['num_cpus']
-        if 'num_gpus' in compute_resource.keys():
-            num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
-
-        env.seed(seeds)
-        state = env.reset()
-        try:
-            state = torch.FloatTensor(state).to(self.device)
-        except:
-            pass
-
-        R = torch.zeros(len(env))
-        entropy = []
-        # sample trajectory
-        while not env.all_done():
-            with torch.no_grad():
-                action, log_lh, entro_p = self.model(state)
-
-            entropy.append(entro_p.detach().cpu())
-
-            # state transient
-            state, rewards, is_end, info = env.step(action)
-            # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            R += torch.FloatTensor(rewards).squeeze()
-            # store info
-            try:
-                state = torch.FloatTensor(state).to(self.device)
-            except:
-                pass
-        _Rs = R.detach().numpy().tolist()
-        env_cost = env.get_env_attr('cost')
-        env_fes = env.get_env_attr('fes')
-        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
-        for key in required_info.keys():
-            results[key] = env.get_env_attr(required_info[key])
-        return results
-
-    # todo add metric
     def log_to_tb_train(self, tb_logger, mini_step,
                         grad_norms,
                         loss,

@@ -50,7 +50,7 @@ for col in range(n):
         while j + 1 < m and problem_data[j][:2] == problem_data[j + 1][:2]:
             j += 1
         for k in range(i, j + 1):
-            idx = data[k][2]
+            idx = problem_data[k][2]
             col_ranks[idx] = rank
         rank += (j - i + 1)
         i = j + 1

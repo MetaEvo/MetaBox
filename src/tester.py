@@ -206,8 +206,10 @@ def store_meta_data(log_dir, meta_data_results):
     for pname in meta_data_results.keys():
         problem_data = meta_data_results[pname]
         for baseline in problem_data.keys():
-            if not problem_data[baseline]:
+            if problem_data[baseline]:
                 # not empty
+                if not os.path.exists(log_dir + f"/metadata/{baseline}/"):
+                    os.makedirs(log_dir + f"/metadata/{baseline}/")
                 if not os.path.exists(log_dir + f"/metadata/{baseline}/{pname}.pkl"):
                     with open(log_dir + f"/metadata/{baseline}/{pname}.pkl", 'wb') as f:
                         pickle.dump(problem_data[baseline], f, -1)
@@ -602,7 +604,7 @@ class Tester(object):
         print(f'start testing: {self.config.run_time}_{self.config.test_problem}_{self.config.test_difficulty}')
         print("following config:")
         pprint.pprint(vars(self.config))
-        test_log_dir = f"{self.test_log_dir}_{self.config.test_problem}_{self.config.test_difficulty}"
+        test_log_dir = self.test_log_dir
 
         if not os.path.exists(test_log_dir):
             os.makedirs(test_log_dir)

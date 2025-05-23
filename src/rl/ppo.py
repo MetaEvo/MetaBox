@@ -65,14 +65,12 @@ class PPO_Agent(Basic_Agent):
     - `update_setting(config)`: Updates the agent's configuration and resets training-related attributes.
     - `train_episode(envs, seeds, para_mode, compute_resource, tb_logger, required_info)`: Trains the agent for one episode using the PPO algorithm.
     - `rollout_episode(env, seed, required_info)`: Executes a single rollout in the environment and collects results.
-    - `rollout_batch_episode(envs, seeds, para_mode, compute_resource, required_info)`: Executes rollouts in parallel environments and collects results.
     - `log_to_tb_train(tb_logger, mini_step, grad_norms, reinforce_loss, baseline_loss, Return, Reward, memory_reward, critic_output, logprobs, entropy, approx_kl_divergence, extra_info)`: Logs training metrics to TensorBoard.
     # Returns
     - `train_episode`: A tuple `(is_train_ended, return_info)` where:
         - `is_train_ended` (bool): Indicates whether the training has reached the maximum number of steps.
         - `return_info` (dict): Contains training metrics such as rewards, learning steps, and environment-specific information.
     - `rollout_episode`: A dictionary containing rollout results such as rewards, costs, and metadata.
-    - `rollout_batch_episode`: A dictionary containing batch rollout results such as rewards, costs, and metadata.
     # Raises
     - `AssertionError`: If required network attributes (e.g., 'actor', 'critic') are not set or if the optimizer specified in the configuration is invalid.
     - `ValueError`: If the length of the learning rates list does not match the number of networks.
@@ -385,67 +383,6 @@ class PPO_Agent(Basic_Agent):
             for key in required_info.keys():
                 results[key] = getattr(env, required_info[key])
             return results
-
-    def rollout_batch_episode(self,
-                              envs,
-                              seeds = None,
-                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                              # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                              # num_cpus: Optional[Union[int, None]] = 1,
-                              # num_gpus: int = 0,
-                              compute_resource = {},
-                              required_info = {}):
-        num_cpus = None
-        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
-        if 'num_cpus' in compute_resource.keys():
-            num_cpus = compute_resource['num_cpus']
-        if 'num_gpus' in compute_resource.keys():
-            num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
-        env.seed(seeds)
-        state = env.reset()
-        try:
-            state = torch.FloatTensor(state).to(self.device)
-        except:
-            pass
-
-        R = torch.zeros(len(env))
-        entropy = []
-        # sample trajectory
-        while not env.all_done():
-            with torch.no_grad():
-                action, log_lh, entro_p = self.actor(state)
-
-            entropy.append(entro_p.detach().cpu())
-
-            # state transient
-            state, rewards, is_end, info = env.step(action)
-            # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            R += torch.FloatTensor(rewards).squeeze()
-            # store info
-            try:
-                state = torch.FloatTensor(state).to(self.device)
-            except:
-                pass
-        env_cost = env.get_env_attr('cost')
-        env_fes = env.get_env_attr('fes')
-        env_metadata = env.get_env_attr('metadata') 
-        results = {'cost': env_cost, 'fes': env_fes, 'return': R, 'metadata': env_metadata}
-        '''
-        cost: 每log_interval(config中设置)的最优评估值 : config.log_interval = config.maxFEs // config.n_logpoint(记录次数)
-        fes: 评估次数
-        return: 奖励
-        metadata: 
-            meta_X: 所有评估值
-            meta_Cost: 所有评估点
-
-        针对非并行环境,若并行环境则为np.array(len(envs)): 如'fes': np.array(['fes' for env in envs])
-        results = {'cost': env_cost -> list, 'fes': env_fes ->float, 'return': R -> float, 'metadata': env_metadata -> dict}
-        env_metadata: {'X': meta_X -> list, 'Cost': meta_Cost -> list(list)}
-        '''
-        for key in required_info.keys():
-            results[key] = env.get_env_attr(required_info[key])
-        return results
 
     def log_to_tb_train(self, tb_logger, mini_step,
                         grad_norms, # network grad

@@ -287,8 +287,8 @@ class JDE21(Basic_Optimizer):
                             self.gbest = cost[i]
 
             if self.full_meta_data:
-                self.meta_Cost.append(self.__population[crowding_ids].copy())
-                self.meta_X.append(self.__cost[crowding_ids].copy())
+                self.meta_X.append(self.__population[crowding_ids].copy())
+                self.meta_Cost.append(self.__cost[crowding_ids].copy())
 
             return SF, SCr, df, age
 
