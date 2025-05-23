@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import pickle
 import os
 import matplotlib.pyplot as plt
@@ -15,7 +14,7 @@ T0_list = [0.0] * len(metabbo_list)
 Tg_list = []
 
 for baseline in metabbo_list:
-    path = f"train/baseline/checkpont_log.txt"
+    path = f"train/{baseline}/checkpoint_log.txt"
     last_time = None
     with open(path, 'r') as f:
         for line in f:
@@ -54,7 +53,7 @@ for baseline in metabbo_list:
         for metarun in c20_metadata:
             cost_run = metarun['Cost']
             y_0 = np.min(cost_run[0])
-            y_min = y_0.copy()
+            y_min = np.min(cost_run[0])
             for cost in cost_run:
                 y_min = np.minimum(y_min, np.min(cost))
             c20_performance.append((y_min - y_0) / (0 - y_0 + 1e-20))
@@ -64,6 +63,7 @@ for baseline in metabbo_list:
     c20_result[baseline] = np.mean(c20_total_performance)
 
 learning_efficiency = []
+print("------------learning efficiency------------")
 for i, baseline in enumerate(metabbo_list):
     learning_efficiency.append((c20_result[baseline] - c0_result[baseline]) / (Tg_list[i] - T0_list[i]))
     print(f"{baseline}: {learning_efficiency[i]}")
@@ -102,7 +102,7 @@ for zero_shot_problem in zeroshot_problem_list:
             for metarun in metadata:
                 cost_run = metarun['Cost']
                 y_0 = np.min(cost_run[0])
-                y_min = y_0.copy()
+                y_min = np.min(cost_run[0])
                 for cost in cost_run:
                     y_min = np.minimum(y_min, np.min(cost))
                 gbest[zero_shot_problem][problem] = min(gbest[zero_shot_problem][problem], y_min)
@@ -128,9 +128,10 @@ for zero_shot_problem in zeroshot_problem_list:
         zero_shot_result[zero_shot_problem][baseline] = np.mean(total_performance)
 
 anti_nfl_result = []
+print("------------anti nfl------------")
 for baseline in metabbo_list:
     baseline_anti_nfl = []
-    for problem in zero_shot_problem:
+    for problem in zeroshot_problem_list:
         if problem == "bbob-10D":
             continue
         baseline_anti_nfl.append((zero_shot_result[problem][baseline] - zero_shot_result["bbob-10D"][baseline]) / zero_shot_result["bbob-10D"][baseline])
@@ -158,6 +159,4 @@ plt.tight_layout()
 plt.savefig('figure_7.pdf', dpi=300)
 print("Figure_7 saved as learning_efficiency.pdf")
 plt.show()
-        
-            
 
