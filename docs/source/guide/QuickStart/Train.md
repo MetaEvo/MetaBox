@@ -39,6 +39,12 @@ trainer = Trainer(config, agent, optimizer, dataset)
 trainer.train()
 ```
 
+If you want to check out the visualized information of the training progress, run following code to start training logger.
+```bash
+cd your_dir/output/tensorboard
+tensorboard --logdir=./
+```
+
 🎯 Example: Train GLEET on COCO's BBOB (10D, easy)
 
 ```python
