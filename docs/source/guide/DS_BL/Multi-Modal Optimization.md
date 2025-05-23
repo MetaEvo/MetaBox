@@ -2,7 +2,7 @@
 
 :maxdepth: 1
 
-CEC2017MTO
+CEC2013MMO
 ```
 
 # Multi-Modal Optimization
