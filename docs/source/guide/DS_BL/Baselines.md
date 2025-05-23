@@ -39,6 +39,7 @@
 |[RLEMMO](https://github.com/MetaEvo/MetaBox/blob/v2.0.0/src/baseline/metabbo/rlemmo.py)|Multi-Modal Optimization|MetaBBO|[RLEMMO: Evolutionary Multimodal Optimization Assisted By Deep Reinforcement Learning](https://dl.acm.org/doi/abs/10.1145/3638529.3653995)|2024|
 |[L2T](https://github.com/MetaEvo/MetaBox/blob/v2.0.0/src/baseline/metabbo/l2t.py)|Multi-Task Optimization|MetaBBO|[Learning to Transfer for Evolutionary Multitasking](https://arxiv.org/abs/2406.14359)|2024|
 
+<!--
 ## MetaBBO
 
 ### Single-Object Optimization
@@ -263,3 +264,4 @@
 #### Multi-Modal Optimization
 
 #### Multi-Task Optimization
+-->
