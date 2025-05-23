@@ -278,7 +278,7 @@ class CFunction(CEC2013MMO_Numpy_Problem):
         # Introduction:
         Load the rotation matrix.
         # Args:
-        - `file_obj` (string) : The name of the file storing the matrix.
+        - `file_obj` (file object) : a file handler for reading the rotation matrix information.
         """
 
         self.__M_ = []
