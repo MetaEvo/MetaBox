@@ -22,9 +22,9 @@ sys.path.insert(0, os.path.abspath("../../src"))
 
 
 project = 'Metabox'
-copyright = '2025, GMC-Team'
-author = 'GMC-Team'
-release = 'v0.0.1'
+copyright = '2025, MetaEvo'
+author = 'MetaEvo'
+release = 'v2.0.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
