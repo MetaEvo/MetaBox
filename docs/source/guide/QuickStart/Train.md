@@ -5,10 +5,10 @@
 Numerous configurable options are available — refer to **Quickstart > [Config](https://metaboxdoc.readthedocs.io/en/stable/guide/QuickStart/Config.html#config)** for details.
 ```
 
-> [!Important]
-> The following is the code specific to Linux.
-> If you are using Windows, please add: ```if __name__ == "__main__":```
-
+```{important}
+The following is the code specific to Linux.
+If you are using Windows, please add: ```if __name__ == "__main__":```
+```
 
 
 🧪 General Training Code
