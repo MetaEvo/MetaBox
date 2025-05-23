@@ -2,42 +2,36 @@
 
 ```{note}
 **The following code demonstrates the core training logic.**
-Numerous configurable options are available — refer to **Gallery > Config** for details.
+Numerous configurable options are available — refer to **Quickstart > [Config](https://metaboxdoc.readthedocs.io/en/stable/guide/QuickStart/Config.html#config)** for details.
 ```
 
-<!-- ```{note} Notes require **no** arguments, so content can start here.
-```
-```{tip} Notes require **no** arguments, so content can start here.
-```
-```{warning} Notes require **no** arguments, so content can start here.
-```
-:::{note}
-This text is **standard** _Markdown_
-:::
-:::{warning}
-This text is **standard** _Markdown_
-:::
-```{admonition} Here's my title
-:class: note
+> [!Important]
+> The following is the code specific to Linux.
+> If you are using Windows, please add: ```if __name__ == "__main__":```
 
-Here's my admonition content
 
-``` -->
 
 🧪 General Training Code
 
 ```python
-from metaevobox import Trainer, Config
+from metaevobox import Config, Trainer
+# import meta-level agent of MetaBBO you want to meta-train
 from metaevobox.baseline.metabbo import XXX
-from metaevobox.baseline.metabbo import XXX_Optimizer
+# import low-level BBO optimizer of MetaBBO you want to meta-train
+from metaevobox.environment.optimizer import XXX_Optimizer
 from metaevobox.environment.problem.utils import construct_problem_set
 
-user_config = {"train_problem": "xxx",
-                   "train_difficulty": "xxx"
-                   }
+# put user-specific configuration
+user_config = {'train_problem': "xxx", # specify the problem set you want to train your MetaBBO 
+          'train_batch_size': 16,
+          'train_parallel_mode':'subproc', # choose parallel training mode
+          }
 config = Config(user_config)
-config, dataset = construct_problem_set(config)
 
+# construct dataset
+config, datasets = construct_problem_set(config)
+
+# initialize your MetaBBO's meta-level agent & low-level optimizer
 agent = XXX(config)
 optimizer = XXX_Optimizer(config)
 
@@ -48,24 +42,28 @@ trainer.train()
 🎯 Example: Train GLEET on COCO's BBOB (10D, easy)
 
 ```python
-from metaevobox import Trainer, Config
+from metaevobox import Config, Trainer
+# import meta-level agent of MetaBBO you want to meta-train
 from metaevobox.baseline.metabbo import GLEET
-from metaevobox.baseline.metabbo import GLEET_Optimizer
+# import low-level BBO optimizer of MetaBBO you want to meta-train
+from metaevobox.environment.optimizer import GLEET_Optimizer
 from metaevobox.environment.problem.utils import construct_problem_set
 
-user_config = {"train_problem": "bbob-10D",
-               "train_difficulty": "easy"
-               }
-config = Config(user_config)
-config, dataset = construct_problem_set(config)
-
-agent = GLEET(config)
-optimizer = GLEET_Optimizer(config)
-
-trainer = Trainer(user_config, agent, optimizer, dataset)
+# put user-specific configuration
+config = {'train_problem': 'bbob-10D', # specify the problem set you want to train your MetaBBO 
+          'train_batch_size': 16,
+          'train_parallel_mode':'subproc', # choose parallel training mode
+          }
+config = Config(config)
+# construct dataset
+config, datasets = construct_problem_set(config)
+# initialize your MetaBBO's meta-level agent & low-level optimizer
+gleet = GLEET(config)
+gleet_opt = GLEET_Optimizer(config)
+trainer = Trainer(config, gleet, gleet_opt, datasets)
 trainer.train()
 ```
 
 ```{tip}
-**Train your algorithm on MetaBox** — refer to  **QuickStart > Config** for details.
+**Train your algorithm on MetaBox** — refer to  **Developer Guide > [Develop your MetaBBO](https://metaboxdoc.readthedocs.io/en/stable/guide/Gallery/Develop%20your%20MetaBBO.html#develop-your-metabbo)** for details.
 ```
