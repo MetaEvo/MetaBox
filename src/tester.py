@@ -1,4 +1,6 @@
 import copy
+import importlib
+
 from .environment.problem.utils import construct_problem_set
 import numpy as np
 import pickle
@@ -20,6 +22,7 @@ from .environment.problem.basic_problem import Basic_Problem
 from dill import dumps, loads
 import importlib.resources as pkg_resources
 import pprint
+import importlib.util
 from .environment.optimizer import (
     DEDDQN_Optimizer,
     DEDQN_Optimizer,
@@ -382,10 +385,19 @@ def get_baseline(config):
                 with open(os.path.join(os.getcwd(), baselines[bsl]['model_load_path']), 'rb') as f:
                     agents_for_cp.append(pickle.load(f, fix_imports=False))
             else:
-                base_dir = f'metaevobox.model.{config.test_problem}.{config.test_difficulty}'
-                model_path = pkg_resources.files(base_dir).joinpath(f"{baselines[bsl]['agent']}.pkl")
-                with model_path.open('rb') as f:
-                    agents_for_cp.append(pickle.load(f))
+                try:
+                    base_dir = f'metaevobox.model.{config.test_problem}.{config.test_difficulty}'
+                    if importlib.util.find_spec(base_dir) is not None:
+                        model_path = pkg_resources.files(base_dir).joinpath(f"{baselines[bsl]['agent']}.pkl")
+                        with model_path.open('rb') as f:
+                            agents_for_cp.append(pickle.load(f))
+                    else:
+                        raise ModuleNotFoundError
+                except ModuleNotFoundError:
+                    base_path = os.path.dirname(os.path.abspath(__file__))
+                    model_path = os.path.join(base_path, f"model/{config.test_problem}/{config.test_difficulty}", f"{baselines[bsl]['agent']}.pkl")
+                    with open(model_path, 'rb') as f:
+                        agents_for_cp.append(pickle.load(f))
         else:  # bbo
             traditional_optimizers_for_cp.append(baselines[bsl]['optimizer'](config))
     config.baselines = None
