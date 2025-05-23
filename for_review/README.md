@@ -24,7 +24,7 @@ This might costs you 1 day to train all MetaBBO baselines. After the training, a
 ```shell
 python test.py
 ```
-This might costs you 2 days to test all baseliens (MetaBBO + BBO) on all tested problem instances across 51 independent runs. After testing, all "metadata" is well organized as elaborated in our paper and saved.
+This might costs you 2 days to test all baselines (MetaBBO + BBO) on all tested problem instances across 51 independent runs. After testing, all "metadata" is well organized as elaborated in our paper and saved.
 
 ## 3. in-distribution test in Table 3 of the paper.
 ```shell
@@ -36,7 +36,7 @@ python table_3.py
 python figure_6.py
 ```
 
-## 5. laerning efficiency and Anti-NFL indicator test in Figure 7 of the paper.
+## 5. learning efficiency and Anti-NFL indicator test in Figure 7 of the paper.
 ```shell
 python figure_7.py
 ```
