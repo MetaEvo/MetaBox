@@ -2,9 +2,7 @@ from ....problem.basic_problem import Basic_Problem
 import numpy as np
 import math
 from os import path
-MINMAX = -1
-import importlib.util
-import os
+MINMAX = -1 
 import importlib.resources as pkg_resources
 class CEC2013MMO_Numpy_Problem(Basic_Problem):
     """
@@ -72,11 +70,11 @@ class CEC2013MMO_Numpy_Problem(Basic_Problem):
         # Introduction:
         Determines the number of global optima found in a given population within a specified accuracy.
         # Args:
-        - `pop` (list of np.ndarray) : A group of solutions for the calculation of found global optima.
+        - `pop` (np.ndarray) : A group of solutions for the calculation of found global optima.
         - `accuracy` (float) : The accuracy used to determin if a solution can be regarded as a satisfied global optimum.
         # Returns:
-        - `coout`(int): The number of global optima found whin the specified accuracy.
-        - `seeds` (list of float): The representive solutions for found global optima.
+        - `count`(int): The number of global optima found within the specified accuracy.
+        - `seeds` (np.ndarray): The representive solutions for found global optima.
         """
         NP, D = pop.shape[0], pop.shape[1]
         fits = self.eval(pop)
@@ -102,7 +100,7 @@ class CEC2013MMO_Numpy_Problem(Basic_Problem):
         # Introduction:
         Identifies seed points in a sorted population based on a given radius.
         # Args:
-        - `sorted_pop` (list of np.ndarray): A group of solutions for indentifition.
+        - `sorted_pop` (np.ndarray): A group of solutions for indentifition.
         - `radius`(float) : Radius used to determine whether two solutions belong to different peaks.
         # Returns:
         - `seeds_idx` (list of int) : The index of the solutions regarded as the seed of peaks.
@@ -126,20 +124,19 @@ class CFunction(CEC2013MMO_Numpy_Problem):
     # Introduction:
     The abstract class for problems with composition functions.
     # Attributes:
-    - `__nofunc` (int) : The number of basic functions.
+    - `__nofunc_` (int) : The number of basic functions.
     - `__C_` (float) : A predefined constant.
-    - `__lambda_` () : A parameter used to stretch or compress each basic function. 
-    - `__sigma_` () : A parameter to control the coverage range of each basic function, with small values to produce a narrow coverage range.
-    - `__bias_` () : Defines a function value bias for each basic function and denotes which optimum is the global optimum
-    - `__O_` () : The new shifted optimum of each basic function.
-    - `__M_` () : The  linear transformation (rotation) matrix of each basic problem.
-    - `__weight_` () : the corresponding  weight of each basic function.
-    - `__fi_` () : The results of basic functions.
-    - `__z_` () : The result after shifting, ratation and stretch/compress.
-    - `__f_bias_` () : A function value bias for the constructed composition function.
-    - `__fmaxi_` () : The maximal value of basic functions.
-    - `__M_` () : The linear transformation (rotation) matrix of each
-    - `__function_` () : The list of basic functions.
+    - `__lambda_` (np.ndarray) : A parameter used to stretch or compress each basic function. 
+    - `__sigma_` (np.ndarray) : A parameter to control the coverage range of each basic function, with small values to produce a narrow coverage range.
+    - `__bias_` (np.ndarray) : Defines a function value bias for each basic function and denotes which optimum is the global optimum
+    - `__O_` (np.ndarray) : The new shifted optimum of each basic function.
+    - `__M_` (list) : The  linear transformation (rotation) matrix of each basic problem.
+    - `__weight_` (np.ndarray) : the corresponding  weight of each basic function.
+    - `__fi_` (np.ndarray) : The results of evaluation of basic functions.
+    - `__z_` (np.ndarray) : The result after shifting, ratation and stretch/compress.
+    - `__f_bias_` (int) : A function value bias for the constructed composition function.
+    - `__fmaxi_` (np.ndarray) : The maximal value of basic functions.
+    - `__function_` (dict) : The list of basic functions.
     """
     __nofunc_ = -1
     __C_ = 2000.0
@@ -168,6 +165,7 @@ class CFunction(CEC2013MMO_Numpy_Problem):
         - `rho` (float): Radius used to determine proximity for seed identification.
         - `nopt` (int): Number of global optima in the problem.
         - `maxfes` (int): Maximum number of function evaluations allowed.
+        - `nofunc` (int): the number of basic functions
         # Attributes:
         - `__nofunc_` (int): The number of basic functions
         """
@@ -190,7 +188,7 @@ class CFunction(CEC2013MMO_Numpy_Problem):
         # Introduction:
         Evaluate the given solutions with the composition function.
         # Args:
-        - `x` (np.ndarray) : A solution for evaluation.
+        - `x` (np.ndarray) : A group of solutions for evaluation.
         # Return:
         - np.array: The result of evaluation.
         """
@@ -214,7 +212,7 @@ class CFunction(CEC2013MMO_Numpy_Problem):
         # Introduction:
         Calculate the weights of basic functions.
         # Args:
-        - `x` (np.ndarray) : A solution for evaluation.
+        - `x` (np.ndarray) : A group of solutions for evaluation.
         """
         self.__weight_ = np.zeros((x.shape[0], self.__nofunc_))
         for i in range(self.__nofunc_):
@@ -239,7 +237,7 @@ class CFunction(CEC2013MMO_Numpy_Problem):
         # Introduction:
         Calculate the maximal values of each basic function.
         # Args:
-        - `x` (np.ndarray) : A solution for evaluation.
+        - `x` (np.ndarray) : A group of solutions for evaluation.
         """
         self.__fmaxi_ = np.zeros(self.__nofunc_)
         if self.__function_ == None:
@@ -267,23 +265,22 @@ class CFunction(CEC2013MMO_Numpy_Problem):
         # Introduction:
         Transform the solution with shift, stretch/compress and rotation.
         # Args:
-        - `x` (np.ndarray) : A solution for evaluation.
+        - `x` (np.ndarray) : A group of solutions for evaluation.
         - `index` (int): The index of the corresponding basic function.
         """
         tmpx = np.divide((x - self.__O_[index]), self.__lambda_[index])
         self.__z_ = np.dot(tmpx, self.__M_[index])
 
-    def __load_rotmat(self, file_obj):
+    def __load_rotmat(self, fname):
         """
         # Introduction:
         Load the rotation matrix.
         # Args:
         - `file_obj` (file object) : a file handler for reading the rotation matrix information.
         """
-
         self.__M_ = []
 
-        with file_obj as f:
+        with fname.open('r') as f:
             tmp = np.zeros((self.dim, self.dim))
             cline = 0
             ctmp = 0
@@ -311,6 +308,8 @@ def FSphere(x):
     Sphere function, one of basic functions for the composition function.
     # Args:
     - `x` (np.ndarray) : A batch of solutions for evaluation.
+    # Returns:
+    - np.ndarray: The evaluation results.
     """
     return (x ** 2).sum(axis = 1)
 
@@ -321,6 +320,8 @@ def FRastrigin(x):
     Rastrigin’s function, one of basic functions for the composition function.
     # Args:
     - `x` (np.ndarray) : A batch of solutions for evaluation.
+    # Returns:
+    - np.ndarray: The evaluation results.
     """
     return np.sum(x ** 2 - 10.0 * np.cos(2.0 * np.pi * x) + 10, axis=1)
 
@@ -331,6 +332,8 @@ def FGrienwank(x):
     Grienwank’s function, one of basic functions for the composition function.
     # Args:
     - `x` (np.ndarray) : A batch of solutions for evaluation.
+    # Returns:
+    - np.ndarray: The evaluation results.
     """
     i = np.sqrt(np.arange(x.shape[1]) + 1.0)
     return np.sum(x ** 2, axis = 1) / 4000.0 - np.prod(np.cos(x / i[None, :]), axis = 1) + 1.0
@@ -342,6 +345,8 @@ def FWeierstrass(x):
     Weierstrass function, one of basic functions for the composition function.
     # Args:
     - `x` (np.ndarray) : A batch of solutions for evaluation.
+    # Returns:
+    - np.ndarray: The evaluation results.
     """
     alpha = 0.5
     beta = 3.0
@@ -364,6 +369,8 @@ def F8F2(x):
     Auxiliary function for FEF8F2.
     # Args:
     - `x` (np.ndarray) : A batch of solutions for evaluation.
+    # Returns:
+    - np.ndarray: The evaluation results.
     """
     f2 = 100.0 * (x[:, 0] ** 2 - x[:, 1]) ** 2 + (1.0 - x[:, 0]) ** 2
     return 1.0 + (f2 ** 2) / 4000.0 - np.cos(f2)
@@ -375,6 +382,8 @@ def FEF8F2(x):
     Expanded Griewank’s plus Rosenbrock’s function (EF8F2), one of basic functions for the composition function.
     # Args:
     - `x` (np.ndarray) : A batch of solutions for evaluation.
+    # Returns:
+    - np.ndarray: The evaluation results.
     """
     D = x.shape[1]
     f = np.zeros(x.shape[0])
@@ -418,7 +427,7 @@ class F1(CEC2013MMO_Numpy_Problem): # five_uneven_peak_trap
         # Introduction:
         Evaluate the inputed solutions.
         # Args:
-        - `x` (np.ndarray) : A solution for evaluation.
+        - `x` (np.ndarray) : A group of solutions for evaluation.
         # Returns:
         - np.ndarray: The evaluation results.
         """
@@ -486,7 +495,7 @@ class F2(CEC2013MMO_Numpy_Problem): #
         # Introduction:
         Evaluate the inputed solutions.
         # Args:
-        - `x` (np.ndarray) : A solution for evaluation.
+        - `x` (np.ndarray) : A group of solutions for evaluation.
         # Returns:
         - np.ndarray: The evaluation results.
         """
@@ -530,7 +539,7 @@ class F3(CEC2013MMO_Numpy_Problem): #
         # Introduction:
         Evaluate the inputed solutions.
         # Args:
-        - `x` (np.ndarray) : A solution for evaluation.
+        - `x` (np.ndarray) : A group of solutions for evaluation.
         # Returns:
         - np.ndarray: The evaluation results.
         """
@@ -577,7 +586,7 @@ class F4(CEC2013MMO_Numpy_Problem): # himmelblau
         # Introduction:
         Evaluate the inputed solutions.
         # Args:
-        - `x` (np.ndarray) : A solution for evaluation.
+        - `x` (np.ndarray) : A group of solutions for evaluation.
         # Returns:
         - np.ndarray: The evaluation results.
         """
@@ -622,7 +631,7 @@ class F5(CEC2013MMO_Numpy_Problem): # six_hump_camel_back
         # Introduction:
         Evaluate the inputed solutions.
         # Args:
-        - `x` (np.ndarray) : A solution for evaluation.
+        - `x` (np.ndarray) : A group of solutions for evaluation.
         # Returns:
         - np.ndarray: The evaluation results.
         """
@@ -672,7 +681,7 @@ class F6(CEC2013MMO_Numpy_Problem): #
         # Introduction:
         Evaluate the inputed solutions.
         # Args:
-        - `x` (np.ndarray) : A solution for evaluation.
+        - `x` (np.ndarray) : A group of solutions for evaluation.
         # Returns:
         - np.ndarray: The evaluation results.
         """
@@ -724,7 +733,7 @@ class F7(CEC2013MMO_Numpy_Problem): #
         # Introduction:
         Evaluate the inputed solutions.
         # Args:
-        - `x` (np.ndarray) : A solution for evaluation.
+        - `x` (np.ndarray) : A group of solutions for evaluation.
         # Returns:
         - np.ndarray: The evaluation results.
         """
@@ -772,7 +781,7 @@ class F8(CEC2013MMO_Numpy_Problem): #
         # Introduction:
         Evaluate the inputed solutions.
         # Args:
-        - `x` (np.ndarray) : A solution for evaluation.
+        - `x` (np.ndarray) : A group of solutions for evaluation.
         # Returns:
         - np.ndarray: The evaluation results.
         """
@@ -816,8 +825,8 @@ class F9(CFunction): # CF1
         - `_CFunction__weight_`(np.ndarray): The __weight_ attribute in the father class 'CFunction'.
         - `_CFunction__lambda_`(np.ndarray): The __lambda_ attribute in the father class 'CFunction'.
         - `_CFunction__O_`(np.ndarray): The __O_ attribute in the father class 'CFunction'.
-        - `_CFunction__M_`(np.ndarray): The __M_ attribute in the father class 'CFunction'.
-        - `_CFunction__function_`(np.ndarray): The __function_ attribute in the father class 'CFunction'.
+        - `_CFunction__M_`(list): The __M_ attribute in the father class 'CFunction'.
+        - `_CFunction__function_`(dict): The __function_ attribute in the father class 'CFunction'.
         """
         super(F9, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 6)
 
@@ -827,19 +836,11 @@ class F9(CFunction): # CF1
         self._CFunction__weight_ = np.zeros(self._CFunction__nofunc_)
         self._CFunction__lambda_ = np.array([1.0, 1.0, 8.0, 8.0, 1.0 / 5.0, 1.0 / 5.0])
 
-        try:
-            folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
-            if importlib.util.find_spec(folder_package) is not None:
-                file_path = pkg_resources.files(folder_package).joinpath('optima.dat')
-                file_obj = file_path.open('r')
-            else:
-                raise ModuleNotFoundError
-        except ModuleNotFoundError:
-            base_path = os.path.dirname(os.path.abspath(__file__))
-            local_file_path = os.path.join(base_path, "datafile", 'optima.dat')
-            file_obj = open(local_file_path, 'r')
+        # Load optima
+        folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
+        optima_file = pkg_resources.files(folder_package).joinpath('optima.dat')
 
-        with file_obj as f:
+        with optima_file.open('r') as f:
             o = np.loadtxt(f)
 
         # o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
@@ -879,7 +880,7 @@ class F9(CFunction): # CF1
         # Introduction:
         Evaluate the inputed solutions.
         # Args:
-        - `x` (np.ndarray) : A solution for evaluation.
+        - `x` (np.ndarray) : A group of solutions for evaluation.
         # Returns:
         - np.ndarray: The evaluation results.
         """
@@ -911,8 +912,8 @@ class F10(CFunction): # CF2
         - `_CFunction__weight_`(np.ndarray): The __weight_ attribute in the father class 'CFunction'.
         - `_CFunction__lambda_`(np.ndarray): The __lambda_ attribute in the father class 'CFunction'.
         - `_CFunction__O_`(np.ndarray): The __O_ attribute in the father class 'CFunction'.
-        - `_CFunction__M_`(np.ndarray): The __M_ attribute in the father class 'CFunction'.
-        - `_CFunction__function_`(np.ndarray): The __function_ attribute in the father class 'CFunction'.
+        - `_CFunction__M_`(list): The __M_ attribute in the father class 'CFunction'.
+        - `_CFunction__function_`(dict): The __function_ attribute in the father class 'CFunction'.
         """
         super(F10, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 8)
 
@@ -924,19 +925,11 @@ class F10(CFunction): # CF2
             [1.0, 1.0, 10.0, 10.0, 1.0 / 10.0, 1.0 / 10.0, 1.0 / 7.0, 1.0 / 7.0]
         )
 
-        try:
-            folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
-            if importlib.util.find_spec(folder_package) is not None:
-                file_path = pkg_resources.files(folder_package).joinpath('optima.dat')
-                file_obj = file_path.open('r')
-            else:
-                raise ModuleNotFoundError
-        except ModuleNotFoundError:
-            base_path = os.path.dirname(os.path.abspath(__file__))
-            local_file_path = os.path.join(base_path, "datafile", 'optima.dat')
-            file_obj = open(local_file_path, 'r')
+        # Load optima
+        folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
+        optima_file = pkg_resources.files(folder_package).joinpath('optima.dat')
 
-        with file_obj as f:
+        with optima_file.open('r') as f:
             o = np.loadtxt(f)
 
         # o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
@@ -978,7 +971,7 @@ class F10(CFunction): # CF2
         # Introduction:
         Evaluate the inputed solutions.
         # Args:
-        - `x` (np.ndarray) : A solution for evaluation.
+        - `x` (np.ndarray) : A group of solutions for evaluation.
         # Returns:
         - np.ndarray: The evaluation results.
         """
@@ -1010,8 +1003,8 @@ class F11(CFunction): # CF3
         - `_CFunction__weight_`(np.ndarray): The __weight_ attribute in the father class 'CFunction'.
         - `_CFunction__lambda_`(np.ndarray): The __lambda_ attribute in the father class 'CFunction'.
         - `_CFunction__O_`(np.ndarray): The __O_ attribute in the father class 'CFunction'.
-        - `_CFunction__M_`(np.ndarray): The __M_ attribute in the father class 'CFunction'.
-        - `_CFunction__function_`(np.ndarray): The __function_ attribute in the father class 'CFunction'.
+        - `_CFunction__M_`(list): The __M_ attribute in the father class 'CFunction'.
+        - `_CFunction__function_`(dict): The __function_ attribute in the father class 'CFunction'.
         """
         super(F11, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 6)
 
@@ -1021,18 +1014,11 @@ class F11(CFunction): # CF3
         self._CFunction__weight_ = np.zeros(self._CFunction__nofunc_)
         self._CFunction__lambda_ = np.array([1.0 / 4.0, 1.0 / 10.0, 2.0, 1.0, 2.0, 5.0])
 
-        try:
-            folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
-            if importlib.util.find_spec(folder_package) is not None:
-                file_path = pkg_resources.files(folder_package).joinpath('optima.dat')
-                file_obj = file_path.open('r')
-            else:
-                raise ModuleNotFoundError
-        except ModuleNotFoundError:
-            base_path = os.path.dirname(os.path.abspath(__file__))
-            local_file_path = os.path.join(base_path, "datafile", 'optima.dat')
-            file_obj = open(local_file_path, 'r')
-        with file_obj as f:
+        # Load optima
+        folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
+        optima_file = pkg_resources.files(folder_package).joinpath('optima.dat')
+
+        with optima_file.open('r') as f:
             o = np.loadtxt(f)
 
         # o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
@@ -1045,20 +1031,10 @@ class F11(CFunction): # CF3
 
         # Load M_: Rotation matrices
         if dim == 2 or dim == 3 or dim == 5 or dim == 10 or dim == 20:
-            try:
-                folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
-                if importlib.util.find_spec(folder_package) is not None:
-                    file_path = pkg_resources.files(folder_package).joinpath(f'CF3_M_D{dim}.dat')
-                    file_obj = file_path.open('r')
-                else:
-                    raise ModuleNotFoundError
-            except ModuleNotFoundError:
-                base_path = os.path.dirname(os.path.abspath(__file__))
-                local_file_path = os.path.join(base_path, "datafile", f'CF3_M_D{dim}.dat')
-                file_obj = open(local_file_path, 'r')
-
+            folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
+            fname = pkg_resources.files(folder_package).joinpath(f'CF3_M_D{dim}.dat')
             # fname = path.join(path.dirname(__file__), 'datafile') + "/CF3_M_D" + str(dim) + ".dat"
-            self._CFunction__load_rotmat(file_obj)
+            self._CFunction__load_rotmat(fname)
         else:
             # M_ Identity matrices 
             self._CFunction__M_ = [np.eye(dim)] * self._CFunction__nofunc_
@@ -1089,7 +1065,7 @@ class F11(CFunction): # CF3
         # Introduction:
         Evaluate the inputed solutions.
         # Args:
-        - `x` (np.ndarray) : A solution for evaluation.
+        - `x` (np.ndarray) : A group of solutions for evaluation.
         # Returns:
         - np.ndarray: The evaluation results.
         """
@@ -1121,8 +1097,8 @@ class F12(CFunction): # CF4
         - `_CFunction__weight_`(np.ndarray): The __weight_ attribute in the father class 'CFunction'.
         - `_CFunction__lambda_`(np.ndarray): The __lambda_ attribute in the father class 'CFunction'.
         - `_CFunction__O_`(np.ndarray): The __O_ attribute in the father class 'CFunction'.
-        - `_CFunction__M_`(np.ndarray): The __M_ attribute in the father class 'CFunction'.
-        - `_CFunction__function_`(np.ndarray): The __function_ attribute in the father class 'CFunction'.
+        - `_CFunction__M_`(list): The __M_ attribute in the father class 'CFunction'.
+        - `_CFunction__function_`(dict): The __function_ attribute in the father class 'CFunction'.
         """
         super(F12, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 8)
 
@@ -1134,18 +1110,11 @@ class F12(CFunction): # CF4
             [4.0, 1.0, 4.0, 1.0, 1.0 / 10.0, 1.0 / 5.0, 1.0 / 10.0, 1.0 / 40.0]
         )
 
-        try:
-            folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
-            if importlib.util.find_spec(folder_package) is not None:
-                file_path = pkg_resources.files(folder_package).joinpath('optima.dat')
-                file_obj = file_path.open('r')
-            else:
-                raise ModuleNotFoundError
-        except ModuleNotFoundError:
-            base_path = os.path.dirname(os.path.abspath(__file__))
-            local_file_path = os.path.join(base_path, "datafile", 'optima.dat')
-            file_obj = open(local_file_path, 'r')
-        with file_obj as f:
+        # Load optima
+        folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
+        optima_file = pkg_resources.files(folder_package).joinpath('optima.dat')
+
+        with optima_file.open('r') as f:
             o = np.loadtxt(f)
 
         # o = np.loadtxt(path.join(path.dirname(__file__), 'datafile') + "/optima.dat")
@@ -1158,19 +1127,10 @@ class F12(CFunction): # CF4
 
         # Load M_: Rotation matrices
         if dim == 2 or dim == 3 or dim == 5 or dim == 10 or dim == 20:
-            try:
-                folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
-                if importlib.util.find_spec(folder_package) is not None:
-                    file_path = pkg_resources.files(folder_package).joinpath(f'CF4_M_D{dim}.dat')
-                    file_obj = file_path.open('r')
-                else:
-                    raise ModuleNotFoundError
-            except ModuleNotFoundError:
-                base_path = os.path.dirname(os.path.abspath(__file__))
-                local_file_path = os.path.join(base_path, "datafile", f'CF4_M_D{dim}.dat')
-                file_obj = open(local_file_path, 'r')
+            folder_package = 'metaevobox.environment.problem.MMO.CEC2013MMO.datafile'
+            fname = pkg_resources.files(folder_package).joinpath(f'CF4_M_D{dim}.dat')
             # fname = path.join(path.dirname(__file__), 'datafile') + "/CF4_M_D" + str(dim) + ".dat"
-            self._CFunction__load_rotmat(file_obj)
+            self._CFunction__load_rotmat(fname)
         else:
             # M_ Identity matrices
             self._CFunction__M_ = [np.eye(dim)] * self._CFunction__nofunc_
@@ -1203,7 +1163,7 @@ class F12(CFunction): # CF4
         # Introduction:
         Evaluate the inputed solutions.
         # Args:
-        - `x` (np.ndarray) : A solution for evaluation.
+        - `x` (np.ndarray) : A group of solutions for evaluation.
         # Returns:
         - np.ndarray: The evaluation results.
         """
