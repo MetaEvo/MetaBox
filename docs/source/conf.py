@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 sys.path.insert(0, os.path.abspath("../../src"))
 
 
-project = 'Metabox'
+project = 'MetaBox'
 copyright = '2025, MetaEvo'
 author = 'MetaEvo'
 release = 'v2.0.0'
