@@ -1756,7 +1756,7 @@ class MOO_Logger(Basic_Logger):
 class MMO_Logger(Basic_Logger):
     """
     #Introduction:
-    The customized logger for multi-modal optimization(MTO) scenario.
+    The customized logger for multi-modal optimization(MMO) scenario.
     """
     def __init__(self, config: argparse.Namespace) -> None:
         super().__init__(config)
