@@ -1,3 +1,4 @@
+```{toctree}
 :maxdepth: 1
 
 COCO-BBOB
@@ -7,3 +8,4 @@ Neuroevolution
 Protein-Docking
 UAV
 CEC2013LSGO
+```
