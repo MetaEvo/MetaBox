@@ -20,7 +20,7 @@ CEC2013MMO is based on CEC2013LSGO benchmark and specially crafeted for multi-mo
 | F5 | Six-Hump Camel Back         | 2   | 2              | 2            | [-1.1, 1.1]         |
 | F6 | Shubert                     | D   | 3^D            | many         | [-10, 10]^D         |
 | F7 | Vincent                     | D   | 6^D            | 0            | [0.25, 10]^D       |
-| F8 | Modified Rastrigin          | D   | -         | 0            | [0, 1]^D            |
+| F8 | Modified Rastrigin          | D   | $$\prod_{i = 1}^{D} k_i$$         | 0            | [0, 1]^D            |
 | F9–F12 | Composition Functions   | 2–20| 6–8            | complex      | [-5, 5]^D          |
 
 ## Dataset Setup
