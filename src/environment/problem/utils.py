@@ -13,13 +13,6 @@ from .SOO.PROTEIN_DOCKING.protein_docking_dataset import Protein_Docking_Dataset
 from .SOO.HPO_B.hpob_dataset import HPOB_Dataset
 from .MOO.UAV.uav_dataset import UAV_Dataset as MMO_UAV_Dataset
 
-def save_class(dir, file_name, saving_class):
-    if not os.path.exists(dir):
-        os.makedirs(dir)
-    with open(dir+file_name+'.pkl', 'wb') as f:
-        pickle.dump(saving_class, f, -1)
-
-
 def construct_problem_set(config):
     if config.train_problem == config.test_problem and config.train_difficulty == config.test_difficulty:
         train_set, test_set = get_problem_set(config, config.train_problem, config.train_difficulty, config.user_train_problem_list, config.user_test_problem_list)

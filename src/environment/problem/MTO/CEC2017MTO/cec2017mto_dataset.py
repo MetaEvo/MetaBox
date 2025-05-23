@@ -4,10 +4,11 @@ import numpy as np
 from torch.utils.data import Dataset
 import os
 import scipy.io as sio
+import importlib.util
 import importlib.resources as pkg_resources
 
-def mat2np(path):
-    with path.open('rb') as f:
+def mat2np(file_obj):
+    with file_obj as f:
         data = sio.loadmat(f)
     return data
 
@@ -178,8 +179,7 @@ class CEC2017MTO_Dataset(Dataset):
             raise ValueError('Please set difficulty or user_train_list and user_test_list.')
         if difficulty not in ['easy', 'difficult', 'all', None]:
             raise ValueError(f'{difficulty} difficulty is invalid.')
-        
-        folder_dir = 'metaevobox.environment.problem.MTO.CEC2017MTO.datafile'
+
         func_id = [i for i in range(0, 9)]
         if difficulty == 'easy':
             train_id = [0, 1, 2, 3, 4, 5]
@@ -200,9 +200,20 @@ class CEC2017MTO_Dataset(Dataset):
             Tasks = []
             if task_ID == 0:
                 file_name = 'CI_H.mat'
-                file_path = pkg_resources.files(folder_dir).joinpath(file_name)
                 keys = ['GO_Task1', 'GO_Task2', 'Rotation_Task1', 'Rotation_Task2']
-                data = mat2np(file_path)
+                try:
+                    folder_dir = 'metaevobox.environment.problem.MTO.CEC2017MTO.datafile'
+                    if importlib.util.find_spec(folder_dir) is not None:
+                        file_path = pkg_resources.files(folder_dir).joinpath(file_name)
+                        file_obj = file_path.open('rb')
+                    else:
+                        raise ModuleNotFoundError
+                except ModuleNotFoundError:
+                    base_path = os.path.dirname(os.path.abspath(__file__))
+                    local_path = os.path.join(base_path, 'datafile', file_name)
+                    file_obj = open(local_path, 'rb')
+
+                data = mat2np(file_obj)
                 if version == 'numpy':
                     task1 = Griewank(50, data[keys[0]], data[keys[2]])
                     task2 = Rastrigin(50, data[keys[1]], data[keys[3]])
@@ -213,9 +224,19 @@ class CEC2017MTO_Dataset(Dataset):
 
             if task_ID == 1:
                 file_name = 'CI_M.mat'
-                file_path = pkg_resources.files(folder_dir).joinpath(file_name)
                 keys = ['GO_Task1', 'GO_Task2', 'Rotation_Task1', 'Rotation_Task2']
-                data = mat2np(file_path)
+                try:
+                    folder_dir = 'metaevobox.environment.problem.MTO.CEC2017MTO.datafile'
+                    if importlib.util.find_spec(folder_dir) is not None:
+                        file_path = pkg_resources.files(folder_dir).joinpath(file_name)
+                        file_obj = file_path.open('rb')
+                    else:
+                        raise ModuleNotFoundError
+                except ModuleNotFoundError:
+                    base_path = os.path.dirname(os.path.abspath(__file__))
+                    local_path = os.path.join(base_path, 'datafile', file_name)
+                    file_obj = open(local_path, 'rb')
+                data = mat2np(file_obj)
                 if version == 'numpy':
                     task1 = Ackley(50, data[keys[0]], data[keys[2]])
                     task2 = Rastrigin(50, data[keys[1]], data[keys[3]])
@@ -226,9 +247,19 @@ class CEC2017MTO_Dataset(Dataset):
 
             if task_ID == 2:
                 file_name = 'CI_L.mat'
-                file_path = pkg_resources.files(folder_dir).joinpath(file_name)
                 keys = ['GO_Task1', None, 'Rotation_Task1',None]
-                data = mat2np(file_path)
+                try:
+                    folder_dir = 'metaevobox.environment.problem.MTO.CEC2017MTO.datafile'
+                    if importlib.util.find_spec(folder_dir) is not None:
+                        file_path = pkg_resources.files(folder_dir).joinpath(file_name)
+                        file_obj = file_path.open('rb')
+                    else:
+                        raise ModuleNotFoundError
+                except ModuleNotFoundError:
+                    base_path = os.path.dirname(os.path.abspath(__file__))
+                    local_path = os.path.join(base_path, 'datafile', file_name)
+                    file_obj = open(local_path, 'rb')
+                data = mat2np(file_obj)
                 if version == 'numpy':
                     task1 = Ackley(50, data[keys[0]], data[keys[2]])
                     task2 = Schwefel(50)
@@ -239,9 +270,19 @@ class CEC2017MTO_Dataset(Dataset):
 
             if task_ID == 3:
                 file_name = 'PI_H.mat'
-                file_path = pkg_resources.files(folder_dir).joinpath(file_name)
                 keys = ['GO_Task1', 'GO_Task2', 'Rotation_Task1', None]
-                data = mat2np(file_path)
+                try:
+                    folder_dir = 'metaevobox.environment.problem.MTO.CEC2017MTO.datafile'
+                    if importlib.util.find_spec(folder_dir) is not None:
+                        file_path = pkg_resources.files(folder_dir).joinpath(file_name)
+                        file_obj = file_path.open('rb')
+                    else:
+                        raise ModuleNotFoundError
+                except ModuleNotFoundError:
+                    base_path = os.path.dirname(os.path.abspath(__file__))
+                    local_path = os.path.join(base_path, 'datafile', file_name)
+                    file_obj = open(local_path, 'rb')
+                data = mat2np(file_obj)
                 if version == 'numpy':
                     task1 = Rastrigin(50, data[keys[0]], data[keys[2]])
                     task2 = Sphere(50, data[keys[1]])
@@ -252,9 +293,19 @@ class CEC2017MTO_Dataset(Dataset):
 
             if task_ID == 4:
                 file_name = 'PI_M.mat'
-                file_path = pkg_resources.files(folder_dir).joinpath(file_name)
                 keys = ['GO_Task1',None, 'Rotation_Task1', None]
-                data = mat2np(file_path)
+                try:
+                    folder_dir = 'metaevobox.environment.problem.MTO.CEC2017MTO.datafile'
+                    if importlib.util.find_spec(folder_dir) is not None:
+                        file_path = pkg_resources.files(folder_dir).joinpath(file_name)
+                        file_obj = file_path.open('rb')
+                    else:
+                        raise ModuleNotFoundError
+                except ModuleNotFoundError:
+                    base_path = os.path.dirname(os.path.abspath(__file__))
+                    local_path = os.path.join(base_path, 'datafile', file_name)
+                    file_obj = open(local_path, 'rb')
+                data = mat2np(file_obj)
                 if version == 'numpy':
                     task1 = Ackley(50, data[keys[0]], data[keys[2]])
                     task2 = Rosenbrock(50)
@@ -265,9 +316,19 @@ class CEC2017MTO_Dataset(Dataset):
 
             if task_ID == 5:
                 file_name = 'PI_L.mat'
-                file_path = pkg_resources.files(folder_dir).joinpath(file_name)
                 keys = ['GO_Task1', 'GO_Task2', 'Rotation_Task1', 'Rotation_Task2']
-                data = mat2np(file_path)
+                try:
+                    folder_dir = 'metaevobox.environment.problem.MTO.CEC2017MTO.datafile'
+                    if importlib.util.find_spec(folder_dir) is not None:
+                        file_path = pkg_resources.files(folder_dir).joinpath(file_name)
+                        file_obj = file_path.open('rb')
+                    else:
+                        raise ModuleNotFoundError
+                except ModuleNotFoundError:
+                    base_path = os.path.dirname(os.path.abspath(__file__))
+                    local_path = os.path.join(base_path, 'datafile', file_name)
+                    file_obj = open(local_path, 'rb')
+                data = mat2np(file_obj)
                 if version == 'numpy':
                     task1 = Ackley(50, data[keys[0]], data[keys[2]])
                     task2 = Weierstrass(25, data[keys[1]], data[keys[3]])
@@ -278,9 +339,19 @@ class CEC2017MTO_Dataset(Dataset):
 
             if task_ID == 6:
                 file_name = 'NI_H.mat'
-                file_path = pkg_resources.files(folder_dir).joinpath(file_name)
                 keys = [None, 'GO_Task2', None, 'Rotation_Task2']
-                data = mat2np(file_path)
+                try:
+                    folder_dir = 'metaevobox.environment.problem.MTO.CEC2017MTO.datafile'
+                    if importlib.util.find_spec(folder_dir) is not None:
+                        file_path = pkg_resources.files(folder_dir).joinpath(file_name)
+                        file_obj = file_path.open('rb')
+                    else:
+                        raise ModuleNotFoundError
+                except ModuleNotFoundError:
+                    base_path = os.path.dirname(os.path.abspath(__file__))
+                    local_path = os.path.join(base_path, 'datafile', file_name)
+                    file_obj = open(local_path, 'rb')
+                data = mat2np(file_obj)
                 if version == 'numpy':
                     task1 = Rosenbrock(50)
                     task2 = Rastrigin(50, data[keys[1]], data[keys[3]])
@@ -291,9 +362,19 @@ class CEC2017MTO_Dataset(Dataset):
             
             if task_ID == 7:
                 file_name = 'NI_M.mat'
-                file_path = pkg_resources.files(folder_dir).joinpath(file_name)
                 keys = ['GO_Task1', 'GO_Task2', 'Rotation_Task1', 'Rotation_Task2']
-                data = mat2np(file_path)
+                try:
+                    folder_dir = 'metaevobox.environment.problem.MTO.CEC2017MTO.datafile'
+                    if importlib.util.find_spec(folder_dir) is not None:
+                        file_path = pkg_resources.files(folder_dir).joinpath(file_name)
+                        file_obj = file_path.open('rb')
+                    else:
+                        raise ModuleNotFoundError
+                except ModuleNotFoundError:
+                    base_path = os.path.dirname(os.path.abspath(__file__))
+                    local_path = os.path.join(base_path, 'datafile', file_name)
+                    file_obj = open(local_path, 'rb')
+                data = mat2np(file_obj)
                 if version == 'numpy':
                     task1 = Griewank(50, data[keys[0]], data[keys[2]])
                     task2 = Weierstrass(50, data[keys[1]], data[keys[3]])
@@ -304,9 +385,19 @@ class CEC2017MTO_Dataset(Dataset):
 
             if task_ID == 8:
                 file_name = 'NI_L.mat'
-                file_path = pkg_resources.files(folder_dir).joinpath(file_name)
                 keys = ['GO_Task1',None, 'Rotation_Task1',None]
-                data = mat2np(file_path)
+                try:
+                    folder_dir = 'metaevobox.environment.problem.MTO.CEC2017MTO.datafile'
+                    if importlib.util.find_spec(folder_dir) is not None:
+                        file_path = pkg_resources.files(folder_dir).joinpath(file_name)
+                        file_obj = file_path.open('rb')
+                    else:
+                        raise ModuleNotFoundError
+                except ModuleNotFoundError:
+                    base_path = os.path.dirname(os.path.abspath(__file__))
+                    local_path = os.path.join(base_path, 'datafile', file_name)
+                    file_obj = open(local_path, 'rb')
+                data = mat2np(file_obj)
                 if version == 'numpy':
                     task1 = Rastrigin(50, data[keys[0]], data[keys[2]])
                     task2 = Schwefel(50)

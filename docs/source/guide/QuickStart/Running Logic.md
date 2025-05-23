@@ -1,0 +1,7 @@
+# Running Logic
+Based on MetaBox’s fully automatic train-test-log workflow, **Unification, Efficiency and Flexible** are the core concepts of MetaBox-v2.0
+- **Unification:** MetaBox-v2.0 provides a unified interface for various MetaBBO (MetaBBO-RL、MetaBBO-SL、MetaBBO-ICL、MetaBBO-NE) and test suites for different types of problems.
+- **Efficiency:**  Parallelization enables MetaBox-v2.0 to train and test efficiently. As the first development exemplar to enable parallel training for MetaBBO, MetaBox-v2.0 supports training speeds up to 10 times faster than MetaBox-v1.0. Various Ray-based parallel modes allow users to fully utilize their computing resources to accelerate testing.
+- **Flexible:** Taking the provided Evaluation Metrics as an example, by recording Metadata, users can easily and flexibly visualize these evaluation metrics across different MetaBBO methods for various types of problems, without being constrained by specific problems or approaches. There are even more flexible usages, including but not limited to leveraging existing resources from other platforms (such as EvoX) to extend MetaBox’s current methods and problem sets. For more information, please refer to the Gallery!
+
+Based on the above three features, users only need to specify the target problem and the MetaBBO algorithm to be used. MetaBox will then provide fully automated training and testing, and ultimately allow flexible visualization of results using the recorded Metadata.

@@ -1,5 +1,5 @@
 import copy
-
+import os
 import torch
 from torch import nn, optim
 from ...rl.basic_agent import Basic_Agent
@@ -186,7 +186,11 @@ class B2OPT(Basic_Agent):
         self.learning_time = 0
         self.cur_checkpoint = 0
 
-        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.train_name + '/'
+        self.config.agent_save_dir = os.path.join(
+            self.config.agent_save_dir,
+            self.__str__(),
+            self.config.train_name
+        )
         super().__init__(self.config)
 
     def __str__(self):

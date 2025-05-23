@@ -133,11 +133,6 @@ class JDE21(Basic_Optimizer):
             cost = problem.eval(Xs)
         else:
             cost = problem.eval(Xs) - problem.optimum
-            
-        if self.full_meta_data:
-            self.meta_Cost.append(cost.copy())
-            self.meta_X.append(Xs.copy())
-        # cost[cost < self.__terminateErrorValue] = 0.0
         return cost
 
     def __sort(self):
@@ -290,6 +285,10 @@ class JDE21(Basic_Optimizer):
                         self.__cbest = cost[i]
                         if cost[i] < self.gbest:
                             self.gbest = cost[i]
+
+            if self.full_meta_data:
+                self.meta_X.append(self.__population[crowding_ids].copy())
+                self.meta_Cost.append(self.__cost[crowding_ids].copy())
 
             return SF, SCr, df, age
 

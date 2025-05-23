@@ -135,7 +135,11 @@ class RLEPSO(PPO_Agent):
 
         # figure out the critic
         critic = Critic(config)
-        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.train_name + '/'
+        self.config.agent_save_dir = os.path.join(
+            self.config.agent_save_dir,
+            self.__str__(),
+            self.config.train_name
+        )
         super().__init__(self.config, {'actor': actor, 'critic': critic}, self.config.lr)
 
     def __str__(self):
@@ -351,7 +355,6 @@ class RLEPSO(PPO_Agent):
         env.close()
         return is_train_ended, return_info
 
-    
 
     def rollout_episode(self,
                         env,

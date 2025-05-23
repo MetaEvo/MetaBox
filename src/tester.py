@@ -1,4 +1,6 @@
 import copy
+import importlib
+
 from .environment.problem.utils import construct_problem_set
 import numpy as np
 import pickle
@@ -20,6 +22,7 @@ from .environment.problem.basic_problem import Basic_Problem
 from dill import dumps, loads
 import importlib.resources as pkg_resources
 import pprint
+import importlib.util
 from .environment.optimizer import (
     DEDDQN_Optimizer,
     DEDQN_Optimizer,
@@ -203,8 +206,10 @@ def store_meta_data(log_dir, meta_data_results):
     for pname in meta_data_results.keys():
         problem_data = meta_data_results[pname]
         for baseline in problem_data.keys():
-            if not problem_data[baseline]:
+            if problem_data[baseline]:
                 # not empty
+                if not os.path.exists(log_dir + f"/metadata/{baseline}/"):
+                    os.makedirs(log_dir + f"/metadata/{baseline}/")
                 if not os.path.exists(log_dir + f"/metadata/{baseline}/{pname}.pkl"):
                     with open(log_dir + f"/metadata/{baseline}/{pname}.pkl", 'wb') as f:
                         pickle.dump(problem_data[baseline], f, -1)
@@ -382,10 +387,19 @@ def get_baseline(config):
                 with open(os.path.join(os.getcwd(), baselines[bsl]['model_load_path']), 'rb') as f:
                     agents_for_cp.append(pickle.load(f, fix_imports=False))
             else:
-                base_dir = f'metaevobox.model.{config.test_problem}.{config.test_difficulty}'
-                model_path = pkg_resources.files(base_dir).joinpath(f"{baselines[bsl]['agent']}.pkl")
-                with model_path.open('rb') as f:
-                    agents_for_cp.append(pickle.load(f))
+                try:
+                    base_dir = f'metaevobox.model.{config.test_problem}.{config.test_difficulty}'
+                    if importlib.util.find_spec(base_dir) is not None:
+                        model_path = pkg_resources.files(base_dir).joinpath(f"{baselines[bsl]['agent']}.pkl")
+                        with model_path.open('rb') as f:
+                            agents_for_cp.append(pickle.load(f))
+                    else:
+                        raise ModuleNotFoundError
+                except ModuleNotFoundError:
+                    base_path = os.path.dirname(os.path.abspath(__file__))
+                    model_path = os.path.join(base_path, f"model/{config.test_problem}/{config.test_difficulty}", f"{baselines[bsl]['agent']}.pkl")
+                    with open(model_path, 'rb') as f:
+                        agents_for_cp.append(pickle.load(f))
         else:  # bbo
             traditional_optimizers_for_cp.append(baselines[bsl]['optimizer'](config))
     config.baselines = None
@@ -590,7 +604,7 @@ class Tester(object):
         print(f'start testing: {self.config.run_time}_{self.config.test_problem}_{self.config.test_difficulty}')
         print("following config:")
         pprint.pprint(vars(self.config))
-        test_log_dir = f"{self.test_log_dir}_{self.config.test_problem}_{self.config.test_difficulty}"
+        test_log_dir = self.test_log_dir
 
         if not os.path.exists(test_log_dir):
             os.makedirs(test_log_dir)

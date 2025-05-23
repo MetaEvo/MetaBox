@@ -44,8 +44,8 @@ class DQN_Agent(Basic_Agent):
     - `get_action`(state, epsilon_greedy=False): Selects an action based on the current state using the epsilon-greedy policy.
     - `train_episode`(envs, seeds, para_mode, compute_resource, tb_logger, required_info): Trains the agent for one episode in a parallelized environment.
     - `rollout_episode`(env, seed, required_info): Executes a single rollout episode in the environment and collects results.
-    - `rollout_batch_episode`(envs, seeds, para_mode, compute_resource, required_info): Executes multiple rollout episodes in parallelized environments and collects results.
     - `log_to_tb_train`(tb_logger, mini_step, grad_norms, loss, Return, Reward, predict_Q, target_Q, extra_info): Logs training metrics to TensorBoard.
+
     """
     def __init__(self, config, network: dict, learning_rates: float):
         """
@@ -353,66 +353,7 @@ class DQN_Agent(Basic_Agent):
                 results[key] = getattr(env, key)
             return results
 
-    def rollout_batch_episode(self,
-                              envs,
-                              seeds=None,
-                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                              # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                              # num_cpus: Optional[Union[int, None]] = 1,
-                              # num_gpus: int = 0,
-                              compute_resource={},
-                              required_info={}):
-        """
-        Executes multiple rollout episodes in parallelized environments and collects results.
 
-        # Args:
-        - envs: List of environments for the rollout.
-        - seeds (list, optional): List of seeds for reproducibility.
-        - para_mode (str): Parallelization mode for the environments.
-        - compute_resource (dict): Resources for computation (e.g., CPUs, GPUs).
-        - required_info (dict): Additional information required from the environments.
-
-        # Returns:
-        - dict: A dictionary containing results of the batch rollout episodes, including return and environment-specific metrics.
-        """
-        num_cpus = None
-        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
-        if 'num_cpus' in compute_resource.keys():
-            num_cpus = compute_resource['num_cpus']
-        if 'num_gpus' in compute_resource.keys():
-            num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
-        env.seed(seeds)
-        state = env.reset()
-        try:
-            state = torch.Tensor(state).to(self.device)
-        except:
-            pass
-
-        R = torch.zeros(len(env))
-        # sample trajectory
-        while not env.all_done():
-            with torch.no_grad():
-                action = self.get_action(state)
-
-            # state transient
-            state, rewards, is_end, info = env.step(action)
-            # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-            R += torch.Tensor(rewards).squeeze()
-            # store info
-            try:
-                state = torch.Tensor(state).to(self.device)
-            except:
-                pass
-        _Rs = R.detach().numpy().tolist()
-        env_cost = env.get_env_attr('cost')
-        env_fes = env.get_env_attr('fes')
-        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
-        for key in required_info:
-            results[key] = env.get_env_attr(key)
-        return results
-
-    # todo add metric
     def log_to_tb_train(self, tb_logger, mini_step,
                         grad_norms,
                         loss,

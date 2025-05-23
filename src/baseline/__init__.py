@@ -3,4 +3,4 @@
 # ]
 
 from .bbo import *
-from metabbo import *
+from .metabbo import *

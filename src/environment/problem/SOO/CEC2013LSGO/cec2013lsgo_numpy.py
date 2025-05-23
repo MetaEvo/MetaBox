@@ -1,7 +1,8 @@
 from ....problem.basic_problem import Basic_Problem
 import numpy as np
 import importlib.resources as pkg_resources
-
+import importlib.util
+import os
 class CEC2013LSGO_Numpy_Problem(Basic_Problem):
     """
     # CEC2013LSGO_Numpy_Problem
@@ -78,9 +79,6 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
     """
     
     def __init__(self):
-        
-        # 设置默认的数据类型
-        self.data_dir = "metaevobox.environment.problem.SOO.CEC2013LSGO.datafile" # 数据文件夹
 
         # 子空间的维度大小, 先提供了三种子空间的维度大小
         self.min_dim = 25
@@ -117,11 +115,20 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
     def readOvector(self):
         d = np.zeros(self.dim)
         file_name = f"F{self.ID}-xopt.txt"
-
-        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
+        try:
+            data_dir = "metaevobox.environment.problem.SOO.CEC2013LSGO.datafile"
+            if importlib.util.find_spec(data_dir) is not None:
+                file_path = pkg_resources.files(data_dir).joinpath(file_name)
+                file_obj = file_path.open('r')
+            else:
+                raise ModuleNotFoundError
+        except ModuleNotFoundError:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            local_path = os.path.join(base_path, 'datafile', file_name)
+            file_obj = open(local_path, 'r')
 
         try:
-            with file_path.open('r') as file:
+            with file_obj as file:
                 c = 0
                 for line in file:
                     values = line.strip().split(',')
@@ -130,7 +137,7 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
                             d[c] = float(value)
                             c += 1
         except FileNotFoundError:
-            print(f"Cannot open the datafile '{file_path}'")
+            print(f"Cannot open the datafile '{file_name}'")
         
         return d
     
@@ -139,10 +146,20 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
         d = [np.zeros(self.s[i]) for i in range(self.s_size)]
         file_name = f"F{self.ID}-xopt.txt"
 
-        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
+        try:
+            data_dir = "metaevobox.environment.problem.SOO.CEC2013LSGO.datafile"
+            if importlib.util.find_spec(data_dir) is not None:
+                file_path = pkg_resources.files(data_dir).joinpath(file_name)
+                file_obj = file_path.open('r')
+            else:
+                raise ModuleNotFoundError
+        except ModuleNotFoundError:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            local_path = os.path.join(base_path, 'datafile', file_name)
+            file_obj = open(local_path, 'r')
 
         try:
-            with file_path.open('r') as file:
+            with file_obj as file:
                 c = 0  # index over 1 to dim
                 i = -1  # index over 1 to s_size
                 up = 0  # current upper bound for one group
@@ -158,7 +175,7 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
                         d[i][c - (up - self.s[i])] = float(value)
                         c += 1
         except FileNotFoundError:
-            print(f"Cannot open the OvectorVec datafiles '{file_path}'")
+            print(f"Cannot open the OvectorVec datafiles '{file_name}'")
 
         return d
     
@@ -167,10 +184,20 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
         d = np.zeros(self.dim, dtype=int)
         file_name = f"F{self.ID}-p.txt"
 
-        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
+        try:
+            data_dir = "metaevobox.environment.problem.SOO.CEC2013LSGO.datafile"
+            if importlib.util.find_spec(data_dir) is not None:
+                file_path = pkg_resources.files(data_dir).joinpath(file_name)
+                file_obj = file_path.open('r')
+            else:
+                raise ModuleNotFoundError
+        except ModuleNotFoundError:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            local_path = os.path.join(base_path, 'datafile', file_name)
+            file_obj = open(local_path, 'r')
         
         try:
-            with file_path.open('r') as file:
+            with file_obj as file:
                 c = 0
                 for line in file:
                     values = line.strip().split(',')
@@ -179,7 +206,7 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
                             d[c] = int(float(value)) - 1
                             c += 1
         except FileNotFoundError:
-            print(f"Cannot open the datafile '{file_path}'")
+            print(f"Cannot open the datafile '{file_name}'")
         
         return d
     
@@ -188,10 +215,20 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
         m = np.zeros((sub_dim, sub_dim))
         file_name = f"F{self.ID}-R{sub_dim}.txt"
 
-        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
+        try:
+            data_dir = "metaevobox.environment.problem.SOO.CEC2013LSGO.datafile"
+            if importlib.util.find_spec(data_dir) is not None:
+                file_path = pkg_resources.files(data_dir).joinpath(file_name)
+                file_obj = file_path.open('r')
+            else:
+                raise ModuleNotFoundError
+        except ModuleNotFoundError:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            local_path = os.path.join(base_path, 'datafile', file_name)
+            file_obj = open(local_path, 'r')
 
         try:
-            with file_path.open('r') as file:
+            with file_obj as file:
                 i = 0
                 for line in file:
                     values = line.strip().split(',')
@@ -199,7 +236,7 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
                         m[i, j] = float(value)
                     i += 1
         except FileNotFoundError:
-            print(f"Cannot open the datafile '{file_path}'")
+            print(f"Cannot open the datafile '{file_name}'")
         
         return m
 
@@ -208,15 +245,25 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
         self.s = np.zeros(num, dtype=int)
         file_name = f"F{self.ID}-s.txt"
 
-        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
         try:
-            with file_path.open('r') as file:
+            data_dir = "metaevobox.environment.problem.SOO.CEC2013LSGO.datafile"
+            if importlib.util.find_spec(data_dir) is not None:
+                file_path = pkg_resources.files(data_dir).joinpath(file_name)
+                file_obj = file_path.open('r')
+            else:
+                raise ModuleNotFoundError
+        except ModuleNotFoundError:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            local_path = os.path.join(base_path, 'datafile', file_name)
+            file_obj = open(local_path, 'r')
+        try:
+            with file_obj as file:
                 c = 0
                 for line in file:
                     self.s[c] = int(float(line.strip()))
                     c += 1
         except FileNotFoundError:
-            print(f"Cannot open the datafile '{file_path}'")
+            print(f"Cannot open the datafile '{file_name}'")
         
         return self.s
 
@@ -225,16 +272,26 @@ class CEC2013LSGO_Numpy_Problem(Basic_Problem):
         self.w = np.zeros(num)
         file_name = f"F{self.ID}-w.txt"
 
-        file_path = pkg_resources.files(self.data_dir).joinpath(file_name)
+        try:
+            data_dir = "metaevobox.environment.problem.SOO.CEC2013LSGO.datafile"
+            if importlib.util.find_spec(data_dir) is not None:
+                file_path = pkg_resources.files(data_dir).joinpath(file_name)
+                file_obj = file_path.open('r')
+            else:
+                raise ModuleNotFoundError
+        except ModuleNotFoundError:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            local_path = os.path.join(base_path, 'datafile', file_name)
+            file_obj = open(local_path, 'r')
 
         try:
-            with file_path.open('r') as file:
+            with file_obj as file:
                 c = 0
                 for line in file:
                     self.w[c] = float(line.strip())
                     c += 1
         except FileNotFoundError:
-            print(f"Cannot open the datafile '{file_path}'")
+            print(f"Cannot open the datafile '{file_name}'")
         
         return self.w
 

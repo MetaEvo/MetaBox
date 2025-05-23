@@ -22,7 +22,7 @@ def vector2nn(x,net,device):
     ptr = 0
     for v in params:
         num_of_params = v.nelement()
-        temp = torch.tensor(x[ptr: ptr+num_of_params]).to(device)
+        temp = torch.Tensor(x[ptr: ptr+num_of_params]).to(device)
         v.data = temp.reshape(v.shape)
         ptr += num_of_params
     return net
@@ -241,7 +241,7 @@ class LES_Optimizer(Learnable_Optimizer):
         # improvement indicator
         improved = population_costs < self.evolution_info['gbest']
         # concat above three feature to N * 3 array
-        return torch.from_numpy(np.vstack([z_score,shifted_rank,improved]).T).to(torch.float32)
+        return torch.from_numpy(np.vstack([z_score,shifted_rank,improved]).T).to(torch.float64)
     
     def cal_mlp_feature(self, W):
         """
@@ -273,7 +273,7 @@ class LES_Optimizer(Learnable_Optimizer):
         c = np.vstack(Pc) # dim * 3
         s = np.vstack(Ps) # dim * 3
         # concat to 19dim feature
-        return torch.from_numpy(np.hstack([c.T,s.T,rho])).to(torch.float32), c, s
+        return torch.from_numpy(np.hstack([c.T,s.T,rho])).to(torch.float64), c, s
     
     def update(self,action, problem):
         """

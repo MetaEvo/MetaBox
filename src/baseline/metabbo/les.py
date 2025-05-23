@@ -72,7 +72,11 @@ class LES(Basic_Agent):
 
         self.cur_checkpoint=0
         # save init agent
-        self.config.agent_save_dir = self.config.agent_save_dir + self.__str__() + '/' + self.config.train_name + '/'
+        self.config.agent_save_dir = os.path.join(
+            self.config.agent_save_dir,
+            self.__str__(),
+            self.config.train_name
+        )
         save_class(self.config.agent_save_dir,'checkpoint-'+str(self.cur_checkpoint),self)
         self.cur_checkpoint+=1
 
@@ -116,13 +120,24 @@ class LES(Basic_Agent):
             num_cpus = compute_resource['num_cpus']
         if 'num_gpus' in compute_resource.keys():
             num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
-        env.seed(seeds)
 
-        env.set_env_attr("rng_cpu", "None")
-        if self.config.device != 'cpu':
-            env.set_env_attr("rng_gpu", "None")
-        env_population = [loads(dumps(env)) for _ in range(self.meta_pop_size)]
+        env_population = []
+
+        for _ in range(self.meta_pop_size):
+            env_ = copy.deepcopy(envs)
+            env_ = ParallelEnv(env_, para_mode, num_cpus = num_cpus, num_gpus = num_gpus)
+            env_.seed(seeds)
+            env_.set_env_attr("rng_cpu", ["None"] * len(env_))
+            if self.config.device != 'cpu':
+                env_.set_env_attr("rng_gpu", ["None"] * len(env_))
+            env_population.append(env_)
+        # env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
+        # env.seed(seeds)
+        #
+        # env.set_env_attr("rng_cpu", "None")
+        # if self.config.device != 'cpu':
+        #     env.set_env_attr("rng_gpu", "None")
+        # env_population = [loads(dumps(env)) for _ in range(self.meta_pop_size)]
 
         # sequential
         for i, e in enumerate(env_population):
@@ -130,7 +145,7 @@ class LES(Basic_Agent):
             action = {'attn':self.x_population[i][:68],
                       'mlp':self.x_population[i][68:],
                       'skip_step': self.skip_step}
-            action = [copy.deepcopy(action) for _ in range(len(env))]
+            action = [copy.deepcopy(action) for _ in range(len(envs))]
             sub_best, _, _, _ = e.step(action)
             
             self.meta_performances[i].append(sub_best)
@@ -138,7 +153,7 @@ class LES(Basic_Agent):
         # todo: modify threshold
         self.learning_step += 1
             
-        if self.learning_step % 10 == 0 and self.config.train_problem in ['protein','protein-torch']:
+        if self.learning_step % 10 == 0:
             self.train_epoch()
             if not self.config.no_tb:
                 self.log_to_tb_train(tb_logger, self.learning_step, self.gbest)
@@ -147,10 +162,10 @@ class LES(Basic_Agent):
             save_class(self.config.agent_save_dir, 'checkpoint-'+str(self.cur_checkpoint), self)
             self.cur_checkpoint += 1
 
-        return_info = {'return': [0] * len(env), 'loss': [0], 'learn_steps': self.learning_step, }
+        return_info = {'return': [0] * len(envs), 'loss': [0], 'learn_steps': self.learning_step, }
         return_info['gbest'] = env_population[0].get_env_attr('cost')[-1],
         for key in required_info.keys():
-            return_info[key] =  env_population[0].get_env_attr(required_info[key])
+            return_info[key] = env_population[0].get_env_attr(required_info[key])
         for i, e in enumerate(env_population):
             e.close()
         # return exceed_max_ls
@@ -200,7 +215,6 @@ class LES(Basic_Agent):
 
         return results
 
-    
 
     def log_to_tb_train(self, tb_logger, mini_step,gbest,
                         extra_info = {}):

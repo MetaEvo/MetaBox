@@ -322,6 +322,8 @@ def save_class(dir, file_name, saving_class):
     # Notes:
     - The saved file will have a `.pkl` extension.
     """
+    if not dir.endswith('/') or not dir.endswith('\\'):
+        dir += '/'
     if not os.path.exists(dir):
         os.makedirs(dir)
     with open(dir+file_name+'.pkl', 'wb') as f:
