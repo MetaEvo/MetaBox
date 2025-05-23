@@ -151,7 +151,7 @@ class A2C_Agent(Basic_Agent):
 
     def update_setting(self, config):
         """
-        Updates the agent's configuration and resets training-related attributes.
+        Updates the agent's configuration and resets training-related attributes.Store the initial agent in the checkpoint directory.
 
         # Args:
         - config: Configuration object containing updated parameters.

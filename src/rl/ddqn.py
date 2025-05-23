@@ -24,19 +24,19 @@ class DDQN_Agent(Basic_Agent):
     - `learning_rates` (float): Learning rate for the optimizer.
 
     # Attributes
-    - `gamma` (float): Discount factor for future rewards.
-    - `n_act` (int): Number of possible actions in the environment.
-    - `epsilon` (float): Epsilon value for epsilon-greedy exploration.
-    - `max_grad_norm` (float): Maximum gradient norm for gradient clipping.
-    - `memory_size` (int): Size of the replay buffer.
-    - `batch_size` (int): Batch size for training.
-    - `warm_up_size` (int): Minimum number of experiences required in the replay buffer before training starts.
-    - `target_update_interval` (int): Interval for updating the target network.
+    - `gamma` (float): Discount factor for future rewards.(default: 0.99)
+    - `n_act` (int): Number of possible actions in the environment.(default: 4)
+    - `epsilon` (float): Epsilon value for epsilon-greedy exploration.(default: 0.1)
+    - `max_grad_norm` (float): Maximum gradient norm for gradient clipping.(default: infinity)
+    - `memory_size` (int): Size of the replay buffer.(default: 100000)
+    - `batch_size` (int): Batch size for training.(default: 64)
+    - `warm_up_size` (int): Minimum number of experiences required in the replay buffer before training starts. (default: 10000)
+    - `target_update_interval` (int): Interval for updating the target network.(default: 1000)
     - `device` (str): Device to run the computations on (e.g., 'cpu' or 'cuda').
     - `replay_buffer` (ReplayBuffer): Replay buffer for storing experiences.
     - `network` (list): List of network names used by the agent.
-    - `optimizer` (torch.optim.Optimizer): Optimizer for training the networks.
-    - `criterion` (torch.nn.Module): Loss function used for training.
+    - `optimizer` (torch.optim.Optimizer): Optimizer for training the networks.(default: 'Adam')
+    - `criterion` (torch.nn.Module): Loss function used for training.(default: 'MSELoss')
     - `learning_time` (int): Counter for the number of training steps.
     - `cur_checkpoint` (int): Counter for the current checkpoint index.
 
@@ -53,7 +53,7 @@ class DDQN_Agent(Basic_Agent):
     """
     def __init__(self, config, networks: dict, learning_rates: float):
         """
-        Initializes the DDQN agent with the given configuration, networks, and learning rates. Store the initial model
+        Initializes the DDQN agent with the given configuration, networks, and learning rates. Store the initial agent in the checkpoint directory.
 
         # Args:
         - config: Configuration object containing all necessary parameters for the experiment.

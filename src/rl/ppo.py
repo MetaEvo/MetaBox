@@ -69,7 +69,7 @@ class PPO_Agent(Basic_Agent):
     """
     def __init__(self, config, networks: dict, learning_rates: float):
         """
-        Initializes the PPO agent with the given configuration, networks, and learning rates.
+        Initializes the PPO agent with the given configuration, networks, and learning rates.Store the initial agent in the checkpoint directory.
 
         # Args:
         - config: Configuration object containing all necessary parameters for the experiment.

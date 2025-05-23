@@ -22,11 +22,11 @@ class QLearning_Agent(Basic_Agent):
     - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
 
     # Attributes
-    - `gamma` (float): Discount factor for future rewards.
-    - `n_act` (int): Number of possible actions.
-    - `n_state` (int): Number of possible states.
-    - `epsilon` (float): Exploration rate for epsilon-greedy policy.
-    - `lr_model` (float): Learning rate for updating the Q-table.
+    - `gamma` (float): Discount factor for future rewards.(default: 0.8)
+    - `n_act` (int): Number of possible actions.(default: 4)
+    - `n_state` (int): Number of possible states.(default: 4)
+    - `epsilon` (float): Exploration rate for epsilon-greedy policy.(default: None)
+    - `lr_model` (float): Learning rate for updating the Q-table.(default: 1)
     - `q_table` (torch.Tensor): Q-table storing the state-action values.
     - `learning_time` (int): Counter for the number of learning steps taken.
     - `cur_checkpoint` (int): Counter for the current checkpoint index.
@@ -43,7 +43,7 @@ class QLearning_Agent(Basic_Agent):
     """
     def __init__(self, config):
         """
-        Initializes the Q-Learning agent with the given configuration.
+        Initializes the Q-Learning agent with the given configuration.Store the initial agent in the checkpoint directory.
 
         # Args:
         - config: Configuration object containing all necessary parameters for the experiment.

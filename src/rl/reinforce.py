@@ -67,7 +67,7 @@ class REINFORCE_Agent(Basic_Agent):
     """
     def __init__(self, config, networks: dict, learning_rates: float):
         """
-        Initializes the REINFORCE agent with the given configuration, networks, and learning rates.
+        Initializes the REINFORCE agent with the given configuration, networks, and learning rates.Store the initial agent in the checkpoint directory.
 
         # Args:
         - config: Configuration object containing all necessary parameters for the experiment.

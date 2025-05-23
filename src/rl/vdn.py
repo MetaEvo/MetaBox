@@ -27,25 +27,25 @@ class VDN_Agent(Basic_Agent):
     - `learning_rates` (float): Learning rate or a list of learning rates for the optimizer(s).
 
     # Attributes
-    - `n_agent` (int): Number of agents in the environment.
-    - `n_act` (int): Number of actions available to each agent.
-    - `available_action` (list): List of available actions for each agent.
-    - `memory_size` (int): Size of the replay buffer.
-    - `warm_up_size` (int): Number of experiences required in the replay buffer before training starts.
-    - `gamma` (float): Discount factor for future rewards.
-    - `epsilon` (float): Epsilon value for epsilon-greedy exploration.
-    - `epsilon_start` (float): Initial epsilon value for exploration.
-    - `epsilon_end` (float): Final epsilon value for exploration.
-    - `epsilon_decay_steps` (int): Number of steps for epsilon decay.
-    - `max_grad_norm` (float): Maximum gradient norm for gradient clipping.
-    - `batch_size` (int): Batch size for training.
-    - `chunk_size` (int): Chunk size for sampling trajectories from the replay buffer.
-    - `update_iter` (int): Number of update iterations per training step.
+    - `n_agent` (int): Number of agents in the environment.(default: 4)
+    - `n_act` (int): Number of actions available to each agent.(default: 4)
+    - `available_action` (list): List of available actions for each agent.(default: 4)
+    - `memory_size` (int): Size of the replay buffer.(default: 10000)
+    - `warm_up_size` (int): Number of experiences required in the replay buffer before training starts.(default: 1000)
+    - `gamma` (float): Discount factor for future rewards.(default: 0.99)
+    - `epsilon` (float): Epsilon value for epsilon-greedy exploration.(default: 0.5)
+    - `epsilon_start` (float): Initial epsilon value for exploration.(default: 1)
+    - `epsilon_end` (float): Final epsilon value for exploration.(default: 0.1)
+    - `epsilon_decay_steps` (int): Number of steps for epsilon decay.(default: 10000)
+    - `max_grad_norm` (float): Maximum gradient norm for gradient clipping.(default: 10.0)
+    - `batch_size` (int): Batch size for training.(default: 64)
+    - `chunk_size` (int): Chunk size for sampling trajectories from the replay buffer.(default: 1)
+    - `update_iter` (int): Number of update iterations per training step.(default: 10)
     - `device` (str): Device used for computation (e.g., 'cpu' or 'cuda').
     - `replay_buffer` (MultiAgent_ReplayBuffer): Replay buffer for storing experiences.
     - `network` (list): List of network names used by the agent.
-    - `optimizer` (torch.optim.Optimizer): Optimizer for training the networks.
-    - `criterion` (torch.nn.Module): Loss function used for training.
+    - `optimizer` (torch.optim.Optimizer): Optimizer for training the networks.(default: Adam)
+    - `criterion` (torch.nn.Module): Loss function used for training.(default: MSELoss)
     - `learning_time` (int): Counter for the number of training steps.
     - `cur_checkpoint` (int): Counter for the current checkpoint index.
 
@@ -62,7 +62,7 @@ class VDN_Agent(Basic_Agent):
 
     def __init__(self, config, networks, learning_rates):
         """
-        Initializes the VDN agent with the given configuration, networks, and learning rates.
+        Initializes the VDN agent with the given configuration, networks, and learning rates.Store the initial agent in the checkpoint directory.
 
         # Args:
         - config: Configuration object containing all necessary parameters for the experiment.

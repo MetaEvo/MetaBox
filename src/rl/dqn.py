@@ -23,18 +23,18 @@ class DQN_Agent(Basic_Agent):
     - `learning_rates` (float): Learning rate for the optimizer.
 
     # Attributes
-    - `gamma` (float): Discount factor for future rewards.
-    - `n_act` (int): Number of possible actions in the environment.
-    - `epsilon` (float): Exploration rate for epsilon-greedy policy.
-    - `max_grad_norm` (float): Maximum gradient norm for gradient clipping.
-    - `memory_size` (int): Size of the replay buffer.
-    - `batch_size` (int): Batch size for training.
-    - `warm_up_size` (int): Minimum number of experiences required in the replay buffer before training starts.
+    - `gamma` (float): Discount factor for future rewards.(default: 0.8)
+    - `n_act` (int): Number of possible actions in the environment.(default: 3)
+    - `epsilon` (float): Exploration rate for epsilon-greedy policy.(default: 0.1)
+    - `max_grad_norm` (float): Maximum gradient norm for gradient clipping.(default: infinity)
+    - `memory_size` (int): Size of the replay buffer.(default: 100)
+    - `batch_size` (int): Batch size for training.(default: 64)
+    - `warm_up_size` (int): Minimum number of experiences required in the replay buffer before training starts.(default: training batch size)
     - `device` (str): Device to run computations on (e.g., 'cpu' or 'cuda').
     - `replay_buffer` (ReplayBuffer): Replay buffer for storing experiences.
     - `network` (list): List of network names used by the agent.
-    - `optimizer` (torch.optim.Optimizer): Optimizer for training the networks.
-    - `criterion` (torch.nn.Module): Loss function used for training.
+    - `optimizer` (torch.optim.Optimizer): Optimizer for training the networks.(default: 'AdamW')
+    - `criterion` (torch.nn.Module): Loss function used for training.(default: 'MSELoss')
     - `learning_time` (int): Counter for the number of training steps.
     - `cur_checkpoint` (int): Counter for the current checkpoint index.
 
@@ -49,7 +49,7 @@ class DQN_Agent(Basic_Agent):
     """
     def __init__(self, config, network: dict, learning_rates: float):
         """
-        Initializes the DQN agent with the given configuration, networks, and learning rates.
+        Initializes the DQN agent with the given configuration, networks, and learning rates.Store the initial agent in the checkpoint directory.
 
         # Args:
         - config: Configuration object containing all necessary parameters for the experiment.
