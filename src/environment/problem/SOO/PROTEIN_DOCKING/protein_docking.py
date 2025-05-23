@@ -8,30 +8,14 @@ import time
 
 class Protein_Docking_Numpy_Problem(Basic_Problem):
     """
-    # Args:
-    - coor_init (np.ndarray): Initial coordinates of the interface atoms, shape [n_atoms, 3].
-    - q (np.ndarray): Charge interaction matrix, shape [n_atoms, n_atoms].
-    - e (np.ndarray): Energy parameter matrix, shape [n_atoms, n_atoms].
-    - r (np.ndarray): Distance parameter matrix, shape [n_atoms, n_atoms].
-    - basis (np.ndarray): Basis vectors for reduced coordinates, shape [dim, 3*n_atoms].
-    - eigval (np.ndarray): Eigenvalues for coordinate transformation, shape [dim].
-    - problem_id (str): Identifier for the problem instance.
-    # Attributes:
-    - n_atoms (int): Number of interface atoms considered.
-    - dim (int): Dimensionality of the reduced coordinate space.
-    - lb (float): Lower bound for optimization variables.
-    - ub (float): Upper bound for optimization variables.
-    - optimum (None): Placeholder for the optimum value (unknown).
-    # Methods:
-    - __str__(): Returns the problem identifier as a string.
-    - func(x): Computes the energy of the protein docking configuration for input variable(s) `x`.
-        # Args:
-            - x (np.ndarray): Input variables in the reduced coordinate space, shape [NP, dim] or [dim].
-        # Returns:
-            - np.ndarray: Computed energy values for each input configuration.
-    # Notes:
-    - The energy function combines electrostatic and Lennard-Jones-like terms, with distance-based masking for different interaction regimes.
-    - The class is intended for use in optimization algorithms for protein docking.
+    # Introduction
+    
+    # Original paper
+
+    # Official Implementation
+
+    # License
+    None
     """
     
     n_atoms = 100  # number of interface atoms considered for computational concern
@@ -40,6 +24,21 @@ class Protein_Docking_Numpy_Problem(Basic_Problem):
     ub = 1.5
 
     def __init__(self, coor_init, q, e, r, basis, eigval, problem_id):
+        """
+        # Introduction
+        Initializes the protein docking problem instance with the provided parameters.
+        # Args:
+        - coor_init (np.ndarray): Initial coordinates of atoms, shape [n_atoms, 3].
+        - q (np.ndarray): Charge matrix, shape [n_atoms, n_atoms].
+        - e (np.ndarray): Epsilon matrix, shape [n_atoms, n_atoms].
+        - r (np.ndarray): Distance matrix, shape [n_atoms, n_atoms].
+        - basis (np.ndarray): Basis vectors, shape [dim, 3*n_atoms].
+        - eigval (np.ndarray): Eigenvalues, shape [dim].
+        - problem_id (Any): Identifier for the problem instance.
+        # Attributes:
+        - optimum (Any or None): The optimum value, initially set to None as it is unknown.
+        """
+        
         self.coor_init = coor_init  # [n_atoms, 3]
         self.q = q                  # [n_atoms, n_atoms]
         self.e = e                  # [n_atoms, n_atoms]
@@ -50,9 +49,34 @@ class Protein_Docking_Numpy_Problem(Basic_Problem):
         self.optimum = None      # unknown, set to None
 
     def __str__(self):
+        """
+        # Introduction
+        Returns a string representation of the object, specifically its `problem_id`.
+        # Returns:
+        - str: The `problem_id` attribute of the object.
+        """
         return self.problem_id
 
     def func(self, x):
+        """
+        # Introduction
+        Computes the energy of a protein docking configuration based on atomic coordinates and pairwise interactions.
+        This function transforms the input coordinates, computes pairwise distances between atoms, applies interaction coefficients, and calculates the mean energy for each configuration in the batch.
+        # Args:
+        - x (np.ndarray): Input array of shape [NP, 3 * n_atoms], representing the coordinates for NP configurations.
+        # Built-in Attribute:
+        - self.eigval (np.ndarray): Eigenvalues used for coordinate transformation.
+        - self.basis (np.ndarray): Basis matrix for coordinate transformation.
+        - self.n_atoms (int): Number of atoms in the protein.
+        - self.coor_init (np.ndarray): Initial coordinates of the atoms.
+        - self.q (float): Charge-related coefficient for interaction energy.
+        - self.e (float): Energy scaling factor.
+        - self.r (float): Distance scaling factor.
+        # Returns:
+        - np.ndarray: Array of shape [NP], containing the computed energy for each configuration.
+        # Raises:
+        - ValueError: If input shapes are incompatible or required attributes are missing.
+        """
         eigval = 1.0 / np.sqrt(self.eigval)
         product = np.matmul(x * eigval, self.basis)  # [NP, 3*n_atoms]
         new_coor = product.reshape((-1, self.n_atoms, 3)) + self.coor_init  # [NP, n_atoms, 3]
@@ -76,12 +100,36 @@ class Protein_Docking_Numpy_Problem(Basic_Problem):
 
 
 class Protein_Docking_Torch_Problem(Basic_Problem_Torch):
+    """
+    # Introduction
+    Represents a protein docking optimization problem using PyTorch tensors, enabling the evaluation of protein conformations based on atomic coordinates, interaction matrices, and physical potentials. This class supports both single and batch evaluations, and is designed for use in single-objective optimization (SOO) settings.
+    # Original paper
+
+    # Official Implementation
+
+    # License
+    None
+    """
     n_atoms = 100  # number of interface atoms considered for computational concern
     dim = 12
     lb = -1.5
     ub = 1.5
 
     def __init__(self, coor_init, q, e, r, basis, eigval, problem_id):
+        """
+        # Introduction
+        Initializes the protein docking problem instance with atomic coordinates, interaction matrices, basis, eigenvalues, and problem identifier.
+        # Attributes:
+        - coor_init (torch.Tensor): Tensor of initial atomic coordinates.
+        - q (torch.Tensor): Tensor of atomic charges or related property.
+        - e (torch.Tensor): Tensor of interaction energies or related property.
+        - r (torch.Tensor): Tensor of distances or related property.
+        - basis (torch.Tensor): Tensor of basis vectors.
+        - eigval (torch.Tensor): Tensor of eigenvalues.
+        - problem_id (Any): Problem identifier.
+        - optimum (None): Placeholder for the optimum value, initially set to None.
+        """
+        
         self.coor_init = torch.as_tensor(coor_init, dtype=torch.float64)  # [n_atoms, 3]
         self.q = torch.as_tensor(q, dtype=torch.float64)  # [n_atoms, n_atoms]
         self.e = torch.as_tensor(e, dtype=torch.float64)  # [n_atoms, n_atoms]
@@ -92,11 +140,26 @@ class Protein_Docking_Torch_Problem(Basic_Problem_Torch):
         self.optimum = None  # unknown, set to None
 
     def __str__(self):
+        """
+        Returns a string representation of the protein docking problem instance.
+        # Returns:
+            str: The unique identifier (`problem_id`) of the problem instance.
+        """
+        
         return self.problem_id
 
     def eval(self, x):
         """
-        A general version of func() with adaptation to evaluate both individual and population.
+        # Introduction
+        Evaluates the objective function for a given individual or population, supporting both single and batch evaluations. Tracks and accumulates the evaluation time in milliseconds.
+        # Args:
+        - x (array-like or torch.Tensor): The input(s) to be evaluated. Can be a 1D array/tensor (single individual) or 2D array/tensor (population).
+        # Built-in Attribute:
+        - self.T1 (float): Accumulates the total evaluation time in milliseconds.
+        # Returns:
+        - torch.Tensor or float: The evaluation result(s) from the objective function. Returns a scalar for a single individual or a tensor for a population.
+        # Raises:
+        - None explicitly. Assumes `self.func` handles input shape and type errors.
         """
         start=time.perf_counter()
         if not isinstance(x, torch.Tensor):
@@ -120,6 +183,25 @@ class Protein_Docking_Torch_Problem(Basic_Problem_Torch):
             return y
 
     def func(self, x):
+        """
+        # Introduction
+        Computes the energy of a protein conformation based on atomic coordinates, pairwise distances, and interaction coefficients. The function transforms the input coordinates, calculates pairwise distances, applies interaction masks, and computes the total energy using a combination of electrostatic and Lennard-Jones-like potentials.
+        # Args:
+        - x (torch.Tensor): Input tensor of shape [NP, 3 * n_atoms], representing the coordinates in the transformed basis.
+        # Built-in Attribute:
+        - self.eigval (torch.Tensor): Eigenvalues used for scaling the input coordinates.
+        - self.basis (torch.Tensor): Basis matrix for coordinate transformation.
+        - self.n_atoms (int): Number of atoms in the protein.
+        - self.coor_init (torch.Tensor): Initial coordinates of the atoms.
+        - self.q (float or torch.Tensor): Charge parameter for electrostatic interaction.
+        - self.e (float or torch.Tensor): Epsilon parameter for Lennard-Jones potential.
+        - self.r (float or torch.Tensor): Sigma parameter for Lennard-Jones potential.
+        # Returns:
+        - torch.Tensor: Tensor of shape [NP], containing the computed energy for each input conformation.
+        # Raises:
+        - None
+        """
+        
         eigval = 1.0 / torch.sqrt(self.eigval)
         product = torch.matmul(x * eigval, self.basis)  # [NP, 3*n_atoms]
         new_coor = product.reshape((-1, self.n_atoms, 3)) + self.coor_init  # [NP, n_atoms, 3]

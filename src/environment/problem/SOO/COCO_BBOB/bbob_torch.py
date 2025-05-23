@@ -7,40 +7,7 @@ import time
 class BBOB_Torch_Problem(Basic_Problem_Torch):
     """
     # Introduction
-    BBOB-Surrogate investigates the integration of surrogate modeling techniques into MetaBBO , enabling data-driven approximation of expensive objective functions while maintaining optimization fidelity.
-    # Original paper
-    "[Surrogate Learning in Meta-Black-Box Optimization: A Preliminary Study](https://arxiv.org/abs/2503.18060)." arXiv preprint arXiv:2503.18060 (2025).
-    # Official Implementation
-    [BBOB-Surrogate](https://github.com/GMC-DRL/Surr-RLDE)
-    # License
-    None
-    # Problem Suite Composition
-    BBOB-Surrogate contains a total of 72 optimization problems, corresponding to three dimensions (2, 5, 10), each dimension contains 24 problems. Each problem consists of a trained KAN or MLP network, which is used to fit 24 black box functions in the COCO-BBOB benchmark. The network here is a surrogate model of the original function.
-    # Args:
-    - dim (int): Dimensionality of the problem.
-    - shift (torch.Tensor): Shift vector applied to the input space.
-    - rotate (torch.Tensor): Rotation matrix applied to the input space.
-    - bias (float): Bias term added to the objective function.
-    - lb (float or torch.Tensor): Lower bound(s) of the search space.
-    - ub (float or torch.Tensor): Upper bound(s) of the search space.
-    - device (torch.device or str): Device on which tensors are allocated (e.g., 'cpu' or 'cuda').
-    # Attributes:
-    - dim (int): Problem dimensionality.
-    - shift (torch.Tensor): Shift vector.
-    - rotate (torch.Tensor): Rotation matrix.
-    - bias (float): Bias term.
-    - lb (float or torch.Tensor): Lower bound(s).
-    - ub (float or torch.Tensor): Upper bound(s).
-    - FES (int): Function evaluation count.
-    - opt (torch.Tensor): Optimal solution (shift vector).
-    - device (torch.device or str): Device for computation.
-    - optimum (float): Objective value at the optimal solution.
-    # Methods:
-    - move_tensors_to_device(): Moves all tensor attributes to the specified device.
-    - get_optimal(): Returns the optimal solution (shift vector).
-    # Notes:
-    - The class expects a `func` method to be defined (likely in the parent class) for evaluating the objective function.
-    - The optimal solution is computed during initialization using the provided shift vector.
+     This is the torch version of the BBOB problem class, which could get the gradient.
     """
     
     def __init__(self, dim, shift, rotate, bias, lb, ub, device):

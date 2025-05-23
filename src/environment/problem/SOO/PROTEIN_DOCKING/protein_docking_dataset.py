@@ -8,30 +8,14 @@ from .protein_docking import Protein_Docking_Torch_Problem, Protein_Docking_Nump
 import importlib.resources as pkg_resources
 class Protein_Docking_Dataset(Dataset):
     """
-    # Attributes:
-    - proteins_set (dict): Dictionary containing protein IDs categorized by difficulty ('rigid', 'medium', 'difficult').
-    - n_start_points (int): Number of starting models per protein (default: 10).
-    - data (list): List of problem instances.
-    - batch_size (int): Number of instances per batch.
-    - N (int): Total number of problem instances.
-    - ptr (list): List of starting indices for each batch.
-    - index (np.ndarray): Array of indices for data access and shuffling.
-    - maxdim (int): Maximum dimension among all problem instances.
-    # Methods:
-    - __init__(self, data, batch_size=1): Initializes the dataset with provided data and batch size.
-    - get_datasets(version, train_batch_size=1, test_batch_size=1, difficulty='easy', dataset_seed=1035): 
-        Static method to generate training and testing datasets based on difficulty and random seed.
-    - __getitem__(self, item): Returns a batch of problem instances at the specified batch index.
-    - __len__(self): Returns the total number of problem instances.
-    - __add__(self, other): Concatenates two Protein_Docking_Dataset instances.
-    - shuffle(self): Randomly permutes the order of the dataset.
-    # Args:
-    - data (list): List of problem instances to be included in the dataset.
-    - batch_size (int, optional): Number of instances per batch (default: 1).
-    # Returns:
-    - Protein_Docking_Dataset: An instance of the dataset for protein docking problems.
-    # Raises:
-    - ValueError: If an unsupported difficulty or version is provided in `get_datasets`.
+    # Introduction
+    
+    # Original paper
+
+    # Official Implementation
+
+    # License
+    None
     """
     
     proteins_set = {'rigid': ['1AVX', '1BJ1', '1BVN', '1CGI', '1DFJ', '1EAW', '1EWY', '1EZU', '1IQD', '1JPS',
@@ -44,6 +28,19 @@ class Protein_Docking_Dataset(Dataset):
     def __init__(self,
                  data,
                  batch_size=1):
+        """
+        Initializes the protein docking dataset object with provided data and batch size.
+        # Args:
+        - data (list): A list of data items, each expected to have a `dim` attribute.
+        - batch_size (int, optional): The number of samples per batch. Defaults to 1.
+        # Built-in Attributes:
+        - data (list): Stores the input data.
+        - batch_size (int): Stores the batch size.
+        - N (int): The total number of data items.
+        - ptr (list): List of starting indices for each batch.
+        - index (np.ndarray): Array of indices for the data items.Defaults to a range from 0 to N.
+        - maxdim (int): The maximum `dim` value among all data items.Defaults to 0.
+        """
         super().__init__()
         self.data = data
         self.batch_size = batch_size
@@ -62,6 +59,23 @@ class Protein_Docking_Dataset(Dataset):
                      user_test_list = None,
                      difficulty='easy',
                      dataset_seed=1035):
+        """
+        # Introduction
+        Generates training and testing datasets for the protein docking problem, partitioning protein instances based on the specified difficulty level or user-provided lists. Supports both NumPy and PyTorch problem representations.
+        # Args:
+        - version (str): The backend to use for problem instances. Must be either 'numpy' or 'torch'.
+        - train_batch_size (int, optional): Batch size for the training dataset. Defaults to 1.
+        - test_batch_size (int, optional): Batch size for the testing dataset. Defaults to 1.
+        - user_train_list (list, optional): List of protein IDs to include in the training set. If None, uses automatic partitioning. Defaults to None.
+        - user_test_list (list, optional): List of protein IDs to include in the testing set. If None, uses automatic partitioning. Defaults to None.
+        - difficulty (str, optional): Difficulty level for dataset partitioning. Can be 'easy', 'difficult', or 'all'. Defaults to 'easy'.
+        - dataset_seed (int, optional): Random seed for reproducible dataset partitioning. Defaults to 1035.
+        # Returns:
+        - Protein_Docking_Dataset: The training dataset.
+        - Protein_Docking_Dataset: The testing dataset.
+        # Raises:
+        - ValueError: If the specified `version` is not supported.
+        """
         # apart train set and test set
         if difficulty == 'easy':
             train_set_ratio = 0.75
@@ -139,6 +153,16 @@ class Protein_Docking_Dataset(Dataset):
         return Protein_Docking_Dataset(train_set, train_batch_size), Protein_Docking_Dataset(test_set, test_batch_size)
 
     def __getitem__(self, item):
+        """
+        # Introduction
+        Retrieves a batch of data samples corresponding to the given index.
+        # Args:
+        - item (int): The batch index to retrieve data for.
+        # Returns:
+        - list: A list containing the data samples for the specified batch.
+        # Raises:
+        - IndexError: If `item` is out of range of available batches.
+        """
         
         ptr = self.ptr[item]
         index = self.index[ptr: min(ptr + self.batch_size, self.N)]
@@ -148,10 +172,41 @@ class Protein_Docking_Dataset(Dataset):
         return res
 
     def __len__(self):
+        """
+        # Introduction
+        Returns the number of items in the dataset.
+        # Returns:
+        - int: The total number of items in the dataset.
+        """
+        
         return self.N
 
     def __add__(self, other: 'Protein_Docking_Dataset'):
+        """
+        # Introduction
+        Implements the addition operator for the `Protein_Docking_Dataset` class, allowing two datasets to be combined into a new dataset.
+        # Args:
+        - other (Protein_Docking_Dataset): Another instance of `Protein_Docking_Dataset` to be added.
+        # Returns:
+        - Protein_Docking_Dataset: A new dataset instance containing the combined data from both datasets, using the current instance's batch size.
+        # Raises:
+        - AttributeError: If `other` does not have a `data` attribute.
+        - TypeError: If `other` is not an instance of `Protein_Docking_Dataset`.
+        """
+        
         return Protein_Docking_Dataset(self.data + other.data, self.batch_size)
 
     def shuffle(self):
+        """
+        # Introduction
+        Randomly shuffles the indices of the dataset, updating the internal index order.
+        # Built-in Attribute:
+        - self.N (int): The total number of items in the dataset.
+        - self.index (np.ndarray): The array storing the current order of indices.
+        # Returns:
+        - None
+        # Notes:
+        This method uses `np.random.permutation` to generate a new random ordering of indices for the dataset.
+        """
+        
         self.index = np.random.permutation(self.N)

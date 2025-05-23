@@ -40,6 +40,24 @@ class BBOB_Dataset(Dataset):
     def __init__(self,
                  data,
                  batch_size=1):
+        """
+        # Introduction
+        Initializes the dataset object with provided data and batch size, and computes relevant attributes for batching and dimensionality.
+        # Args:
+        - data (list): The dataset to be managed, where each item is expected to have a `dim` attribute.
+        - batch_size (int, optional): The number of samples per batch. Defaults to 1.
+        # Built-in Attribute:
+        - self.data (list): Stores the input dataset.
+        - self.batch_size (int): Stores the batch size.
+        - self.N (int): The total number of data items.
+        - self.ptr (list): List of starting indices for each batch.
+        - self.index (np.ndarray): Array of indices for the dataset.
+        - self.maxdim (int): The maximum dimension found among all items in the dataset.
+        # Returns:
+        - None
+        # Raises:
+        - AttributeError: If any item in `data` does not have a `dim` attribute.
+        """
         super().__init__()
         self.data = data
         self.batch_size = batch_size
@@ -64,6 +82,31 @@ class BBOB_Dataset(Dataset):
                      user_train_list=None,
                      user_test_list=None,
                      device = None):
+        """
+        # Introduction
+        Generates training and testing datasets for BBOB (Black-Box Optimization Benchmarking) or BBOB-noisy function suites, with configurable properties such as shifting, rotation, bias, and difficulty level.
+        # Args:
+        - suit (str): The function suite and dimension, e.g., 'bbob10' or 'bbob-noisy20'.
+        - upperbound (float): The upper bound for the function domain (must be at least 5).
+        - shifted (bool, optional): Whether to apply a random shift to the function. Defaults to True.
+        - rotated (bool, optional): Whether to apply a random rotation to the function. Defaults to True.
+        - biased (bool, optional): Whether to add a random bias to the function. Defaults to True.
+        - train_batch_size (int, optional): Batch size for the training dataset. Defaults to 1.
+        - test_batch_size (int, optional): Batch size for the testing dataset. Defaults to 1.
+        - difficulty (str, optional): Difficulty level of the functions to include ('easy', 'difficult', 'all', or None). Defaults to None.
+        - version (str, optional): Version of the function implementation ('numpy' or other). Defaults to 'numpy'.
+        - instance_seed (int, optional): Random seed for reproducibility. Defaults to 3849.
+        - user_train_list (list, optional): List of function IDs to include in the training set. Defaults to None.
+        - user_test_list (list, optional): List of function IDs to include in the testing set. Defaults to None.
+        - device (torch.device, optional): Device for torch tensors if using the torch version. Defaults to None.
+        # Returns:
+        - Tuple[BBOB_Dataset, BBOB_Dataset]: A tuple containing the training and testing datasets.
+        # Raises:
+        - ValueError: If neither `difficulty` nor both `user_train_list` and `user_test_list` are provided.
+        - ValueError: If the function suite is invalid or not supported.
+        - ValueError: If the difficulty level is invalid.
+        - AssertionError: If `upperbound` is less than 5.
+        """
         # get functions ID of indicated suit
         if difficulty == None and user_test_list == None and user_train_list == None:
             raise ValueError('Please set difficulty or user_train_list and user_test_list.')
@@ -149,6 +192,16 @@ class BBOB_Dataset(Dataset):
         return BBOB_Dataset(train_set, train_batch_size), BBOB_Dataset(test_set, test_batch_size)
 
     def __getitem__(self, item):
+        """
+        # Introduction
+        Retrieves a batch of data items corresponding to the given index or indices.
+        # Args:
+        - item (int or slice): The index or indices specifying which batch to retrieve.
+        # Returns:
+        - list: A list containing the data items from the dataset for the specified batch.
+        # Raises:
+        - IndexError: If the provided index is out of range.
+        """
         
         ptr = self.ptr[item]
         index = self.index[ptr: min(ptr + self.batch_size, self.N)]
@@ -158,10 +211,41 @@ class BBOB_Dataset(Dataset):
         return res
 
     def __len__(self):
+        """
+        # Introduction
+        Returns the number of elements in the dataset.
+        # Returns:
+        - int: The total number of elements contained in the dataset.
+        """
+        
         return self.N
 
     def __add__(self, other: 'BBOB_Dataset'):
+        """
+        # Introduction
+        Implements the addition operator for the `BBOB_Dataset` class, allowing two datasets to be combined.
+        # Args:
+        - other (BBOB_Dataset): Another instance of `BBOB_Dataset` to be added to the current dataset.
+        # Returns:
+        - BBOB_Dataset: A new `BBOB_Dataset` instance containing the combined data from both datasets, with the same batch size as the original.
+        # Raises:
+        - AttributeError: If `other` does not have a `data` attribute.
+        - TypeError: If `other` is not an instance of `BBOB_Dataset`.
+        """
+        
         return BBOB_Dataset(self.data + other.data, self.batch_size)
 
     def shuffle(self):
+        """
+        # Introduction
+        Randomly shuffles the indices of the dataset, updating the internal index order.
+        # Built-in Attribute:
+        - self.N (int): The total number of elements in the dataset.
+        - self.index (np.ndarray): The array storing the current order of indices.
+        # Returns:
+        - None
+        # Notes:
+        This method modifies the `self.index` attribute in-place using a random permutation.
+        """
+        
         self.index = np.random.permutation(self.N)
