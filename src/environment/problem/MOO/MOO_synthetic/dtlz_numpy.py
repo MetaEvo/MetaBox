@@ -224,9 +224,6 @@ class DTLZ(Basic_Problem):
         # Introduction
         Return a string representation of the problem class.
 
-        # Args
-        None
-
         # Returns
         - str: A string describing the problem's name, number of objectives, and variables.
         """
