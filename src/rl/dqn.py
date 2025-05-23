@@ -203,7 +203,7 @@ class DQN_Agent(Basic_Agent):
         - required_info (dict): Additional information required from the environment.
 
         # Returns:
-            tuple: A boolean indicating whether training has ended and a dictionary with training metrics.
+        - tuple: A boolean indicating whether training has ended and a dictionary with training metrics.
         """
         num_cpus = None
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
@@ -373,7 +373,7 @@ class DQN_Agent(Basic_Agent):
         - required_info (dict): Additional information required from the environments.
 
         # Returns:
-            dict: A dictionary containing results of the batch rollout episodes, including return and environment-specific metrics.
+        - dict: A dictionary containing results of the batch rollout episodes, including return and environment-specific metrics.
         """
         num_cpus = None
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
