@@ -6,7 +6,7 @@ Numerous configurable options are available — refer to **Quickstart > [Config]
 
 ```{important}
 The following is the code specific to Linux.
-If you are using Windows, please add: ```if __name__ == "__main__":```
+If you are using Windows, please add: \ ```if __name__ == "__main__":```
 ```
 
 🧪 General Tester Code
@@ -93,6 +93,5 @@ tester = Tester(config, baselines, datasets)
 tester.test()
 ```
 
-```{tip} **Test your algorithm on MetaBox** — refer to  **Gallery > Config** for details.\
-**Test two or more algorithms** — refer to  **Gallery > Config** for details.
+```{tip} **Test your algorithm on MetaBox** — refer to  **Developer Guide > [Develop your MetaBBO](https://metaboxdoc.readthedocs.io/en/stable/guide/Gallery/Develop%20your%20MetaBBO.html)** for details.
 ```
