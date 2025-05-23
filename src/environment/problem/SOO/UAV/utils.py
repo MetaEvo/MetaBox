@@ -2,61 +2,32 @@ import numpy as np
 from scipy.interpolate import LinearNDInterpolator
 
 def createmodel(map_size = 900, r = 100, rr = 10, num_threats = 5, rng = None):
+    """ 
+    # Introduction
+    Creates a synthetic terrain map and randomly places cylindrical threats. Determines suitable start and end points for the drone, ensuring they are not in immediate collision with any threats.
+    # Args:
+    - map_size (int, optional): Size of the square terrain grid. Default is 900.
+    - r (float, optional): Initial roughness of the terrain. Default is 100.
+    - rr (float, optional): Roughness variation factor controlling terrain detail. Default is 10.
+    - num_threats (int, optional): Number of cylindrical threats to be placed on the map. Default is 5.
+    - rng (np.random.Generator, optional): Random number generator for reproducibility.
+    # Returns:
+    - dict: A dictionary containing terrain, threat information, and start/end points:
+        - 'drone_size' (float): The size of the drone.
+        - 'danger_dist' (float): Minimum safety distance from threats.
+        - 'threats' (ndarray): Array of shape (num_threats, 4), each row as [x, y, height, radius].
+        - 'start' (ndarray): Start position [x, y, z] for the drone.
+        - 'end' (ndarray): End position [x, y, z] for the drone.
+        - 'xmin', 'xmax', 'ymin', 'ymax', 'zmin', 'zmax' (float): Boundaries of the map.
+        - 'MAPSIZE_X', 'MAPSIZE_Y' (float): Dimensions of the terrain grid.
+        - 'X', 'Y' (ndarray): Meshgrid representing terrain coordinates.
+        - 'H' (ndarray): Heightmap of the terrain.
+    # Raises:
+    - AssertionError: If no valid start/end points are found after 20 attempts.
+    # Notes:
+    - Threats are randomly placed with constraints ensuring they remain within bounds.
     """
-        Generates a simulation model for a drone navigation task in a terrain with threats.
-
-        This function creates a synthetic terrain map and places cylindrical threats randomly.
-        It also determines suitable start and end points for the drone, ensuring they are not
-        in immediate collision with any threats.
-
-        Parameters:
-        ----------
-        map_size : int, optional (default=900)
-            Size of the square terrain grid.
-        r : float, optional (default=100)
-            Initial roughness of the terrain.
-        rr : float, optional (default=10)
-            Roughness variation factor controlling terrain detail.
-        num_threats : int, optional (default=5)
-            Number of cylindrical threats to be placed on the map.
-        seed : int, optional (default=3849)
-            Random seed for reproducibility.
-
-        Returns:
-        -------
-        model : dict
-            A dictionary containing terrain, threat information, and start/end points:
-
-            - 'drone_size' : float
-              The size of the drone.
-            - 'danger_dist' : float
-              Minimum safety distance from threats.
-            - 'threats' : ndarray, shape (num_threats, 4)
-              Array where each row represents a threat: `[x, y, height, radius]`.
-            - 'start' : ndarray, shape (3, 1)
-              Start position `[x, y, z]` for the drone.
-            - 'end' : ndarray, shape (3, 1)
-              End position `[x, y, z]` for the drone.
-            - 'xmin', 'xmax', 'ymin', 'ymax', 'zmin', 'zmax' : float
-              Boundaries of the map.
-            - 'MAPSIZE_X', 'MAPSIZE_Y' : float
-              Dimensions of the terrain grid.
-            - 'X', 'Y' : ndarray
-              Meshgrid representing terrain coordinates.
-            - 'H' : ndarray
-              Heightmap of the terrain.
-
-        Notes:
-        -----
-        - The threats are randomly placed with constraints ensuring they remain within bounds.
-        - Start and end points are selected to avoid initial collisions with threats.
-        - If no valid start/end points are found after 20 attempts, an assertion error is raised.
-
-        Example:
-        -------
-        ```
-        ```
-        """
+        
     H = generate_terrain(8, map_size, 130, r, rr, rng)
     MAPSIZE_X = H.shape[1]
     MAPSIZE_Y = H.shape[0]
@@ -121,28 +92,22 @@ def createmodel(map_size = 900, r = 100, rr = 10, num_threats = 5, rng = None):
 
 def generate_terrain(n = 8, map_size = 900, h0 = 130, r0 = None, rr = None, rng = None):
     """
-        Generates a series of points that approximate terrain using a simple algorithm
-        with minimal parameters.
-
-        Parameters:
-        ----------
-        n : int
-            Number of iterations of the algorithm, controlling the level of detail.
-            Values beyond 8 add negligible visible detail but significantly increase computation time.
-        mesh_size : int
-            The size of the output mesh (e.g., 512 for a 512x512 grid).
-        h0 : float
-            Initial elevation.
-        r0 : float
-            Initial roughness, determining how much terrain can vary in a step.
-        rr : float
-            Roughness roughness, controlling how much roughness itself can vary in a step.
-
-        Returns:
-        -------
-        hm : ndarray
-            2D mesh grids useful for surface plotting.
-        """
+    # Introduction
+    Generates a synthetic terrain heightmap using a recursive point-generation algorithm.
+    This function creates a 2D terrain heightmap by iteratively generating and interpolating points in the plane, with configurable detail, roughness, and randomness. The resulting heightmap can be used for surface plotting or simulation environments.
+    # Args:
+    - n (int, optional): Number of recursive iterations controlling terrain detail. Higher values increase detail and computation time. Default is 8.
+    - map_size (int, optional): The size (width and height) of the output square mesh grid. Default is 900.
+    - h0 (float, optional): Initial elevation value for the terrain. Default is 130.
+    - r0 (float, optional): Initial roughness, controlling the initial terrain variability. If None, should be set before use.
+    - rr (float, optional): Roughness roughness, controlling how much the roughness itself can vary. If None, should be set before use.
+    - rng (np.random.Generator): Numpy random number generator instance for reproducibility.
+    # Returns:
+    - hm (np.ndarray): 2D array of shape (map_size, map_size) representing the generated terrain heightmap.
+    # Raises:
+    - AttributeError: If `rng` is None or does not provide required random methods.
+    - ValueError: If required parameters (`r0`, `rr`, or `rng`) are not provided.
+    """
     n0 = rng.randint(low = 1, high = 5)
     m = 3
     nf = n0 * (m + 1) ** n
@@ -189,6 +154,27 @@ def generate_terrain(n = 8, map_size = 900, h0 = 130, r0 = None, rr = None, rng 
     return hm
 
 def interpolate(x0, y0, v0, xn, yn):
+    """
+    # Introduction
+
+    Interpolates values at specified coordinates using scattered data interpolation with extrapolation support.
+
+    # Args:
+
+    - x0 (np.ndarray): 1D array of x-coordinates of known data points.
+    - y0 (np.ndarray): 1D array of y-coordinates of known data points.
+    - v0 (np.ndarray): 1D array of values at the known data points.
+    - xn (np.ndarray or float): x-coordinates where interpolation is desired.
+    - yn (np.ndarray or float): y-coordinates where interpolation is desired.
+
+    # Returns:
+
+    - np.ndarray or float: Interpolated values at the specified (xn, yn) coordinates.
+
+    # Raises:
+
+    - ValueError: If input arrays have incompatible shapes or lengths.
+    """
 
     x_ext = np.concatenate([100 * np.array([-1, -1, 1, 1]), x0.flatten()])
     y_ext = np.concatenate([100 * np.array([-1, 1, -1, 1]), y0.flatten()])

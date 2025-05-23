@@ -277,4 +277,5 @@ class LDE(REINFORCE_Agent):
 
             for key in required_info.keys():
                 results[key] = getattr(env, required_info[key])
+
             return results

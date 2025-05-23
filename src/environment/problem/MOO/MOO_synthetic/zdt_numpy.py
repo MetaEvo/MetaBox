@@ -5,23 +5,29 @@ from ....problem.basic_problem import Basic_Problem
 
 def find_non_dominated_indices(Point):
     """
-    此函数用于找出种群中的支配解
-    :param population_list: 种群的目标值的列表，列表中的每个元素是一个代表单个解目标值的列表
-    :return: 支配解的列表
+    # Introduction
+    Find the indices of non-dominated solutions in a population.
+
+    A solution is said to be non-dominated if no other solution in the population
+    dominates it. This function performs a pairwise comparison between all solutions.
+
+    # Args:
+    - Point (np.ndarray): A 2D array of shape (n_points, n_objectives), where each row 
+                          represents the objective values of a solution.
+
+    # Returns:
+    - non_dominated_indices (np.ndarray): Indices of the non-dominated solutions.
     """
-    # 将列表转换为 numpy 数组
     n_points = Point.shape[0]
     is_dominated = np.zeros(n_points, dtype = bool)
 
     for i in range(n_points):
         for j in range(n_points):
             if i != j:
-                # 检查是否存在解 j 支配解 i
                 if np.all(Point[j] <= Point[i]) and np.any(Point[j] < Point[i]):
                     is_dominated[i] = True
                     break
 
-    # 找出非支配解的索引
     non_dominated_indices = np.where(~is_dominated)[0]
     return non_dominated_indices
 
@@ -55,6 +61,15 @@ class ZDT(Basic_Problem):
     """
 
     def __init__(self, n_var = 30, **kwargs):
+        """
+        # Introduction
+        Initialize a ZDT problem with specified number of decision variables.
+
+        # Args
+        - n_var (int, optional): Number of decision variables. Default is 30.
+        - **kwargs: Additional keyword arguments for further customization.
+
+        """
         self.n_var = n_var
         self.n_obj = 2
         self.vtype = float
@@ -62,12 +77,44 @@ class ZDT(Basic_Problem):
         self.ub = np.ones(n_var)
 
     def __str__(self):
+        """
+        # Introduction
+        Return a string representation of the problem class.
+
+        # Args
+        None
+
+        # Returns
+        - str: A string describing the problem's name, number of objectives, and variables.
+        """
         return self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class ZDT1(ZDT):
+    """
+    # Introduction
+    The `ZDT1` class represents the first problem in the ZDT benchmark suite. It features a convex Pareto front and is commonly used to evaluate the convergence ability of multi-objective optimization algorithms.
+
+    # Methods
+    - func(x): Compute the objective values of ZDT1.
+    - get_ref_set(n_ref_points): Generate a reference Pareto front for ZDT1.
+    """
 
     def func(self, x, *args, **kwargs):
+        """
+        # Introduction
+        Compute the two objective values of the ZDT1 problem for a given set of decision variable vectors.
+
+        # Args
+        - x (np.ndarray): A 1D or 2D NumPy array representing decision variables. 
+                          If 1D, it will be reshaped to (1, n_var).
+        - *args: Unused positional arguments.
+        - **kwargs: Unused keyword arguments.
+
+        # Returns
+        - np.ndarray: A 2D NumPy array of shape (n_samples, 2), containing the objective values for each solution.
+
+        """
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         f1 = x[:, 0]
@@ -77,7 +124,18 @@ class ZDT1(ZDT):
         out = np.column_stack([f1, f2])
         return out
 
-    def get_ref_set(self, n_ref_points = 1000):  # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
+    def get_ref_set(self, n_ref_points = 1000):  
+        """
+        # Introduction
+        Generate the reference Pareto front for ZDT1, which has a convex shape and is analytically defined.
+
+        # Args
+        - n_ref_points (int, optional): Number of points to sample along the Pareto front. Defaults to 1000.
+
+        # Returns
+        - np.ndarray: A 2D NumPy array of shape (n_ref_points, 2), representing the true Pareto front.
+
+        """
         N = n_ref_points  #
         ObjV1 = np.linspace(0, 1, N)
         ObjV2 = 1 - np.sqrt(ObjV1)
@@ -86,8 +144,32 @@ class ZDT1(ZDT):
 
 
 class ZDT2(ZDT):
+    """
+    # Introduction
+    The `ZDT2` class represents the second problem in the ZDT benchmark suite. It is characterized by a non-convex 
+    Pareto front and is designed to test the ability of optimization algorithms to converge and maintain diversity 
+    in non-convex regions.
+
+    # Methods
+    - func(x): Compute the objective values of ZDT2.
+    - get_ref_set(n_ref_points): Generate a reference Pareto front for ZDT2.
+    """
 
     def func(self, x, *args, **kwargs):
+        """
+        # Introduction
+        Compute the two objective values of the ZDT2 problem for a given set of decision variable vectors.
+
+        # Args
+        - x (np.ndarray): A 1D or 2D NumPy array representing decision variables. 
+                          If 1D, it will be reshaped to (1, n_var).
+        - *args: Unused positional arguments.
+        - **kwargs: Unused keyword arguments.
+
+        # Returns
+        - np.ndarray: A 2D NumPy array of shape (n_samples, 2), containing the objective values for each solution.
+
+        """
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         f1 = x[:, 0]
@@ -98,7 +180,18 @@ class ZDT2(ZDT):
         out = np.column_stack([f1, f2])
         return out
 
-    def get_ref_set(self, n_ref_points = 1000):  # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
+    def get_ref_set(self, n_ref_points = 1000): 
+        """
+        # Introduction
+        Generate the reference Pareto front for ZDT2, which is known to be non-convex and continuous.
+
+        # Args
+        - n_ref_points (int, optional): Number of points to sample along the Pareto front. Defaults to 1000.
+
+        # Returns
+        - np.ndarray: A 2D NumPy array of shape (n_ref_points, 2), representing the true Pareto front.
+
+        """
         N = n_ref_points
         ObjV1 = np.linspace(0, 1, N)
         ObjV2 = 1 - ObjV1 ** 2
@@ -107,8 +200,42 @@ class ZDT2(ZDT):
 
 
 class ZDT3(ZDT):
+    """
+    # Introduction
+    The `ZDT3` class represents the third problem in the ZDT multi-objective benchmark suite.
+    This problem features a disconnected Pareto front and is used to evaluate the diversity-preserving ability of algorithms.
+
+    # Args
+    - `n_var` (int, optional): Number of decision variables. Default is 30.
+    - `**kwargs`: Additional keyword arguments for customization.
+
+    # Attributes
+    - `n_var` (int): Number of decision variables.
+    - `n_obj` (int): Number of objectives, fixed at 2.
+    - `vtype` (type): Variable type, set to `float`.
+    - `lb` (np.ndarray): Lower bounds of the decision variables, set to 0.
+    - `ub` (np.ndarray): Upper bounds of the decision variables, set to 1.
+
+    # Methods
+    - `func(x, *args, **kwargs)`: Computes the objective values for input `x`.
+    - `get_ref_set(n_ref_points=1000)`: Returns reference Pareto-optimal points for ZDT3.
+    """
 
     def func(self, x, *args, **kwargs):
+        """
+        # Introduction
+        Evaluate the objective values for the ZDT3 problem. ZDT3 features a multi-modal, non-convex, and 
+        discontinuous Pareto front. The objective is to map the decision variables to their respective 
+        objective values in the two-objective space.
+
+        # Args
+        - x (np.ndarray): A 1D or 2D numpy array representing the decision variables.
+        - *args: Additional positional arguments (unused).
+        - **kwargs: Additional keyword arguments (unused).
+
+        # Returns
+        - np.ndarray: A 2D array of shape (n_samples, 2) containing the computed objective values.
+        """
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         f1 = x[:, 0]
@@ -119,7 +246,18 @@ class ZDT3(ZDT):
         out = np.column_stack([f1, f2])
         return out
 
-    def get_ref_set(self, n_ref_points = 1000):  # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
+    def get_ref_set(self, n_ref_points = 1000):
+        """
+        # Introduction
+        Generate a set of true Pareto-optimal objective vectors for the ZDT3 problem.
+        ZDT3 has a discontinuous front composed of several convex segments.
+
+        # Args
+        - n_ref_points (int): Number of uniformly sampled candidate points. Default is 1000.
+
+        # Returns
+        - np.ndarray: A 2D array containing non-dominated Pareto-optimal objective vectors.
+        """
         N = n_ref_points
         ObjV1 = np.linspace(0, 1, N)
         ObjV2 = 1 - ObjV1 ** 0.5 - ObjV1 * np.sin(10 * np.pi * ObjV1)
@@ -132,7 +270,37 @@ class ZDT3(ZDT):
 
 
 class ZDT4(ZDT):
+    """
+    # Introduction
+    The `ZDT4` class represents the fourth problem in the ZDT multi-objective benchmark suite.
+    This problem introduces a multimodal landscape with many local Pareto-optimal solutions to evaluate
+    the ability of optimization algorithms to escape local optima.
+
+    
+    # Args
+    - `n_var` (int, optional): Number of decision variables. Default is 10.
+
+    # Attributes
+    - `n_var` (int): Number of decision variables.
+    - `n_obj` (int): Number of objectives, fixed at 2.
+    - `vtype` (type): Variable type, set to `float`.
+    - `lb` (np.ndarray): Lower bounds of the decision variables. x₀ in [0,1], others in [-5,5].
+    - `ub` (np.ndarray): Upper bounds of the decision variables. x₀ in [0,1], others in [-5,5].
+
+    # Methods
+    - `func(x, *args, **kwargs)`: Computes the objective values for ZDT4.
+    - `get_ref_set(n_ref_points=1000)`: Returns reference Pareto-optimal points for ZDT4.
+    """
+
     def __init__(self, n_var = 10):
+        """
+        # Introduction
+        Initialize the ZDT4 problem by setting custom bounds for the decision variables.
+        x₀ is in [0, 1], while x₁~xₙ are in [-5, 5].
+
+        # Args
+        - n_var (int): Number of decision variables. Default is 10.
+        """
         super().__init__(n_var)
         self.lb = -5 * np.ones(self.n_var)
         self.lb[0] = 0.0
@@ -141,6 +309,19 @@ class ZDT4(ZDT):
         # self.func = self._evaluate
 
     def func(self, x, *args, **kwargs):
+        """
+        # Introduction
+        Evaluate the objective values for the ZDT4 problem. ZDT4 is characterized by a large number of
+        local Pareto-optimal fronts, testing the global search capability of optimization algorithms.
+
+        # Args
+        - x (np.ndarray): A 1D or 2D array representing decision variable(s).
+        - *args: Additional unused positional arguments.
+        - **kwargs: Additional unused keyword arguments.
+
+        # Returns
+        - np.ndarray: A 2D array of shape (n_samples, 2) containing the computed objective vectors.
+        """
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         f1 = x[:, 0]
@@ -154,7 +335,17 @@ class ZDT4(ZDT):
         out = np.column_stack([f1, f2])
         return out
 
-    def get_ref_set(self, n_ref_points = 1000):  # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
+    def get_ref_set(self, n_ref_points = 1000):  
+        """
+        # Introduction
+        Generate a set of true Pareto-optimal objective vectors for the ZDT4 problem.ZDT4 shares the same Pareto front shape as ZDT1, but has a rugged decision space.
+
+        # Args
+        - n_ref_points (int): Number of uniformly sampled points to generate. Default is 1000.
+
+        # Returns
+        - np.ndarray: A 2D array of shape (n_ref_points, 2) containing Pareto-optimal reference points.
+        """
         N = n_ref_points
         ObjV1 = np.linspace(0, 1, N)
         ObjV2 = 1 - np.sqrt(ObjV1)
@@ -163,14 +354,61 @@ class ZDT4(ZDT):
 
 
 class ZDT5(ZDT):
+    """
+    # Introduction
+    The `ZDT5` class represents the fifth problem in the ZDT benchmark suite.
+    This problem features binary decision variables and a discrete search space.
+    It evaluates the ability of optimization algorithms to handle discrete and combinatorial problems.
+
+    # Args
+    - `m` (int, optional): Number of subcomponents (objectives related). Default is 11.
+    - `n` (int, optional): Number of bits per subcomponent. Default is 5.
+    - `normalize` (bool, optional): Whether to normalize objectives to [0,1]. Default is True.
+    - `**kwargs`: Additional keyword arguments passed to the base class.
+
+    # Attributes
+    - `m` (int): Number of subcomponents.
+    - `n` (int): Number of bits per subcomponent.
+    - `normalize` (bool): Whether to normalize objectives.
+    - `n_var` (int): Number of decision variables, computed as 30 + n * (m-1).
+    - Other attributes inherited from `ZDT`.
+
+    # Methods
+    - `__init__(m=11, n=5, normalize=True, **kwargs)`: Initializes ZDT5 with given parameters.
+    - `func(x, *args, **kwargs)`: Evaluates objectives for the input decision variables.
+    - `get_ref_set(n_ref_points=1000)`: Generates reference Pareto front points.
+    """
 
     def __init__(self, m = 11, n = 5, normalize = True, **kwargs):
+        """
+        # Introduction
+        Initialize the ZDT5 problem with given parameters for subcomponents and bit-lengths.
+
+        # Args
+        - m (int): Number of subcomponents, default 11.
+        - n (int): Number of bits per subcomponent, default 5.
+        - normalize (bool): Whether to normalize objectives, default True.
+        - **kwargs: Additional keyword arguments passed to the base class.
+        """
         self.m = m
         self.n = n
         self.normalize = normalize
         super().__init__(n_var = (30 + n * (m - 1)), **kwargs)
 
     def func(self, x, *args, **kwargs):
+        """
+        # Introduction
+        Evaluate the objectives for the ZDT5 problem. Converts input to float and splits
+        decision variables into subcomponents. Calculates the objectives according to the ZDT5 definition.
+
+        # Args
+        - x (np.ndarray): Decision variable array, 1D or 2D.
+        - *args: Additional positional arguments.
+        - **kwargs: Additional keyword arguments.
+
+        # Returns
+        - np.ndarray: 2D array of shape (n_samples, 2) with objective values.
+        """
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         x = x.astype(float)
@@ -194,6 +432,16 @@ class ZDT5(ZDT):
         return out
 
     def get_ref_set(self, n_ref_points = 1000):
+        """
+        # Introduction
+        Generate reference Pareto front points for ZDT5.
+
+        # Args
+        - n_ref_points (int): Number of points to generate, default 1000.
+
+        # Returns
+        - np.ndarray: 2D array of reference Pareto front points.
+        """
         x = 1 + np.linspace(0, 1, n_ref_points) * 30
         pf = np.column_stack([x, (self.m - 1) / x])
         if self.normalize:
@@ -202,11 +450,49 @@ class ZDT5(ZDT):
 
 
 class ZDT6(ZDT):
+    """
+    # Introduction
+    The `ZDT6` class represents the sixth problem in the ZDT benchmark suite.This problem features a non-uniformly distributed Pareto front and a complicated shape that challenges multi-objective optimization algorithms.
+
+
+    # Args
+    - `n_var` (int, optional): Number of decision variables. Default is 10.
+    - `**kwargs`: Additional keyword arguments passed to the base class.
+
+    # Attributes
+    - `n_var` (int): Number of decision variables.
+    - Other attributes inherited from `ZDT`.
+
+    # Methods
+    - `__init__(n_var=10, **kwargs)`: Initializes the ZDT6 problem.
+    - `func(x, *args, **kwargs)`: Evaluates the objective functions.
+    - `get_ref_set(n_ref_points=1000)`: Returns the theoretical Pareto front reference set.
+    """
 
     def __init__(self, n_var = 10, **kwargs):
+        """
+        # Introduction
+        Initialize ZDT6 with a specified number of decision variables.
+
+        # Args
+        - `n_var` (int): Number of decision variables, default 10.
+        - `**kwargs`: Additional keyword arguments passed to the base class.
+        """
         super().__init__(n_var = n_var, **kwargs)
 
     def func(self, x, *args, **kwargs):
+        """
+        # Introduction
+        Evaluate the two objectives of the ZDT6 problem for given decision variables.
+
+        # Args
+        - `x` (np.ndarray): Decision variable array, can be 1D or 2D.
+        - `*args`: Additional positional arguments.
+        - `**kwargs`: Additional keyword arguments.
+
+        # Returns
+        - `np.ndarray`: Array of shape (n_samples, 2) containing objective values.
+        """
         if x.ndim == 1:
             x = np.expand_dims(x, axis = 0)
         f1 = 1 - np.exp(-4 * x[:, 0]) * np.power(np.sin(6 * np.pi * x[:, 0]), 6)
@@ -216,7 +502,17 @@ class ZDT6(ZDT):
         out = np.column_stack([f1, f2])
         return out
 
-    def get_ref_set(self, n_ref_points = 1000):  # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
+    def get_ref_set(self, n_ref_points = 1000):  
+        """
+        # Introduction
+        Generate the theoretical Pareto front reference points for ZDT6.
+
+        # Args
+        - `n_ref_points` (int): Number of reference points to generate. Default is 1000.
+
+        # Returns
+        - `np.ndarray`: Array of shape (n_ref_points, 2) representing the Pareto front.
+        """
         N = n_ref_points
         ObjV1 = np.linspace(0.280775, 1, N)
         ObjV2 = 1 - ObjV1 ** 2;
@@ -225,8 +521,37 @@ class ZDT6(ZDT):
 
 
 class ZeroToOneNormalization():
+    """
+    # Introduction
+    A utility class to normalize data features to the [0, 1] range based on provided lower and upper bounds.
+    Supports cases where bounds may be partially or fully unspecified (NaN), handling normalization accordingly.
+
+    # Args
+    - `lb` (np.ndarray or None): Lower bounds for normalization. If None, treated as unspecified.
+    - `ub` (np.ndarray or None): Upper bounds for normalization. If None, treated as unspecified.
+
+    # Attributes
+    - `lb` (np.ndarray or None): Stored lower bounds.
+    - `ub` (np.ndarray or None): Stored upper bounds.
+    - `lb_only` (np.ndarray of bool): Mask where only lower bound is specified.
+    - `ub_only` (np.ndarray of bool): Mask where only upper bound is specified.
+    - `both_nan` (np.ndarray of bool): Mask where both bounds are NaN.
+    - `neither_nan` (np.ndarray of bool): Mask where neither bound is NaN.
+
+    # Methods
+    - `__init__(lb=None, ub=None)`: Initializes normalization bounds and masks.
+    - `forward(X)`: Normalize input array `X` based on stored bounds.
+    """
 
     def __init__(self, lb = None, ub = None) -> None:
+        """
+        # Introduction
+        Initialize normalization with optional lower and upper bounds.
+
+        # Args
+        - `lb` (np.ndarray or None): Lower bounds.
+        - `ub` (np.ndarray or None): Upper bounds.
+        """
 
         # if both are None we are basically done because normalization is disabled
         if lb is None and ub is None:
@@ -260,6 +585,16 @@ class ZeroToOneNormalization():
         assert np.all(np.logical_or(ub >= lb, any_nan)), "lb must be less or equal than ub."
 
     def forward(self, X):
+        """
+        # Introduction
+        Normalize input array `X` based on stored bounds.
+
+        # Args
+        - `X` (np.ndarray): Input data to be normalized.
+
+        # Returns
+        - `np.ndarray`: Normalized data in [0,1] range or adjusted according to specified bounds.
+        """
         if X is None or (self.lb is None and self.ub is None):
             return X
 
@@ -280,6 +615,20 @@ class ZeroToOneNormalization():
 
 
 def normalize(X, lb = None, ub = None, return_bounds = False, estimate_bounds_if_none = True):
+    """
+    # Introduction
+    Normalize input data `X` to [0, 1] based on provided or estimated bounds.
+
+    # Args
+    - `X` (np.ndarray): Input data array.
+    - `lb` (float, int, np.ndarray or None): Lower bounds. If None and `estimate_bounds_if_none` is True, estimated from `X`.
+    - `ub` (float, int, np.ndarray or None): Upper bounds. If None and `estimate_bounds_if_none` is True, estimated from `X`.
+    - `return_bounds` (bool): Whether to return the bounds along with normalized data.
+    - `estimate_bounds_if_none` (bool): Whether to estimate bounds from `X` if they are not provided.
+
+    # Returns
+    - `np.ndarray` or tuple: Normalized data array; if `return_bounds` is True, also returns lower and upper bounds.
+    """
     if estimate_bounds_if_none:
         if lb is None:
             lb = np.min(X, axis = 0)

@@ -7,39 +7,33 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
     """
     # PSORLNS_Optimizer
     An implementation of a learnable optimizer that combines Particle Swarm Optimization (PSO) with Reinforcement Learning-based Neighborhood Search (RLNS). This optimizer maintains a population of particles and updates their positions and velocities based on both PSO dynamics and adaptive neighborhood strategies, aiming to solve optimization problems efficiently.
-    # Args:
-    - config (object): Configuration object containing hyperparameters and settings for the optimizer.
-    # Attributes:
-    - w (float): Inertia weight for velocity update.
-    - c1 (float): Cognitive coefficient for velocity update.
-    - c2 (float): Social coefficient for velocity update.
-    - ps (int): Population size (number of particles).
-    - TT2 (float): Threshold for selecting better/worse neighbors.
-    - neighbor_num (list): List of possible neighbor counts for adaptive neighborhood selection.
-    - fes (int): Current number of function evaluations.
-    - cost (list): History of global best costs.
-    - pr (list): History of peak ratios.
-    - sr (list): History of success rates.
-    - log_index (int): Current logging index.
-    - log_interval (int): Interval for logging progress.
-    - particles (dict): Dictionary storing current state of all particles.
-    - meta_X, meta_Cost, meta_Pr, meta_Sr (list): Optional metadata for full logging.
-    # Methods:
-    - __str__(): Returns the name of the optimizer.
-    - cal_pr_sr(problem): Calculates peak ratio and success rate for the current population.
-    - initialize_particles(problem): Initializes particle positions, velocities, and costs.
-    - init_population(problem): Resets the optimizer and initializes the population.
-    - get_costs(position, problem): Evaluates the cost of given positions.
-    - observe(): Encodes the current population state as features.
-    - cal_reward(current_cost, parent_cost): Computes the reward signal for reinforcement learning.
-    - update(action, problem): Updates the population based on actions, evaluates new solutions, and manages logging and termination.
-    # Returns:
-    - Various methods return updated states, rewards, termination flags, and logging information as appropriate for reinforcement learning environments.
-    # Raises:
-    - No explicit exceptions are raised, but downstream errors may occur if problem definitions are invalid or if configuration parameters are inconsistent.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the PSORLNS optimizer with the provided configuration and sets default parameters for the optimization process.
+        # Args:
+        - config (object): Config object containing parameters for the optimizer.
+            - The Attributes needed for the DEDDQN_Optimizer are the following:
+                - n_logpoint (int): Number of log points for the optimizer.
+                - full_meta_data (bool): Flag to indicate if full meta-data should be collected.
+        # Attributes:
+        - w (float): Inertia weight for the optimizer.Default is 1.
+        - c1 (float): Cognitive coefficient.Default is 1.49445.
+        - c2 (float): Social coefficient.Default is 1.49445.
+        - ps (int): Population size.Default is 100.
+        - TT2 (float): Threshold for selecting worse or better solutions.Default is 0.8.
+        - neighbor_num (list of int): List of neighbor counts for local search.Default is [5, 10, 20, 30, 40].
+        - fes (Any): Function evaluation counter (initialized as None).
+        - cost (Any): Cost value (initialized as None).
+        - pr (Any): Probability rate (initialized as None).
+        - sr (Any): Success rate (initialized as None).
+        - log_index (Any): Logging index (initialized as None).
+        - log_interval (Any): Logging interval (initialized as None).
+        - archive (Any): Archive for storing solutions (initialized as None).
+        - archive_val (Any): Archive for storing solution values (initialized as None).
+        """
         super().__init__(config)
         self.__config = config
 
@@ -62,9 +56,31 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
         self.archive_val = None
 
     def __str__(self):
+        """
+        # Introduction
+        Returns a string representation of the PSORLNS_Optimizer instance.
+        # Returns:
+        - str: The name of the optimizer, "PSORLNS_Optimizer".
+        """
+        
         return "PSORLNS_Optimizer"
 
     def cal_pr_sr(self, problem):
+        """
+        # Introduction
+        Calculates the Peak Ratio (PR) and Success Rate (SR) at multiple accuracy levels for the current solution archive with respect to the given optimization problem.
+        # Args:
+        - problem: The optimization problem object, which provides the attributes `nopt` (number of global optima) and the method `how_many_goptima` for evaluating solutions.
+        # Returns:
+        - raw_PR (np.ndarray): Array of shape (5,) containing the peak ratio at each accuracy level.
+        - raw_SR (np.ndarray): Array of shape (5,) containing the success rate at each accuracy level.
+        # Notes:
+        - The method uses five predefined accuracy thresholds: 1e-1, 1e-2, 1e-3, 1e-4, and 1e-5.
+        - The solution archive (`self.archive`) and their corresponding values (`self.archive_val`) are used to determine which solutions meet each accuracy level.
+        - The peak ratio is the fraction of global optima found at each accuracy level.
+        - The success rate is set to 1 if all global optima are found at a given accuracy level, otherwise 0.
+        """
+        
         raw_PR = np.zeros(5)
         raw_SR = np.zeros(5)
         solu = self.archive.copy()
@@ -86,7 +102,7 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
         # Introduction
         Initializes the particles for the PSO (Particle Swarm Optimization) algorithm by generating random positions and velocities within the problem's bounds, and computes initial costs and best values.
         # Args:
-        - problem: An object representing the optimization problem, which must have attributes `lb` (lower bounds), `ub` (upper bounds), and be compatible with the `get_costs` method.
+        - problem: The optimization problem object, which has attributes `lb` (lower bounds), `ub` (upper bounds), and be compatible with the `get_costs` method.
         # Returns:
         - None: Updates the `self.particles` attribute with initialized positions, velocities, costs, and best values.
         # Side Effects:
@@ -132,7 +148,26 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
         # Introduction
         Initializes the population of particles for the PSO-RLNS optimizer, sets up problem-specific parameters, and prepares logging and meta-data structures.
         # Args:
-        - problem (object): An object representing the optimization problem, which must have attributes such as `maxfes`, `dim`, `ub`, and `lb`.
+        - problem (object): The optimization problem, which has attributes such as `maxfes`, `dim`, `ub`, and `lb`.
+        # Built-in Attributes:
+        - `self.max_fes`: Maximum function evaluations allowed for the problem.
+        - `self.log_interval`: Interval for logging progress.
+        - `self.dim`: Dimensionality of the problem.
+        - `self.fes`: Function evaluation counter. Default is 0.
+        - `self.max_velocity`: Maximum velocity for particles, calculated based on the problem's bounds.
+        - `self.w`: Inertia weight for the optimizer, default is 1.
+        - `self.archive`: Archive for storing solutions, initialized as an empty array.
+        - `self.archive_val`: Archive for storing solution values, initialized as an empty array.
+        - `self.max_dist`: Maximum distance between particles, calculated based on the problem's bounds.
+        - `self.eps`: Threshold for neighborhood size, default is 0.1.
+        - `self.log_index`: Index for logging progress, initialized to 1.
+        - `self.cost`: List to store the best cost values during optimization.
+        - `self.pr`: List to store the peak ratio values during optimization.
+        - `self.sr`: List to store the success rate values during optimization.
+        - `self.meta_X`: List to store the positions of particles for meta-data collection (if enabled).
+        - `self.meta_Cost`: List to store the costs of particles for meta-data collection (if enabled).
+        - `self.meta_Pr`: List to store the peak ratio values for meta-data collection (if enabled).
+        - `self.meta_Sr`: List to store the success rate values for meta-data collection (if enabled).
         # Returns:
         - np.ndarray: The initial observed state of the population, as returned by the `observe()` method.
         # Notes:
@@ -181,6 +216,20 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
 
     # calculate costs of solutions
     def get_costs(self, position, problem):
+        """
+        # Introduction
+        Calculates the cost values for a given set of positions by evaluating them on the provided problem and adjusting by the problem's optimum value. Also updates the function evaluation count.
+        # Args:
+        - position (np.ndarray): An array of candidate solutions to be evaluated.
+        - problem (object): An optimization problem instance with `eval` and `optimum` attributes.
+        # Built-in Attribute:
+        - self.fes (int): Counter for the number of function evaluations, incremented by the batch size.
+        # Returns:
+        - np.ndarray: The computed cost values for each position, adjusted by the problem's optimum.
+        # Raises:
+        - AttributeError: If `problem` does not have `eval` or `optimum` attributes.
+        """
+        
         ps = position.shape[0]
         self.fes += ps
         cost = problem.eval(position) - problem.optimum
@@ -188,6 +237,17 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
 
     # feature encoding
     def observe(self):
+        """
+        # Introduction
+        Computes a normalized state representation based on the neighborhood structure of particles in the optimizer.
+        # Args:
+        None
+        # Returns:
+        - np.ndarray: A (ps, 1) array where each entry represents the normalized count of neighbors for each particle.
+        # Raises:
+        None
+        """
+        
         state = np.zeros((self.ps, 1))
         pop_dist = self.particles['pop_dist'].copy()
         pop_dist[range(self.ps), range(self.ps)] = np.inf
@@ -200,6 +260,17 @@ class PSORLNS_Optimizer(Learnable_Optimizer):
 
     # direct reward function
     def cal_reward(self, current_cost, parent_cost):
+        """
+        # Introduction
+        Calculates the reward for each solution in the population based on the comparison between current and parent costs.
+        # Args:
+        - current_cost (np.ndarray): An array of current costs for each solution in the population.
+        - parent_cost (np.ndarray): An array of parent costs for each solution in the population.
+        # Returns:
+        - np.ndarray: An array of rewards where each element is 1 if the current cost is less than the parent cost, -1 if greater, and 0 otherwise.
+        # Notes:
+        - The length of `current_cost` and `parent_cost` should match the population size (`self.ps`).
+        """
         reward = np.zeros(self.ps)
         reward[current_cost < parent_cost]  = 1
         reward[current_cost > parent_cost] = -1

@@ -7,6 +7,21 @@ mutation_operators = ['DE1', 'DE2', 'DE3', 'DE4', 'DE5', 'DE6', 'DE7', 'DE8', 'D
 
 class select_mutation:
     def __init__(self, rng):
+        """
+        # Introduction
+        Initializes the optimizer with a given random number generator and sets up mutation operators.
+        # Args:
+        - rng: A random number generator instance used for stochastic operations.
+        # Built-in Attributes:
+        - `self.rng`: Stores the provided random number generator.
+        - `self.mutation_operators` (list): List of mutation operator names to be used.
+        - `self.operators` (dict): Dictionary mapping operator names to their instantiated objects.
+        - `self.n_operator` (int): Number of mutation operators.
+        # Notes:
+        - The mutation_operators variable is expected to be defined elsewhere in the class or module.
+        - Each operator is instantiated using its name and the provided random number generator.
+        """
+        
         # print(mutation_operators)
         operators = {}
         self.rng = rng
@@ -18,12 +33,37 @@ class select_mutation:
         self.n_operator = len(self.mutation_operators)
 
     def select_mutation_operator(self, mutation_operator):
+        """
+        # Introduction
+        Selects and returns the mutation operator class based on the provided mutation operator key.
+        # Args:
+        - mutation_operator (str or int): The key or index used to identify the desired mutation operator.
+        # Returns:
+        - type: The class corresponding to the selected mutation operator.
+        # Raises:
+        - KeyError: If the provided mutation_operator does not exist in the mutation_operators mapping.
+        """
+        
         mutation_operator_name = self.mutation_operators[mutation_operator]
         operator_class = self.operators[mutation_operator_name]
         return operator_class
 
 class select_crossover:
     def __init__(self, rng):
+        """
+        # Introduction
+        Initializes the optimizer with a random number generator and sets up crossover operators.
+        # Args:
+        - rng: A random number generator instance used for stochastic operations.
+        # Attributes:
+        - `self.rng`: Stores the provided random number generator.
+        - `self.crossover_operators`: A list or collection of crossover operator names.
+        - `self.operators`: A dictionary mapping operator names to their instantiated objects.
+        - `self.n_operator`: The number of crossover operators available.
+        # Notes:
+        Assumes that `crossover_operators` is defined in the scope and that each operator name corresponds to a callable class or function.
+        """
+        
         self.rng = rng
         # print(crossover_operators)
         operators = {}
@@ -35,6 +75,17 @@ class select_crossover:
         self.n_operator = len(self.crossover_operators)
 
     def select_crossover_operator(self, crossover_operator):
+        """
+        # Introduction
+        Selects and returns the crossover operator class based on the provided operator key.
+        # Args:
+        - crossover_operator (str): The key or identifier for the desired crossover operator.
+        # Returns:
+        - type: The class corresponding to the selected crossover operator.
+        # Raises:
+        - KeyError: If the provided `crossover_operator` is not found in the available operators.
+        """
+        
         crossover_operator_name = self.crossover_operators[crossover_operator]
         operator_class = self.operators[crossover_operator_name]
         return operator_class
@@ -47,42 +98,33 @@ class RLDEAFL_Optimizer(Learnable_Optimizer):
     [Reinforcement Learning-based Self-adaptive Differential Evolution through Automated Landscape Feature Learning](https://arxiv.org/abs/2503.18061)
     # Implementation:
     [RLDEAFL](https://github.com/MetaEvo/RLDE-AFL)
-    # Attributes:
-    - __config (object): Stores the configuration object.
-    - __mu_operator (int): Number of mutation operators available.
-    - __cr_operator (int): Number of crossover operators available.
-    - __n_mutation (int): Number of mutation parameters.
-    - __n_crossover (int): Number of crossover parameters.
-    - __NP (int): Population size.
-    - __dim (int): Dimensionality of the problem.
-    - max_fes (int): Maximum number of function evaluations.
-    - __reward_ratio (float): Scaling factor for reward calculation.
-    - __mu_selector (object): Mutation operator selector.
-    - __cr_selector (object): Crossover operator selector.
-    - log_index (int): Current log index for tracking progress.
-    - log_interval (int): Interval for logging progress.
-    - fes (int): Current number of function evaluations.
-    - current_vector (np.ndarray): Current population of solutions.
-    - current_fitness (np.ndarray): Fitness values of the current population.
-    - gbest_val (float): Best fitness value found so far.
-    - __gbest_index (int): Index of the best solution in the population.
-    - __gbest_vector (np.ndarray): Best solution vector found so far.
-    - cost (list): History of best fitness values for logging.
-    - __init_gbest (float): Initial best fitness value.
-    - meta_X (list): History of population vectors (if meta-data is enabled).
-    - meta_Cost (list): History of population fitness values (if meta-data is enabled).
-    - __archive (np.ndarray): Archive of previous solutions for diversity.
-    # Methods:
-    - __init__(self, config): Initializes the optimizer with the given configuration.
-    - __str__(self): Returns the string representation of the optimizer.
-    - get_costs(self, position, problem): Calculates the costs of given solutions for the problem.
-    - observe(self): Returns the current observation/state of the optimizer.
-    - init_population(self, problem): Initializes the population and related attributes.
-    - __update_archive(self, old_id): Updates the archive with a given solution.
-    - update(self, action, problem): Updates the population based on actions, applies operators, evaluates new solutions, and returns observation, reward, done flag, and info.
-    - Exceptions may be raised if the action array is malformed, operator selection fails, or if there are issues with the problem evaluation.
     """
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the RLDEAFLOptimizer with the provided configuration, setting up internal parameters for mutation, crossover, population size, and logging.
+        # Args:
+        - config (object): Configuration object containing optimizer settings such as `maxFEs` and `log_interval`.
+            - The Attribute needed for the RLDEAFL_Optimizer:
+                - maxFEs (int): Maximum number of function evaluations.
+                - log_interval (int): Interval for logging progress.
+                - n_logpoint (int): Number of log points to record.
+                - full_meta_data (bool): Flag indicating whether to use full meta data.
+        # Built-in Attribute:
+        - self.__config: Stores the configuration object.
+        - self.__mu_operator (int): Number of mutation operators. Default is 14.
+        - self.__cr_operator (int): Number of crossover operators. Default is 3.
+        - self.__n_mutation (int): Number of mutation strategies. Default is 3.
+        - self.__n_crossover (int): Number of crossover strategies. Default is 2.
+        - self.__NP (int): Population size. Default is 100.
+        - self.__reward_ratio (int): Reward ratio for operator selection. Default is 1.
+        - self.__mu_selector: Placeholder for mutation operator selector.Default is None.
+        - self.__cr_selector: Placeholder for crossover operator selector.Default is None.
+        - self.log_index: Index for logging.Default is None.
+        # Returns:
+        - None
+        """
+        
         super().__init__(config)
         self.__config = config
 
@@ -104,10 +146,30 @@ class RLDEAFL_Optimizer(Learnable_Optimizer):
         self.log_interval = config.log_interval
 
     def __str__(self):
+        """
+        Returns a string representation of the RLDEAFL_Optimizer class.
+        # Returns:
+            str: The name of the optimizer, "RLDEAFL_Optimizer".
+        """
+        
         return "RLDEAFL_Optimizer"
 
     # calculate costs of solutions
     def get_costs(self, position, problem):
+        """
+        # Introduction
+        Evaluates the cost(s) of a given position or set of positions for a specified optimization problem, applying boundary constraints and adjusting for the problem's optimum if available.
+        # Args:
+        - position (np.ndarray): The position(s) to be evaluated, typically in normalized [0, 1] space.
+        - problem (object): The optimization problem instance, expected to have `lb`, `ub`, `eval`, and `optimum` attributes.
+        # Built-in Attribute:
+        - self.fes (int): Increments the function evaluation counter by the number of positions evaluated.
+        # Returns:
+        - cost (float or np.ndarray): The evaluated cost(s) for the given position(s), optionally shifted by the problem's optimum.
+        # Raises:
+        - AttributeError: If the `problem` object does not have the required attributes (`lb`, `ub`, `eval`, `optimum`).
+        """
+        
         ps = position.shape[0]
         self.fes += ps
         # return problem bound
@@ -121,12 +183,48 @@ class RLDEAFL_Optimizer(Learnable_Optimizer):
         return cost
 
     def observe(self):
+        """
+        # Introduction
+        Observes the current state of the optimizer by normalizing the current vector, recording the current fitness, and tracking the progress as a fraction of function evaluations.
+        # Returns:
+        - np.ndarray: A 2D array where each row contains the normalized current vector, its corresponding fitness value, and the normalized number of function evaluations.
+        # Notes:
+        - The normalization of the current vector assumes the lower and upper bounds are 0 and 1, respectively.
+        - The function evaluation step (`fes`) is normalized by the maximum allowed function evaluations (`max_fes`).
+        """
+        
         xs = (self.current_vector - 0) / (1 - 0)
         fes = self.fes / self.max_fes
         pop = np.column_stack((xs, self.current_fitness, np.full(xs.shape[0], fes)))
         return pop
 
     def init_population(self, problem):
+        """
+        # Introduction
+        Initializes the population for the RLDEAF optimizer, setting up the initial candidate solutions, their fitness values, and relevant optimizer state variables.
+        # Args:
+        - problem (object): An optimization problem instance that must have `dim`, `ub`, and `lb` attributes, representing the dimensionality, upper bounds, and lower bounds of the search space, respectively.
+        # Built-in Attribute:
+        - self.__dim (int): Dimensionality of the problem.
+        - self.__mu_selector, self.__cr_selector: Mutation and crossover selector functions, initialized if not already set.
+        - self.fes (int): Function evaluation counter, reset to zero.
+        - self.__archive (np.ndarray): Archive of solutions, initialized as empty.
+        - self.current_vector (np.ndarray): Current population of candidate solutions.
+        - self.current_fitness (np.ndarray): Fitness values of the current population.
+        - self.gbest_val (float): Best fitness value found in the current population.
+        - self.__gbest_index (int): Index of the best individual in the current population.
+        - self.__gbest_vector (np.ndarray): Best solution vector found in the current population.
+        - self.log_index (int): Logging index, initialized to 1.
+        - self.cost (list): List of best fitness values per generation.
+        - self.__init_gbest (float): Initial best fitness value.
+        - self.meta_X (list, optional): List of population vectors for meta-data logging (if enabled).
+        - self.meta_Cost (list, optional): List of population fitness values for meta-data logging (if enabled).
+        # Returns:
+        - object: The result of `self.observe()`, typically an observation or summary of the initialized population state.
+        # Raises:
+        - None explicitly, but may raise exceptions if `problem` is not properly defined or if array operations fail.
+        """
+        
         self.__dim = problem.dim
         if self.__mu_selector is None:
             self.__mu_selector = select_mutation(self.rng)
@@ -157,6 +255,22 @@ class RLDEAFL_Optimizer(Learnable_Optimizer):
         return self.observe()
 
     def __update_archive(self, old_id):
+        """
+        # Introduction
+        Updates the archive of solution vectors by either appending a new vector or replacing an existing one, depending on the archive's current size.
+        # Args:
+        - old_id (int): The index of the vector in `current_vector` to be added to the archive.
+        # Built-in Attribute:
+        - `self.__archive` (np.ndarray): The archive of solution vectors.
+        - `self.__NP` (int): The maximum allowed size of the archive.
+        - `self.current_vector` (np.ndarray): The current population of solution vectors.
+        - `self.__dim` (int): The dimensionality of each solution vector.
+        - `self.rng` (np.random.Generator): Random number generator for selecting replacement indices.
+        # Returns:
+        - None
+        # Raises:
+        - None
+        """
         if self.__archive.shape[0] < self.__NP:
             self.__archive = np.append(self.__archive, self.current_vector[old_id]).reshape(-1, self.__dim)
         else:
@@ -170,11 +284,10 @@ class RLDEAFL_Optimizer(Learnable_Optimizer):
         - action (np.ndarray): An array representing the actions to be taken, including mutation and crossover operator indices and their parameters for each individual in the population.
         - problem (object): The optimization problem instance, which should provide methods for evaluating solutions and contain problem-specific attributes such as bounds and optimum.
         # Returns:
-        - tuple: A tuple containing:
-            - observation (np.ndarray): The current observation/state after the update.
-            - reward (float): The reward computed based on the improvement in the global best value.
-            - is_done (bool): A flag indicating whether the optimization process has reached its termination condition.
-            - info (dict): An empty dictionary reserved for additional information (for compatibility).
+        - observation (np.ndarray): The current observation/state after the update.
+        - reward (float): The reward computed based on the improvement in the global best value.
+        - is_done (bool): A flag indicating whether the optimization process has reached its termination condition.
+        - info (dict): An empty dictionary reserved for additional information (for compatibility).
         # Raises:
         - None explicitly, but may raise exceptions if the action array is malformed or if operator selection fails.
         """

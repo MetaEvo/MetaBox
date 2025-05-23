@@ -491,6 +491,7 @@ class GLHF(Basic_Agent):
                 results[key] = getattr(env, required_info[key])
             return results
 
+
     def log_to_tb_train(self, tb_logger, mini_step,
                         grad_norms,
                         loss_1, loss_2, loss,

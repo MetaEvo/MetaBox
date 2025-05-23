@@ -17,28 +17,23 @@ class CEC2013MMO_Dataset(Dataset):
     Simplified BSD License
     # Problem Suite Composition
     The CEC2013 MMO problem suite contains 20 optimization problems, each with specific characteristics such as dimensionality, bounds, and multimodal properties. These problems are categorized into different difficulty levels (`easy`, `difficult`, and `all`) and can be used for benchmarking optimization algorithms.
-    # Args:
-    - `data` (list): A list of problem instances to be included in the dataset.
-    - `batch_size` (int, optional): The size of each batch for data retrieval. Defaults to 1.
-    # Attributes:
-    - `data` (list): The list of problem instances in the dataset.
-    - `maxdim` (int): The maximum dimensionality among all problem instances in the dataset.
-    - `batch_size` (int): The size of each batch for data retrieval.
-    - `N` (int): The total number of problem instances in the dataset.
-    - `ptr` (list): A list of indices representing the start of each batch.
-    - `index` (numpy.ndarray): An array of indices used for shuffling and accessing data.
-    # Methods:
-    - `get_datasets(version='numpy', train_batch_size=1, test_batch_size=1, difficulty=None, user_train_list=None, user_test_list=None, instance_seed=3849)`: 
-        A static method to generate training and testing datasets based on the specified difficulty or user-defined problem lists.
-    - `__getitem__(item)`: Retrieves a batch of problem instances based on the given batch index.
-    - `__len__()`: Returns the total number of problem instances in the dataset.
-    - `__add__(other)`: Combines two datasets into a single dataset.
-    - `shuffle()`: Shuffles the dataset to randomize the order of problem instances.
-    # Raises:
-    - `ValueError`: Raised in `get_datasets` if neither `difficulty` nor `user_train_list` and `user_test_list` are provided, or if an invalid `difficulty` value is specified.
     """
 
     def __init__(self, data, batch_size = 1):
+        """
+        # Introduction
+        Initialize a cec2013 mmo dataset.
+        # Args:
+        - `data` (list): A list of problem instances to be included in the dataset.
+        - `batch_size` (int, optional): The size of each batch for data retrieval. Defaults to 1.
+        # Attributes:
+        - `data` (list): The list of problem instances in the dataset.
+        - `maxdim` (int): The maximum dimensionality among all problem instances in the dataset.
+        - `batch_size` (int): The size of each batch for data retrieval.
+        - `N` (int): The total number of problem instances in the dataset.
+        - `ptr` (list): A list of indices representing the start of each batch.
+        - `index` (numpy.ndarray): An array of indices used for shuffling and accessing data.
+        """
         super().__init__()
         self.data = data
         self.maxdim = 0
@@ -60,6 +55,27 @@ class CEC2013MMO_Dataset(Dataset):
                     user_train_list = None,
                     user_test_list = None,
                     instance_seed=3849):
+        
+        """
+        # Introduction:
+        A static method to generate training and testing datasets based on the specified difficulty or user-defined problem lists.
+        # Args:
+        - `version` (str, optional): Specifies the implementation version to use for function instances. 
+          Accepts 'numpy' or any other string for alternative (e.g., 'torch'). Defaults to 'numpy'.
+        - `train_batch_size` (int, optional): Batch size for the training dataset. Defaults to 1.
+        - `test_batch_size` (int, optional): Batch size for the testing dataset. Defaults to 1.
+        - `difficulty` (str, optional): Difficulty level for dataset split. Accepts 'easy', 'difficult', 'all', or None. 
+          If None, `user_train_list` and `user_test_list` must be provided.
+        - `user_train_list` (list of int, optional): List of function IDs to include in the training set. Used if `difficulty` is None.
+        - `user_test_list` (list of int, optional): List of function IDs to include in the testing set. Used if `difficulty` is None.
+        # Returns:
+        - tuple: A tuple containing two `CEC2013MMO_Dataset` objects:
+            - The first is the training dataset.
+            - The second is the testing dataset.
+        # Raises:
+        - `ValueError`: Raised in `get_datasets` if neither `difficulty` nor `user_train_list` and `user_test_list` are provided, or if an invalid `difficulty` value is specified.
+        
+        """
 
         if difficulty == None and user_test_list == None and user_train_list == None:
             raise ValueError('Please set difficulty or user_train_list and user_test_list.')
@@ -147,6 +163,14 @@ class CEC2013MMO_Dataset(Dataset):
         return CEC2013MMO_Dataset(train_set, train_batch_size), CEC2013MMO_Dataset(test_set, test_batch_size)
 
     def __getitem__(self, item):
+        """
+        # Introduction:
+        Retrieves a batch of problem instances based on the given batch index.
+        # Args:
+        - `item` (int, optional): Specifies which batch of problems of the CEC2013MMO benchmark is selected.
+        # Returns:
+        - list: A list containing a batch of problems of the CEC2013MMO benchmark.
+        """
         
         ptr = self.ptr[item]
         index = self.index[ptr: min(ptr + self.batch_size, self.N)]
@@ -156,10 +180,26 @@ class CEC2013MMO_Dataset(Dataset):
         return res
 
     def __len__(self):
+        """
+        # Introduction:
+        Returns the total number of problem instances in the dataset.
+        # Returns:
+        - int: The size of the CEC2013 benchmark suite.
+        """
         return self.N
 
     def __add__(self, other: "CEC2013MMO_Dataset"):
+        """
+        # Introduction:
+        Combines two datasets into a single dataset.
+        # Returns:
+        - Object: The combined new dataset of the CEC2013MMO benchmark suite.
+        """
         return CEC2013MMO_Dataset(self.data + other.data, self.batch_size)
 
     def shuffle(self):
+        """
+        # Introduction:
+        Shuffles the dataset to randomize the order of problem instances.
+        """
         self.index = np.random.permutation(self.N)

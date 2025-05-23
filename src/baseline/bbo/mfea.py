@@ -3,6 +3,20 @@ import copy
 from ...environment.optimizer.basic_optimizer import Basic_Optimizer
 
 def SBX(parent1,parent2,n):
+    """
+    # Introduction
+    Performs Simulated Binary Crossover (SBX) on two parent populations to generate two offspring populations. SBX is a genetic algorithm operator used to recombine two parent solutions, producing offspring that inherit characteristics from both parents, with diversity controlled by the distribution index `n`.
+    # Args:
+    - parent1 (np.ndarray): The first parent population, typically a 2D array where each row represents an individual.
+    - parent2 (np.ndarray): The second parent population, with the same shape as `parent1`.
+    - n (float): The distribution index that controls the spread of the offspring around the parents. Higher values result in offspring closer to the parents.
+    # Returns:
+    - Tuple[np.ndarray, np.ndarray]: A tuple containing two offspring populations, each with the same shape as the input parents.
+    # Notes:
+    - The function assumes that `parent1` and `parent2` are NumPy arrays of the same shape.
+    - Offspring values are clipped to the range [0, 1].
+    """
+    
     pop_cnt = parent1.shape[0]
     beta = [0] * pop_cnt
     for i in range(pop_cnt):
@@ -23,6 +37,21 @@ def SBX(parent1,parent2,n):
     return offspring1, offspring2
 
 def gaussian_mutation(parent, mutate_probability, sigma):
+    """
+    # Introduction
+    Applies Gaussian mutation to a parent solution vector, producing an offspring by perturbing each gene with a specified probability.
+    # Args:
+    - parent (np.ndarray): The parent solution vector to be mutated.
+    - mutate_probability (float): The probability of mutating each gene in the parent vector.
+    - sigma (float): The standard deviation of the Gaussian distribution used for mutation.
+    # Returns:
+    - np.ndarray: The mutated offspring vector, with values clipped to the range [0, 1].
+    # Notes:
+    - Each gene in the parent vector has an independent chance (mutate_probability) to be mutated.
+    - Mutated genes are sampled from a normal distribution centered at the original gene value with standard deviation sigma.
+    - All gene values are clipped to the range [0, 1] after mutation.
+    """
+    
     dimension = parent.shape[0]
     offspring = copy.deepcopy(parent)
     for i in range(dimension):
@@ -33,6 +62,19 @@ def gaussian_mutation(parent, mutate_probability, sigma):
     return offspring
 
 def polinomial_mutation(parent, mu):
+    """
+    # Introduction
+    Applies polynomial mutation to a parent solution vector, generating an offspring with mutated genes based on a specified distribution index.
+    # Args:
+    - parent (np.ndarray): The parent solution vector to be mutated. Each element should be within the range [0, 1].
+    - mu (float): The distribution index controlling the mutation's spread. Higher values result in smaller mutations.
+    # Returns:
+    - np.ndarray: The mutated offspring vector, with each gene potentially altered and clipped to the [0, 1] range.
+    # Notes:
+    - Mutation occurs independently for each gene with a probability of 0.05.
+    - The function uses deep copy to avoid modifying the original parent vector.
+    """
+    
     dim = parent.shape[0]
     offspring = copy.deepcopy(parent)
     for i in range(dim):
@@ -49,6 +91,20 @@ def polinomial_mutation(parent, mu):
 
 class Individual():
     def __init__(self, D_multitask, tasks):
+        """
+        Initializes an instance for multitask evolutionary optimization.
+        # Args:
+        - D_multitask (int): The dimensionality of the multitask problem.
+        - tasks (list): A list of task objects or definitions to be optimized.
+        # Attributes:
+        - dim (int): Stores the dimensionality of the multitask problem.
+        - tasks (list): Stores the list of tasks.
+        - tasks_count (int): The number of tasks.
+        - genes (np.ndarray): Randomly initialized gene vector of length `D_multitask`.
+        - scalar_fitness (float or None): Placeholder for the individual's scalar fitness value.
+        - skill_factor (int or None): Placeholder for the individual's skill factor.
+        """
+        
         self.dim = D_multitask
         self.tasks = tasks
         self.tasks_count = len(tasks)
@@ -57,12 +113,42 @@ class Individual():
         self.skill_factor = None
 
     def update_evaluate(self):
+        """
+        # Introduction
+        Evaluates the individual's fitness on its assigned task using its current genes.
+        # Args:
+        None
+        # Built-in Attribute:
+        - self.skill_factor (int): Index of the task assigned to this individual.
+        - self.tasks (List[Task]): List of task objects, each with a `dim` attribute and an `eval` method.
+        - self.genes (np.ndarray): The individual's genetic representation.
+        # Returns:
+        - Tuple[int, np.ndarray]: A tuple containing the skill factor (task index) and the evaluated fitness as a 1D numpy array.
+        # Raises:
+        - AttributeError: If required attributes (`tasks`, `genes`, or `skill_factor`) are missing or improperly set.
+        """
+        
         task = self.tasks[self.skill_factor]
         task_genes = self.genes[:task.dim].reshape(1,-1)
         fitness = task.eval(task_genes).reshape(-1)
         return self.skill_factor, fitness
 
     def first_evaluate(self):
+        """
+        # Introduction
+        Evaluates the fitness of the current individual's genes on all tasks and returns a list of fitness values for each task.
+        # Args:
+        None
+        # Built-in Attribute:
+        - self.genes (np.ndarray): The gene representation of the individual.
+        - self.tasks (List[Task]): List of task objects, each with a `dim` attribute and an `eval` method.
+        - self.tasks_count (int): The number of tasks.
+        # Returns:
+        - List[np.ndarray]: A list where each element is a 1D numpy array containing the fitness value(s) for the corresponding task.
+        # Raises:
+        None
+        """
+        
         factorial_cost_list_j = []
         for j in range(self.tasks_count):
             task_j_genes = self.genes[:self.tasks[j].dim].reshape(1,-1)
@@ -84,34 +170,28 @@ class MFEA(Basic_Optimizer):
     None
     # Application Scenario
     multi-task optimization problems(MTOP)
-    # Args:
-        `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
-    # Attributes:
-        __config (object): Stores the configuration object passed during initialization.
-        log_interval (int): Interval at which logs are recorded.
-        full_meta_data (bool): Flag to determine whether to store full metadata during execution.
-        cost (list): Tracks the best fitness values for each task over generations.
-        _fes (int): Tracks the number of function evaluations performed.
-        log_index (int): Tracks the current log index.
-        meta_Cost (list): Stores the factorial costs of the population (if `full_meta_data` is True).
-        meta_X (list): Stores the genes of the population (if `full_meta_data` is True).
-    # Methods:
-        __str__():
-            Returns the string representation of the class.
-        run_episode(mto_tasks):
-            Executes the optimization process for the given multi-task optimization tasks.
-            # Args:
-                mto_tasks (object): An object containing the tasks to be optimized.
-            # Returns:
-                dict: A dictionary containing the optimization results, including:
-                    - 'cost': List of best fitness values for each task.
-                    - 'fes': Total number of function evaluations performed.
-                    - 'metadata' (optional): Contains 'X' (genes of the population) and
-                      'Cost' (factorial costs of the population) if `full_meta_data` is True.
-    # Raises:
-        None
     """
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the class with the provided configuration, setting up logging intervals, meta data, and default values for optimization parameters.
+        # Args:
+        - config (object): Config object.
+            - The Attributes needed for the MFEA are the following:
+                - log_interval (int): Interval at which logs are recorded, defaulted to config.maxFEs/config.n_logpoint.
+                - full_meta_data (bool): Flag indicating whether to use full meta data, defaulted to False.
+                - maxFEs (int): Maximum number of function evaluations allowed.
+                - n_logpoint (int): Number of log points to record, defaulted to 50.
+                
+        # Built-in Attributes:
+        - log_interval (int): Interval at which logs are recorded, taken from the configuration.
+        - full_meta_data (any): Meta data used for the optimization process, from the configuration.
+        - total_generation (int): Total number of generations for the optimization, defaulted to 250.
+        - cost (any): Placeholder for cost value, initialized as None.
+        - _fes (any): Placeholder for function evaluation count, initialized as None.
+        - log_index (any): Placeholder for log index, initialized as None.
+        """
+        
         super().__init__(config)
         self.__config = config
         self.log_interval = config.log_interval
@@ -123,10 +203,43 @@ class MFEA(Basic_Optimizer):
         self.log_index = None
 
     def __str__(self):
+        """
+        Returns a string representation of the MFEA class.
+        # Returns:
+            str: The name of the class, "MFEA".
+        """
+        
         return "MFEA"
     
     
     def run_episode(self, mto_tasks):
+        """
+        # Introduction
+        Executes a single episode of the Multifactorial Evolutionary Algorithm (MFEA) for multitask optimization. This function manages the evolutionary process, including population initialization, evaluation, selection, crossover, mutation, and logging of progress for a set of optimization tasks.
+        # Args:
+        - mto_tasks (object): An object containing the multitask optimization tasks and related methods. It should provide access to the list of tasks, each with its own dimensionality and evaluation function.
+        # Built-in Attribute:
+        - self.full_meta_data (bool): If True, collects and stores metadata (population and costs) during the run.
+        - self._fes (int): Tracks the number of function evaluations performed.
+        - self.log_index (int): Index for logging progress at specified intervals.
+        - self.log_interval (int): Interval (in function evaluations) at which to log progress.
+        - self.__config (object): Configuration object containing parameters such as `maxFEs` (maximum function evaluations) and `n_logpoint` (number of log points).
+        - self.total_generation (int): Maximum number of generations to run.
+        - self.meta_Cost (list): Stores cost metadata if `full_meta_data` is enabled.
+        - self.meta_X (list): Stores population metadata if `full_meta_data` is enabled.
+        - self.cost (list): Stores the best fitness values found at each log point.
+        - self.rng (np.random.Generator): Random number generator for reproducibility.
+        # Returns:
+        - dict: A dictionary containing:
+            - 'cost' (list): Best fitness values for each task at each log point.
+            - 'fes' (int): Total number of function evaluations performed.
+            - 'metadata' (dict, optional): If `full_meta_data` is True, includes:
+                - 'X' (list): Population genes at each log point.
+                - 'Cost' (list): Corresponding costs at each log point.
+        # Raises:
+        - None explicitly. Assumes that all required attributes and methods are properly defined and that the input `mto_tasks` object is valid.
+        """
+        
         rmp = 0.3
         population_cnt = 50
         generation = 0

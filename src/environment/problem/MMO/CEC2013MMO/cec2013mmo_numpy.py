@@ -20,32 +20,33 @@ class CEC2013MMO_Numpy_Problem(Basic_Problem):
     Simplified BSD License
     # Problem Suite Composition
     The CEC2013 MMO problem suite contains 20 optimization problems, each with specific characteristics such as dimensionality, bounds, and multimodal properties. These problems are categorized into different difficulty levels (`easy`, `difficult`, and `all`) and can be used for benchmarking optimization algorithms.
-    # Args:
-    - `dim` (int): Dimensionality of the problem.
-    - `lb` (float): Lower bound of the search space.
-    - `ub` (float): Upper bound of the search space.
-    - `fopt` (float): The optimal fitness value for the problem.
-    - `rho` (float): Radius used to determine proximity for seed identification.
-    - `nopt` (int): Number of global optima in the problem.
-    - `maxfes` (int): Maximum number of function evaluations allowed.
-    # Attributes:
-    - `dim` (int): Dimensionality of the problem.
-    - `lb` (float): Lower bound of the search space.
-    - `ub` (float): Upper bound of the search space.
-    - `FES` (int): Current number of function evaluations performed.
-    - `optimum` (float): The optimal fitness value for the problem.
-    - `rho` (float): Radius used to determine proximity for seed identification.
-    - `nopt` (int): Number of global optima in the problem.
-    - `maxfes` (int): Maximum number of function evaluations allowed.
-    # Methods:
-    - `func(x)`: Abstract method to evaluate the fitness of a solution `x`. Must be implemented in a subclass.
-    - `how_many_goptima(pop, accuracy)`: Determines the number of global optima found in a given population within a specified accuracy.
-    - `__find_seeds_indices(sorted_pop, radius)`: Identifies seed points in a sorted population based on a given radius.
-    # Raises:
-    - `NotImplementedError`: Raised when the `func` method is called without being implemented in a subclass.
     """
 
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
+        """
+        # Introduction:
+        Initialize the cec2013 mmo problem with the settings.
+        
+        # Args:
+        - `dim` (int): Dimensionality of the problem.
+        - `lb` (float): Lower bound of the search space.
+        - `ub` (float): Upper bound of the search space.
+        - `fopt` (float): The optimal fitness value for the problem.
+        - `rho` (float): Radius used to determine proximity for seed identification.
+        - `nopt` (int): Number of global optima in the problem.
+        - `maxfes` (int): Maximum number of function evaluations allowed.
+        # Attributes:
+        - `dim` (int): Dimensionality of the problem.
+        - `lb` (float): Lower bound of the search space.
+        - `ub` (float): Upper bound of the search space.
+        - `FES` (int): Current number of function evaluations performed.
+        - `optimum` (float): The optimal fitness value for the problem.
+        - `rho` (float): Radius used to determine proximity for seed identification.
+        - `nopt` (int): Number of global optima in the problem.
+        - `maxfes` (int): Maximum number of function evaluations allowed.
+
+        
+        """
         self.dim = dim
         self.lb = lb
         self.ub = ub
@@ -56,9 +57,27 @@ class CEC2013MMO_Numpy_Problem(Basic_Problem):
         self.maxfes = maxfes
     
     def func(self, x):
+        """
+        # Introduction:
+        Abstract method to evaluate the fitness of a solution `x`. Must be implemented in a subclass.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        # Raises:
+        - `NotImplementedError`: Raised when the `func` method is called without being implemented in a subclass.
+        """
         raise NotImplementedError
 
     def how_many_goptima(self, pop, accuracy):
+        """
+        # Introduction:
+        Determines the number of global optima found in a given population within a specified accuracy.
+        # Args:
+        - `pop` (list of np.ndarray) : A group of solutions for the calculation of found global optima.
+        - `accuracy` (float) : The accuracy used to determin if a solution can be regarded as a satisfied global optimum.
+        # Returns:
+        - `coout`(int): The number of global optima found whin the specified accuracy.
+        - `seeds` (list of float): The representive solutions for found global optima.
+        """
         NP, D = pop.shape[0], pop.shape[1]
         fits = self.eval(pop)
         order = np.argsort(fits)
@@ -79,6 +98,15 @@ class CEC2013MMO_Numpy_Problem(Basic_Problem):
 
 
     def __find_seeds_indices(self, sorted_pop, radius):
+        """
+        # Introduction:
+        Identifies seed points in a sorted population based on a given radius.
+        # Args:
+        - `sorted_pop` (list of np.ndarray): A group of solutions for indentifition.
+        - `radius`(float) : Radius used to determine whether two solutions belong to different peaks.
+        # Returns:
+        - `seeds_idx` (list of int) : The index of the solutions regarded as the seed of peaks.
+        """
         seeds = []
         seeds_idx = []
         for i, x in enumerate(sorted_pop):
@@ -94,7 +122,25 @@ class CEC2013MMO_Numpy_Problem(Basic_Problem):
         return seeds_idx
 
 class CFunction(CEC2013MMO_Numpy_Problem):
-    # Abstract composition function
+    """
+    # Introduction:
+    The abstract class for problems with composition functions.
+    # Attributes:
+    - `__nofunc` (int) : The number of basic functions.
+    - `__C_` (float) : A predefined constant.
+    - `__lambda_` () : A parameter used to stretch or compress each basic function. 
+    - `__sigma_` () : A parameter to control the coverage range of each basic function, with small values to produce a narrow coverage range.
+    - `__bias_` () : Defines a function value bias for each basic function and denotes which optimum is the global optimum
+    - `__O_` () : The new shifted optimum of each basic function.
+    - `__M_` () : The  linear transformation (rotation) matrix of each basic problem.
+    - `__weight_` () : the corresponding  weight of each basic function.
+    - `__fi_` () : The results of basic functions.
+    - `__z_` () : The result after shifting, ratation and stretch/compress.
+    - `__f_bias_` () : A function value bias for the constructed composition function.
+    - `__fmaxi_` () : The maximal value of basic functions.
+    - `__M_` () : The linear transformation (rotation) matrix of each
+    - `__function_` () : The list of basic functions.
+    """
     __nofunc_ = -1
     __C_ = 2000.0
     __lambda_ = None
@@ -111,13 +157,43 @@ class CFunction(CEC2013MMO_Numpy_Problem):
     __function_ = None
 
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes, nofunc):
+        """
+        # Introduction:
+        Initialize a problem with a composition function.
+        # Args:
+        - `dim` (int): Dimensionality of the problem.
+        - `lb` (float): Lower bound of the search space.
+        - `ub` (float): Upper bound of the search space.
+        - `fopt` (float): The optimal fitness value for the problem.
+        - `rho` (float): Radius used to determine proximity for seed identification.
+        - `nopt` (int): Number of global optima in the problem.
+        - `maxfes` (int): Maximum number of function evaluations allowed.
+        # Attributes:
+        - `__nofunc_` (int): The number of basic functions
+        """
         super(CFunction, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
         self.__nofunc_ = nofunc
 
     def func(self, x):
+        """
+        # Introduction:
+        Abstract method to evaluate the fitness of a solution `x`. Must be implemented in a subclass.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        # Raises:
+        - `NotImplementedError`: Raised when the `func` method is called without being implemented in a subclass.
+        """
         raise NotImplementedError
 
     def __evaluate_inner_(self, x):
+        """
+        # Introduction:
+        Evaluate the given solutions with the composition function.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        # Return:
+        - np.array: The result of evaluation.
+        """
         if self.__function_ == None:
             raise NameError("Composition functions' dict is uninitialized")
         self.__fi_ = np.zeros((x.shape[0], self.__nofunc_))
@@ -134,6 +210,12 @@ class CFunction(CEC2013MMO_Numpy_Problem):
         return np.sum(tmpsum, axis = 1) * MINMAX + self.__f_bias_
 
     def __calculate_weights(self, x):
+        """
+        # Introduction:
+        Calculate the weights of basic functions.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        """
         self.__weight_ = np.zeros((x.shape[0], self.__nofunc_))
         for i in range(self.__nofunc_):
             mysum = np.sum((x - self.__O_[i]) ** 2, -1)
@@ -153,6 +235,12 @@ class CFunction(CEC2013MMO_Numpy_Problem):
         self.__weight_[mask2] = self.__weight_[mask2] / mysum[:, None][mask2]
 
     def __calculate_fmaxi(self):
+        """
+        # Introduction:
+        Calculate the maximal values of each basic function.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        """
         self.__fmaxi_ = np.zeros(self.__nofunc_)
         if self.__function_ == None:
             raise NameError("Composition functions' dict is uninitialized")
@@ -164,14 +252,35 @@ class CFunction(CEC2013MMO_Numpy_Problem):
             self.__fmaxi_[i] = self.__function_[i](self.__z_)[0]
 
     def __transform_to_z_noshift(self, x, index):
+        """
+        # Introduction:
+        Transform the global optima without shfit.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        - `index` (int): the index of the corresponding basic function.
+        """
         tmpx = np.divide(x, self.__lambda_[index])
         self.__z_ = np.dot(tmpx, self.__M_[index])
 
     def __transform_to_z(self, x, index):
+        """
+        # Introduction:
+        Transform the solution with shift, stretch/compress and rotation.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        - `index` (int): The index of the corresponding basic function.
+        """
         tmpx = np.divide((x - self.__O_[index]), self.__lambda_[index])
         self.__z_ = np.dot(tmpx, self.__M_[index])
 
     def __load_rotmat(self, file_obj):
+        """
+        # Introduction:
+        Load the rotation matrix.
+        # Args:
+        - `file_obj` (string) : The name of the file storing the matrix.
+        """
+
         self.__M_ = []
 
         with file_obj as f:
@@ -197,19 +306,43 @@ class CFunction(CEC2013MMO_Numpy_Problem):
 
 # Sphere function
 def FSphere(x):
+    """
+    # Introduction:
+    Sphere function, one of basic functions for the composition function.
+    # Args:
+    - `x` (np.ndarray) : A batch of solutions for evaluation.
+    """
     return (x ** 2).sum(axis = 1)
 
 # Rastrigin's function
 def FRastrigin(x):
+    """
+    # Introduction:
+    Rastrigin’s function, one of basic functions for the composition function.
+    # Args:
+    - `x` (np.ndarray) : A batch of solutions for evaluation.
+    """
     return np.sum(x ** 2 - 10.0 * np.cos(2.0 * np.pi * x) + 10, axis=1)
 
 # Griewank's function
 def FGrienwank(x):
+    """
+    # Introduction:
+    Grienwank’s function, one of basic functions for the composition function.
+    # Args:
+    - `x` (np.ndarray) : A batch of solutions for evaluation.
+    """
     i = np.sqrt(np.arange(x.shape[1]) + 1.0)
     return np.sum(x ** 2, axis = 1) / 4000.0 - np.prod(np.cos(x / i[None, :]), axis = 1) + 1.0
 
 # Weierstrass's function
 def FWeierstrass(x):
+    """
+    # Introduction:
+    Weierstrass function, one of basic functions for the composition function.
+    # Args:
+    - `x` (np.ndarray) : A batch of solutions for evaluation.
+    """
     alpha = 0.5
     beta = 3.0
     kmax = 20
@@ -226,11 +359,23 @@ def FWeierstrass(x):
     return f + c
 
 def F8F2(x):
+    """
+    # Introduction:
+    Auxiliary function for FEF8F2.
+    # Args:
+    - `x` (np.ndarray) : A batch of solutions for evaluation.
+    """
     f2 = 100.0 * (x[:, 0] ** 2 - x[:, 1]) ** 2 + (1.0 - x[:, 0]) ** 2
     return 1.0 + (f2 ** 2) / 4000.0 - np.cos(f2)
 
 # FEF8F2 function
 def FEF8F2(x):
+    """
+    # Introduction:
+    Expanded Griewank’s plus Rosenbrock’s function (EF8F2), one of basic functions for the composition function.
+    # Args:
+    - `x` (np.ndarray) : A batch of solutions for evaluation.
+    """
     D = x.shape[1]
     f = np.zeros(x.shape[0])
     for i in range(D - 1):
@@ -238,15 +383,45 @@ def FEF8F2(x):
     f += F8F2(x[:, [D - 1, 0]] + 1)
     return f
 
+
+
 class F1(CEC2013MMO_Numpy_Problem): # five_uneven_peak_trap
+    """
+    # Introduction:
+    The first test function: Five-Uneven-Peak Trap.
+    """
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
+        """
+        # Introduction:
+        Initialization the test function.
+        # Args:
+        - `dim` (int): Dimensionality of the problem.
+        - `lb` (float): Lower bound of the search space.
+        - `ub` (float): Upper bound of the search space.
+        - `fopt` (float): The optimal fitness value for the problem.
+        - `rho` (float): Radius used to determine proximity for seed identification.
+        - `nopt` (int): Number of global optima in the problem.
+        - `maxfes` (int): Maximum number of function evaluations allowed.
+        """
         super(F1, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The name with the dimension.
+        """
         return 'five_uneven_peak_trap'+'_D'+str(self.dim)
 
     def func(self, x):
-        
+        """
+        # Introduction:
+        Evaluate the inputed solutions.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        # Returns:
+        - np.ndarray: The evaluation results.
+        """
         if x is None:
             return None
         
@@ -277,14 +452,44 @@ class F1(CEC2013MMO_Numpy_Problem): # five_uneven_peak_trap
         
         return -result
 
-class F2(CEC2013MMO_Numpy_Problem): # equal_maxima
+class F2(CEC2013MMO_Numpy_Problem): # 
+    """
+    # Introduction:
+    The second test function: equal_maxima.
+    """
+
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
+        """
+        # Introduction:
+        Initialization the test function.
+        # Args:
+        - `dim` (int): Dimensionality of the problem.
+        - `lb` (float): Lower bound of the search space.
+        - `ub` (float): Upper bound of the search space.
+        - `fopt` (float): The optimal fitness value for the problem.
+        - `rho` (float): Radius used to determine proximity for seed identification.
+        - `nopt` (int): Number of global optima in the problem.
+        - `maxfes` (int): Maximum number of function evaluations allowed.
+        """
         super(F2, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The name with the dimension.
+        """
         return 'equal_maxima'+'_D'+str(self.dim)
 
     def func(self, x):
+        """
+        # Introduction:
+        Evaluate the inputed solutions.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        # Returns:
+        - np.ndarray: The evaluation results.
+        """
         if x is None:
             return None
         x = np.asarray(x)
@@ -292,14 +497,43 @@ class F2(CEC2013MMO_Numpy_Problem): # equal_maxima
         self.FES += x.shape[0]
         return -np.sin(5.0 * np.pi * x[:, 0]) ** 6
 
-class F3(CEC2013MMO_Numpy_Problem): # uneven_decreasing_maxima
+class F3(CEC2013MMO_Numpy_Problem): # 
+    """
+    # Introduction:
+    The third test function: uneven_decreasing_maxima
+    """
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
+        """
+        # Introduction:
+        Initialization the test function.
+        # Args:
+        - `dim` (int): Dimensionality of the problem.
+        - `lb` (float): Lower bound of the search space.
+        - `ub` (float): Upper bound of the search space.
+        - `fopt` (float): The optimal fitness value for the problem.
+        - `rho` (float): Radius used to determine proximity for seed identification.
+        - `nopt` (int): Number of global optima in the problem.
+        - `maxfes` (int): Maximum number of function evaluations allowed.
+        """
         super(F3, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The name with the dimension.
+        """
         return 'uneven_decreasing_maxima'+'_D'+str(self.dim)
 
     def func(self, x):
+        """
+        # Introduction:
+        Evaluate the inputed solutions.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        # Returns:
+        - np.ndarray: The evaluation results.
+        """
         if x is None:
             return None
         x = np.asarray(x)
@@ -311,13 +545,42 @@ class F3(CEC2013MMO_Numpy_Problem): # uneven_decreasing_maxima
         )
         
 class F4(CEC2013MMO_Numpy_Problem): # himmelblau
+    """
+    # Introduction:
+    The 4th test function: himmelblau
+    """
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
+        """
+        # Introduction:
+        Initialization the test function.
+        # Args:
+        - `dim` (int): Dimensionality of the problem.
+        - `lb` (float): Lower bound of the search space.
+        - `ub` (float): Upper bound of the search space.
+        - `fopt` (float): The optimal fitness value for the problem.
+        - `rho` (float): Radius used to determine proximity for seed identification.
+        - `nopt` (int): Number of global optima in the problem.
+        - `maxfes` (int): Maximum number of function evaluations allowed.
+        """
         super(F4, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The name with the dimension.
+        """
         return 'himmelblau'+'_D'+str(self.dim)
 
     def func(self, x):
+        """
+        # Introduction:
+        Evaluate the inputed solutions.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        # Returns:
+        - np.ndarray: The evaluation results.
+        """
         if x is None:
             return None
         x = np.asarray(x)
@@ -327,13 +590,42 @@ class F4(CEC2013MMO_Numpy_Problem): # himmelblau
         return -result
 
 class F5(CEC2013MMO_Numpy_Problem): # six_hump_camel_back
+    """
+    # Introduction:
+    The 5th test function: six_hump_camel_back
+    """
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
+        """
+        # Introduction:
+        Initialization the test function.
+        # Args:
+        - `dim` (int): Dimensionality of the problem.
+        - `lb` (float): Lower bound of the search space.
+        - `ub` (float): Upper bound of the search space.
+        - `fopt` (float): The optimal fitness value for the problem.
+        - `rho` (float): Radius used to determine proximity for seed identification.
+        - `nopt` (int): Number of global optima in the problem.
+        - `maxfes` (int): Maximum number of function evaluations allowed.
+        """
         super(F5, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The name with the dimension.
+        """
         return 'six_hump_camel_back'+'_D'+str(self.dim)
 
     def func(self, x):
+        """
+        # Introduction:
+        Evaluate the inputed solutions.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        # Returns:
+        - np.ndarray: The evaluation results.
+        """
         if x is None:
             return None
         x = np.asarray(x)
@@ -347,14 +639,43 @@ class F5(CEC2013MMO_Numpy_Problem): # six_hump_camel_back
         expr3 = (4.0 * y2 - 4.0) * y2
         return -(-1.0 * (expr1 + expr2 + expr3))
 
-class F6(CEC2013MMO_Numpy_Problem): # shubert
+class F6(CEC2013MMO_Numpy_Problem): # 
+    """
+    # Introduction:
+    The 6th test function: shubert
+    """
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
+        """
+        # Introduction:
+        Initialization the test function.
+        # Args:
+        - `dim` (int): Dimensionality of the problem.
+        - `lb` (float): Lower bound of the search space.
+        - `ub` (float): Upper bound of the search space.
+        - `fopt` (float): The optimal fitness value for the problem.
+        - `rho` (float): Radius used to determine proximity for seed identification.
+        - `nopt` (int): Number of global optima in the problem.
+        - `maxfes` (int): Maximum number of function evaluations allowed.
+        """
         super(F6, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The name with the dimension.
+        """
         return 'shubert'+'_D'+str(self.dim)
 
     def func(self, x):
+        """
+        # Introduction:
+        Evaluate the inputed solutions.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        # Returns:
+        - np.ndarray: The evaluation results.
+        """
         if x is None:
             return None
         x = np.asarray(x)
@@ -370,14 +691,43 @@ class F6(CEC2013MMO_Numpy_Problem): # shubert
 
         return -(-result)
 
-class F7(CEC2013MMO_Numpy_Problem): # vincent
+class F7(CEC2013MMO_Numpy_Problem): # 
+    """
+    # Introduction:
+    The 7th test function: vincent
+    """
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
+        """
+        # Introduction:
+        Initialization the test function.
+        # Args:
+        - `dim` (int): Dimensionality of the problem.
+        - `lb` (float): Lower bound of the search space.
+        - `ub` (float): Upper bound of the search space.
+        - `fopt` (float): The optimal fitness value for the problem.
+        - `rho` (float): Radius used to determine proximity for seed identification.
+        - `nopt` (int): Number of global optima in the problem.
+        - `maxfes` (int): Maximum number of function evaluations allowed.
+        """
         super(F7, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The name with the dimension.
+        """
         return 'vincent'+'_D'+str(self.dim)
 
     def func(self, x):
+        """
+        # Introduction:
+        Evaluate the inputed solutions.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        # Returns:
+        - np.ndarray: The evaluation results.
+        """
         if x is None:
             return None
         x = np.asarray(x)
@@ -389,14 +739,43 @@ class F7(CEC2013MMO_Numpy_Problem): # vincent
         result = np.sum((np.sin(10 * np.log(x))) / D, axis = 1)
         return -result
 
-class F8(CEC2013MMO_Numpy_Problem): # modified_rastrigin_all
+class F8(CEC2013MMO_Numpy_Problem): # 
+    """
+    # Introduction:
+    The 8th test function: modified_rastrigin_all
+    """
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
+        """
+        # Introduction:
+        Initialization the test function.
+        # Args:
+        - `dim` (int): Dimensionality of the problem.
+        - `lb` (float): Lower bound of the search space.
+        - `ub` (float): Upper bound of the search space.
+        - `fopt` (float): The optimal fitness value for the problem.
+        - `rho` (float): Radius used to determine proximity for seed identification.
+        - `nopt` (int): Number of global optima in the problem.
+        - `maxfes` (int): Maximum number of function evaluations allowed.
+        """
         super(F8, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes)
 
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The name with the dimension.
+        """
         return 'modified_rastrigin_all'+'_D'+str(self.dim)
 
     def func(self, x):
+        """
+        # Introduction:
+        Evaluate the inputed solutions.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        # Returns:
+        - np.ndarray: The evaluation results.
+        """
         if x is None:
             return None
         x = np.asarray(x)
@@ -415,7 +794,31 @@ class F8(CEC2013MMO_Numpy_Problem): # modified_rastrigin_all
         return -(-result)
 
 class F9(CFunction): # CF1
+    """
+    # Introduction:
+    The 9th test function: Composition function 1.
+    """
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
+        """
+        # Introduction:
+        Initialization the test function.
+        # Args:
+        - `dim` (int): Dimensionality of the problem.
+        - `lb` (float): Lower bound of the search space.
+        - `ub` (float): Upper bound of the search space.
+        - `fopt` (float): The optimal fitness value for the problem.
+        - `rho` (float): Radius used to determine proximity for seed identification.
+        - `nopt` (int): Number of global optima in the problem.
+        - `maxfes` (int): Maximum number of function evaluations allowed.
+        # Attibutes:
+        - `_CFunction__sigma_` (np.ndarray): The __sigma_ attribute in the father class 'CFunction'.
+        - `_CFunction__bias_`(np.ndarray): The __bias_ attribute in the father class 'CFunction'.
+        - `_CFunction__weight_`(np.ndarray): The __weight_ attribute in the father class 'CFunction'.
+        - `_CFunction__lambda_`(np.ndarray): The __lambda_ attribute in the father class 'CFunction'.
+        - `_CFunction__O_`(np.ndarray): The __O_ attribute in the father class 'CFunction'.
+        - `_CFunction__M_`(np.ndarray): The __M_ attribute in the father class 'CFunction'.
+        - `_CFunction__function_`(np.ndarray): The __function_ attribute in the father class 'CFunction'.
+        """
         super(F9, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 6)
 
         # Initialize data for composition
@@ -464,16 +867,53 @@ class F9(CFunction): # CF1
         self._CFunction__calculate_fmaxi()
 
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The name with the dimension.
+        """
         return 'CF1'+'_D'+str(self.dim)
 
     def func(self, x):
+        """
+        # Introduction:
+        Evaluate the inputed solutions.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        # Returns:
+        - np.ndarray: The evaluation results.
+        """
         x = np.asarray(x)
         assert x.shape[1] == self.dim
         self.FES += x.shape[0]
         return -self._CFunction__evaluate_inner_(x)
 
 class F10(CFunction): # CF2
+    """
+    # Introduction:
+    The 10th test function: Composition function 2.
+    """
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
+        """
+        # Introduction:
+        Initialization the test function.
+        # Args:
+        - `dim` (int): Dimensionality of the problem.
+        - `lb` (float): Lower bound of the search space.
+        - `ub` (float): Upper bound of the search space.
+        - `fopt` (float): The optimal fitness value for the problem.
+        - `rho` (float): Radius used to determine proximity for seed identification.
+        - `nopt` (int): Number of global optima in the problem.
+        - `maxfes` (int): Maximum number of function evaluations allowed.
+        # Attibutes:
+        - `_CFunction__sigma_` (np.ndarray): The __sigma_ attribute in the father class 'CFunction'.
+        - `_CFunction__bias_`(np.ndarray): The __bias_ attribute in the father class 'CFunction'.
+        - `_CFunction__weight_`(np.ndarray): The __weight_ attribute in the father class 'CFunction'.
+        - `_CFunction__lambda_`(np.ndarray): The __lambda_ attribute in the father class 'CFunction'.
+        - `_CFunction__O_`(np.ndarray): The __O_ attribute in the father class 'CFunction'.
+        - `_CFunction__M_`(np.ndarray): The __M_ attribute in the father class 'CFunction'.
+        - `_CFunction__function_`(np.ndarray): The __function_ attribute in the father class 'CFunction'.
+        """
         super(F10, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 8)
 
         # Initialize data for composition
@@ -526,16 +966,53 @@ class F10(CFunction): # CF2
         self._CFunction__calculate_fmaxi()
 
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The name with the dimension.
+        """
         return 'CF2'+'_D'+str(self.dim)
 
     def func(self, x):
+        """
+        # Introduction:
+        Evaluate the inputed solutions.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        # Returns:
+        - np.ndarray: The evaluation results.
+        """
         x = np.asarray(x)
         assert x.shape[1] == self.dim
         self.FES += x.shape[0]
         return -self._CFunction__evaluate_inner_(x)
 
 class F11(CFunction): # CF3
+    """
+    # Introduction:
+    The 11th test function: Composition function 3.
+    """
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
+        """
+        # Introduction:
+        Initialization the test function.
+        # Args:
+        - `dim` (int): Dimensionality of the problem.
+        - `lb` (float): Lower bound of the search space.
+        - `ub` (float): Upper bound of the search space.
+        - `fopt` (float): The optimal fitness value for the problem.
+        - `rho` (float): Radius used to determine proximity for seed identification.
+        - `nopt` (int): Number of global optima in the problem.
+        - `maxfes` (int): Maximum number of function evaluations allowed.
+        # Attibutes:
+        - `_CFunction__sigma_` (np.ndarray): The __sigma_ attribute in the father class 'CFunction'.
+        - `_CFunction__bias_`(np.ndarray): The __bias_ attribute in the father class 'CFunction'.
+        - `_CFunction__weight_`(np.ndarray): The __weight_ attribute in the father class 'CFunction'.
+        - `_CFunction__lambda_`(np.ndarray): The __lambda_ attribute in the father class 'CFunction'.
+        - `_CFunction__O_`(np.ndarray): The __O_ attribute in the father class 'CFunction'.
+        - `_CFunction__M_`(np.ndarray): The __M_ attribute in the father class 'CFunction'.
+        - `_CFunction__function_`(np.ndarray): The __function_ attribute in the father class 'CFunction'.
+        """
         super(F11, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 6)
 
         # Initialize data for composition
@@ -600,16 +1077,53 @@ class F11(CFunction): # CF3
         self._CFunction__calculate_fmaxi()
 
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The name with the dimension.
+        """
         return 'CF3'+'_D'+str(self.dim)
 
     def func(self, x):
+        """
+        # Introduction:
+        Evaluate the inputed solutions.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        # Returns:
+        - np.ndarray: The evaluation results.
+        """
         x = np.asarray(x)
         assert x.shape[1] == self.dim
         self.FES += x.shape[0]
         return -self._CFunction__evaluate_inner_(x)
 
 class F12(CFunction): # CF4
+    """
+    # Introduction:
+    The 12th test function: Composition function 4.
+    """
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
+        """
+        # Introduction:
+        Initialization the test function.
+        # Args:
+        - `dim` (int): Dimensionality of the problem.
+        - `lb` (float): Lower bound of the search space.
+        - `ub` (float): Upper bound of the search space.
+        - `fopt` (float): The optimal fitness value for the problem.
+        - `rho` (float): Radius used to determine proximity for seed identification.
+        - `nopt` (int): Number of global optima in the problem.
+        - `maxfes` (int): Maximum number of function evaluations allowed.
+        # Attibutes:
+        - `_CFunction__sigma_` (np.ndarray): The __sigma_ attribute in the father class 'CFunction'.
+        - `_CFunction__bias_`(np.ndarray): The __bias_ attribute in the father class 'CFunction'.
+        - `_CFunction__weight_`(np.ndarray): The __weight_ attribute in the father class 'CFunction'.
+        - `_CFunction__lambda_`(np.ndarray): The __lambda_ attribute in the father class 'CFunction'.
+        - `_CFunction__O_`(np.ndarray): The __O_ attribute in the father class 'CFunction'.
+        - `_CFunction__M_`(np.ndarray): The __M_ attribute in the father class 'CFunction'.
+        - `_CFunction__function_`(np.ndarray): The __function_ attribute in the father class 'CFunction'.
+        """
         super(F12, self).__init__(dim, lb, ub, fopt, rho, nopt, maxfes, 8)
 
         # Initialize data for composition
@@ -677,9 +1191,22 @@ class F12(CFunction): # CF4
         self._CFunction__calculate_fmaxi()
 
     def __str__(self):
+        """
+        Returns a string representation of the object.
+        # Returns:
+        - str: The name with the dimension.
+        """
         return 'CF4'+'_D'+str(self.dim)
 
     def func(self, x):
+        """
+        # Introduction:
+        Evaluate the inputed solutions.
+        # Args:
+        - `x` (np.ndarray) : A solution for evaluation.
+        # Returns:
+        - np.ndarray: The evaluation results.
+        """
         x = np.asarray(x)
         assert x.shape[1] == self.dim
         self.FES += x.shape[0]

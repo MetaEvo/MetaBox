@@ -37,47 +37,29 @@ import pickle
 class UAV_Numpy_Problem(Basic_Problem):
     """
     # Introduction
-    Represents a UAV (Unmanned Aerial Vehicle) path planning problem using numpy for efficient computation. 
-    This class defines the problem boundaries, coordinate transformations, and geometric utilities for 
-    optimization algorithms in a simulated terrain environment.
-    # References:
-    Shehadeh, M. A., & Kudela, J. (2025). Benchmarking global optimization techniques for unmanned aerial vehicle path planning.arXiv. https://arxiv.org/abs/2501.14503
-    # Attributes:
-    - terrain_model (dict): The model describing the terrain, including start/end points, boundaries, and dimensions.
-    - FES (int): Function evaluation count or budget.
-    - optimum (Any): Stores the optimum solution found (if any).
-    - problem_id (Any): Identifier for the problem instance.
-    - dim (int): Dimensionality of the problem.
-    - lb (np.ndarray): Lower bounds for the optimization variables.
-    - ub (np.ndarray): Upper bounds for the optimization variables.
-    # Methods:
-    - __init__():
-        Initializes the UAV_Numpy_Problem instance and its attributes.
-    - __str__():
-        Returns a string representation of the problem, typically including the terrain/problem ID.
-    - __boundaries__():
-        Calculates and sets the lower and upper bounds for the optimization variables based on the terrain model.
-        Also computes velocity bounds for each variable.
-    - spherical_to_cart_vec(solve):
-        Converts a population of solutions from spherical coordinates (r, psi, phi) to Cartesian coordinates (x, y, z).
-        ## Args:
-        - solve (np.ndarray): 2D array of shape [NP, 3 * n], where NP is the population size and n is the number of waypoints.
-        ## Returns:
-        - tuple: (x, y, z) each as np.ndarray of shape [NP, n], representing Cartesian coordinates for each solution.
-    - DistP2S(xs, a, b):
-        Computes the minimum distance from a point to a line segment for a batch of segments.
-        ## Args:
-        - xs (np.ndarray): 1D array of shape [2], representing the point coordinates.
-        - a (np.ndarray): 2D array of shape [2, NP], representing the start points of the segments.
-        - b (np.ndarray): 2D array of shape [2, NP], representing the end points of the segments.
-        ## Returns:
-        - np.ndarray: 1D array of shape [NP], containing the minimum distances from xs to each segment.
-    # Usage:
-    Instantiate the class, set the `terrain_model`, call `__boundaries__()` to initialize bounds, and use 
-    `spherical_to_cart_vec` and `DistP2S` for coordinate transformations and geometric calculations during optimization.
+    UAV provides 56 terrain-based landscapes as realistic Unmanned Aerial Vehicle(UAV) path planning problems, each of which is 30D. The objective is to select given number of path nodes (x,y,z coordinates) from the 3D space, so the the UAV could fly as shortly as possible in a collision-free way.
+    # Original paper
+    "[Benchmarking global optimization techniques for unmanned aerial vehicle path planning.](https://arxiv.org/abs/2501.14503)" arXiv preprint arXiv:2501.14503 (2025).
+    # Official Implementation
+    [UAV](https://zenodo.org/records/12793991)
+    # License
+    None
     """
     
     def __init__(self):
+        """
+        # Introduction
+        Initializes the UAV problem environment with default attributes for terrain modeling, function evaluation count, optimum value, problem identification, dimensionality, and variable bounds.
+        # Attributes:
+        - terrain_model (Any or None): The terrain model associated with the UAV problem.
+        - FES (int): The number of function evaluations performed, initialized to 0.
+        - optimum (Any or None): The optimum value for the problem, if known.
+        - problem_id (Any or None): Identifier for the specific problem instance.
+        - dim (Any or None): The dimensionality of the problem.
+        - lb (Any or None): The lower bounds for the problem variables.
+        - ub (Any or None): The upper bounds for the problem variables.
+        """
+        
         self.terrain_model = None
         self.FES = 0
         self.optimum = None
@@ -87,9 +69,30 @@ class UAV_Numpy_Problem(Basic_Problem):
         self.ub = None
 
     def __str__(self):
+        """
+        # Introduction
+        Returns a string representation of the terrain associated with this problem instance.
+        # Returns:
+        - str: A string in the format "Terrain {problem_id}" where `problem_id` is the identifier of the problem.
+        """
+        
         return f"Terrain {self.problem_id}"
 
     def __boundaries__(self):
+        """
+        # Introduction
+        Computes and sets the lower and upper boundaries for UAV trajectory optimization variables, including position (radial distance, inclination, azimuth) and their velocities, based on the terrain model and problem configuration.
+        # Args:
+        None
+        # Built-in Attribute:
+        - self.lb (np.ndarray): Lower bounds for each optimization variable, tiled for all trajectory points.
+        - self.ub (np.ndarray): Upper bounds for each optimization variable, tiled for all trajectory points.
+        # Returns:
+        None
+        # Raises:
+        None
+        """
+        
         model = self.terrain_model
 
         nVar = model['n']
@@ -138,6 +141,19 @@ class UAV_Numpy_Problem(Basic_Problem):
         self.ub = bounds[:, 1]
 
     def spherical_to_cart_vec(self, solve):
+        """
+        # Introduction
+        Converts a batch of spherical coordinates to Cartesian coordinates for multiple UAV waypoints, applying boundary constraints from the terrain model.
+        # Args:
+        - solve (np.ndarray): A 2D NumPy array of shape [NP, 3 * n], where NP is the number of solutions (batches) and n is the number of waypoints. Each row contains concatenated spherical coordinates (r, psi, phi) for each waypoint.
+        # Built-in Attribute:
+        - self.terrain_model (dict): A dictionary containing the terrain boundaries and the starting coordinates, with keys 'start', 'xmin', 'xmax', 'ymin', 'ymax', 'zmin', 'zmax'.
+        # Returns:
+        - tuple: A tuple of three np.ndarray objects (x, y, z), each of shape [NP, n], representing the Cartesian coordinates of the waypoints for each solution.
+        # Raises:
+        - KeyError: If required keys are missing in `self.terrain_model`.
+        - ValueError: If the input array `solve` does not have the expected shape.
+        """
         # solve : 2D [NP, 3 * n]
         # Extracting r, phi, and psi from the solution row
         r = solve[:, 0::3]  # r values are in indices 0, 3, 6, ...
@@ -174,6 +190,20 @@ class UAV_Numpy_Problem(Basic_Problem):
         return x, y, z
 
     def DistP2S(self, xs, a, b):
+        """
+        # Introduction
+        Calculates the shortest Euclidean distance from a point to a set of line segments in 2D space using NumPy arrays.
+        # Args:
+        - xs (np.ndarray): A 1D array of shape [2], representing the coordinates of the point.
+        - a (np.ndarray): A 2D array of shape [2, NP], representing the starting points of the line segments.
+        - b (np.ndarray): A 2D array of shape [2, NP], representing the ending points of the line segments.
+        # Returns:
+        - np.ndarray: A 1D array of shape [NP], where each element is the shortest distance from the point `xs` to the corresponding line segment defined by `a[:, i]` and `b[:, i]`.
+        # Notes:
+        - If the segment is degenerate (i.e., `a` and `b` are the same point), the distance is computed as the distance from `xs` to `a`.
+        - If the perpendicular projection of `xs` onto the line defined by `a` and `b` falls outside the segment, the distance to the nearest endpoint is returned.
+        """
+        
         # xs: 1D array [2], a: 2D array [2, NP], b: 2D array [2, NP]
 
         # Convert x to a 2D array of shape [2, 1] to match the other input arrays
@@ -203,7 +233,25 @@ class UAV_Numpy_Problem(Basic_Problem):
         return dist
 
 class Terrain(UAV_Numpy_Problem):
+    """
+    # Introduction
+    Represents a UAV path planning problem over a 3D terrain, evaluating the cost of candidate paths based on multiple criteria such as path length, threats, altitude, smoothness, and terrain clearance.
+    """
     def __init__(self, terrain_model, problem_id):
+        """
+        Initializes the UAV problem environment with the specified terrain model and problem ID.
+        # Args:
+        - terrain_model (dict): A dictionary containing terrain model parameters, including the number of UAVs (`'n'`).
+        - problem_id (Any): An identifier for the specific problem instance.
+        # Attributes:
+        - terrain_model (dict): Stores the provided terrain model.
+        - dim (int): The dimensionality of the problem, calculated as three times the number of UAVs.
+        - problem_id (Any): Stores the provided problem identifier.
+        - optimum (Any or None): Placeholder for the optimum solution, initialized as None.
+        # Notes:
+        - Calls the `__boundaries__()` method to set up problem boundaries.
+        - Inherits from the `Terrain` class.
+        """
         super(Terrain, self).__init__()
         self.terrain_model = terrain_model
         self.dim = 3 * terrain_model['n']
@@ -214,6 +262,21 @@ class Terrain(UAV_Numpy_Problem):
 
 
     def func(self, solve):
+        """
+        # Introduction
+        Evaluates the total cost for a set of UAV paths based on multiple criteria, including path length, threats, altitude, smoothness, and terrain constraints. The function computes a weighted sum of these costs for each candidate solution.
+        # Args:
+        - solve (np.ndarray): A 2D numpy array of shape [NP, 3 * nv], where each row represents a candidate solution in spherical coordinates for the UAV path.
+        # Built-in Attribute:
+        - self.terrain_model (dict): Contains terrain and mission parameters such as start/end locations, threat information, altitude constraints, and penalty values.
+        # Returns:
+        - np.ndarray: A 1D numpy array of length NP, where each element is the total cost associated with a candidate UAV path.
+        # Raises:
+        - IndexError: If the indices computed for terrain or threat arrays are out of bounds.
+        - KeyError: If required keys are missing from the terrain model dictionary.
+        - ValueError: If input shapes are inconsistent or invalid for the computations.
+        """
+
         # solve : 2D [NP, 3 * nv]
         model = self.terrain_model
 
@@ -342,14 +405,21 @@ class Terrain(UAV_Numpy_Problem):
 
     def are_paths_clear(self, x_all, y_all, z_abs, H, num_samples = 12):
         """
-        Check if all the line segments connecting adjacent points of NP paths are completely above the terrain H.
-        :param x_all: (NP, N) shaped array, x coordinates of N points for each of NP paths
-        :param y_all: (NP, N) shaped array, y coordinates of N points for each of NP paths
-        :param z_abs: (NP, N) shaped array, absolute heights of N points for each of NP paths
-        :param H: (H_rows, H_cols) shaped terrain height matrix
-        :param num_samples: The number of sample points along each line segment (excluding the endpoints)
-        :return: A boolean array of shape (NP,) where each value indicates whether all segments of a path are above the terrain
+        # Introduction
+        Checks whether all line segments connecting adjacent points of multiple UAV paths are completely above the terrain surface.
+        # Args:
+        - x_all (np.ndarray): Array of shape (NP, N) containing x coordinates of N points for each of NP paths.
+        - y_all (np.ndarray): Array of shape (NP, N) containing y coordinates of N points for each of NP paths.
+        - z_abs (np.ndarray): Array of shape (NP, N) containing absolute heights of N points for each of NP paths.
+        - H (np.ndarray): 2D array of shape (H_rows, H_cols) representing the terrain height matrix.
+        - num_samples (int, optional): Number of sample points to interpolate along each line segment (excluding endpoints). Default is 12.
+        # Returns:
+        - np.ndarray: Boolean array of shape (NP,) where each value indicates whether all segments of a path are above the terrain.
+        # Notes:
+        - Uses linear interpolation to sample points along each path segment and checks if all sampled points are above the terrain.
+        - If any sampled point is not above the terrain, the corresponding path is marked as not clear.
         """
+    
         # Generate the interpolation function for the terrain
 
         H_rows, H_cols = H.shape

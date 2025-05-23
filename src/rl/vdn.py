@@ -17,36 +17,38 @@ class VDN_Agent(Basic_Agent):
     """
     # Introduction
     The `VDN_Agent` class implements a Value Decomposition Network (VDN) agent for multi-agent reinforcement learning. This agent is designed to handle cooperative multi-agent environments by decomposing the joint action-value function into individual agent value functions. It supports experience replay, target networks, epsilon-greedy exploration, and parallelized environments. The class provides methods for training, action selection, and evaluation.
+
     # Original paper
     "[**Value-Decomposition Networks For Cooperative Multi-Agent Learning**](https://arxiv.org/abs/1706.05296)."
-    # Official Implementation
-    None
+
     # Args
     - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
     - `network` (dict): A dictionary of neural networks used by the agent, where keys are network names and values are the corresponding network objects.
     - `learning_rates` (float): Learning rate or a list of learning rates for the optimizer(s).
+
     # Attributes
-    - `n_agent` (int): Number of agents in the environment.
-    - `n_act` (int): Number of actions available to each agent.
-    - `available_action` (list): List of available actions for each agent.
-    - `memory_size` (int): Size of the replay buffer.
-    - `warm_up_size` (int): Number of experiences required in the replay buffer before training starts.
-    - `gamma` (float): Discount factor for future rewards.
-    - `epsilon` (float): Epsilon value for epsilon-greedy exploration.
-    - `epsilon_start` (float): Initial epsilon value for exploration.
-    - `epsilon_end` (float): Final epsilon value for exploration.
-    - `epsilon_decay_steps` (int): Number of steps for epsilon decay.
-    - `max_grad_norm` (float): Maximum gradient norm for gradient clipping.
-    - `batch_size` (int): Batch size for training.
-    - `chunk_size` (int): Chunk size for sampling trajectories from the replay buffer.
-    - `update_iter` (int): Number of update iterations per training step.
+    - `n_agent` (int): Number of agents in the environment.(default: 4)
+    - `n_act` (int): Number of actions available to each agent.(default: 4)
+    - `available_action` (list): List of available actions for each agent.(default: 4)
+    - `memory_size` (int): Size of the replay buffer.(default: 10000)
+    - `warm_up_size` (int): Number of experiences required in the replay buffer before training starts.(default: 1000)
+    - `gamma` (float): Discount factor for future rewards.(default: 0.99)
+    - `epsilon` (float): Epsilon value for epsilon-greedy exploration.(default: 0.5)
+    - `epsilon_start` (float): Initial epsilon value for exploration.(default: 1)
+    - `epsilon_end` (float): Final epsilon value for exploration.(default: 0.1)
+    - `epsilon_decay_steps` (int): Number of steps for epsilon decay.(default: 10000)
+    - `max_grad_norm` (float): Maximum gradient norm for gradient clipping.(default: 10.0)
+    - `batch_size` (int): Batch size for training.(default: 64)
+    - `chunk_size` (int): Chunk size for sampling trajectories from the replay buffer.(default: 1)
+    - `update_iter` (int): Number of update iterations per training step.(default: 10)
     - `device` (str): Device used for computation (e.g., 'cpu' or 'cuda').
     - `replay_buffer` (MultiAgent_ReplayBuffer): Replay buffer for storing experiences.
     - `network` (list): List of network names used by the agent.
-    - `optimizer` (torch.optim.Optimizer): Optimizer for training the networks.
-    - `criterion` (torch.nn.Module): Loss function used for training.
+    - `optimizer` (torch.optim.Optimizer): Optimizer for training the networks.(default: Adam)
+    - `criterion` (torch.nn.Module): Loss function used for training.(default: MSELoss)
     - `learning_time` (int): Counter for the number of training steps.
     - `cur_checkpoint` (int): Counter for the current checkpoint index.
+
     # Methods
     - `set_network(networks: dict, learning_rates: float)`: Sets up the networks, optimizer, and loss function for the agent.
     - `get_step() -> int`: Returns the current training step.
@@ -55,17 +57,17 @@ class VDN_Agent(Basic_Agent):
     - `train_episode(...)`: Trains the agent for one episode in a parallelized environment.
     - `rollout_episode(env, seed=None, required_info={}) -> dict`: Executes a single episode in the environment and returns the results.
     - `log_to_tb_train(...)`: Logs training metrics and information to TensorBoard.
-    # Returns
-    - `train_episode`: A tuple containing:
-        - `is_train_ended` (bool): Whether the training has reached the maximum number of steps.
-        - `return_info` (dict): Information about the training episode, including return, learning steps, and additional metrics.
-    - `rollout_episode`: A dictionary containing episode results, including cost, return, and metadata.
-    # Raises
-    - `AssertionError`: If required network attributes (e.g., `model`) are not set.
-    - `ValueError`: If the length of the learning rates list does not match the number of networks.
-    - `AssertionError`: If the optimizer or criterion specified in the configuration is invalid.
     """
+
     def __init__(self, config, networks, learning_rates):
+        """
+        Initializes the VDN agent with the given configuration, networks, and learning rates.Store the initial agent in the checkpoint directory.
+
+        # Args:
+        - config: Configuration object containing all necessary parameters for the experiment.
+        - networks (dict): A dictionary of neural networks used by the agent.
+        - learning_rates (float): Learning rate for the optimizer.
+        """
         super().__init__(config)
         self.config = config
 
@@ -120,6 +122,16 @@ class VDN_Agent(Basic_Agent):
         self.cur_checkpoint += 1
 
     def set_network(self, networks: dict, learning_rates: float):
+        """
+        Sets up the networks, optimizer, and loss function for the agent.
+
+        # Args:
+        - networks (dict): A dictionary of neural networks used by the agent.
+        - learning_rates (float): Learning rate for the optimizer.
+
+        # Raises:
+        - ValueError: If the length of the learning rates list does not match the number of networks.
+        """
         Network_name = []
         if networks:
             for name, network in networks.items():
@@ -149,10 +161,22 @@ class VDN_Agent(Basic_Agent):
             getattr(self, network_name).to(self.device)
 
     def get_step(self):
+        """
+        Returns the current training step.
+
+        #Returns:
+        - int: The current training step.
+        """
         return self.learning_time
 
 
     def update_setting(self, config):
+        """
+        Updates the agent's configuration and resets training-related attributes.
+
+        # Args:
+        - config: Configuration object containing updated parameters.
+        """
         self.config.max_learning_step = config.max_learning_step
         self.config.agent_save_dir = config.agent_save_dir
         self.learning_time = 0
@@ -161,6 +185,16 @@ class VDN_Agent(Basic_Agent):
         self.cur_checkpoint = 1
 
     def get_action(self, state, epsilon_greedy = False):
+        """
+        Selects an action based on the current state and exploration strategy.
+
+        # Args:
+        - state (torch.Tensor): The current state.
+        - epsilon_greedy (bool): Whether to use epsilon-greedy exploration.
+
+        # Returns:
+        - np.ndarray: The selected action(s).
+        """
         state = torch.tensor(state, dtype = torch.float64).to(self.device)
         with torch.no_grad():
             Q_list = self.model(state)
@@ -183,6 +217,20 @@ class VDN_Agent(Basic_Agent):
                       compute_resource = {},
                       tb_logger = None,
                       required_info = {}):
+        """
+        Trains the agent for one episode in a parallelized environment.
+
+        # Args:
+        - envs: List of environments for training.
+        - seeds: Seeds for reproducibility.
+        - para_mode (str): Parallelization mode for the environments.
+        - compute_resource (dict): Resources for computation (e.g., CPUs, GPUs).
+        - tb_logger: TensorBoard logger for logging training metrics.
+        - required_info (dict): Additional information required from the environment.
+
+        # Returns:
+        - tuple: A boolean indicating whether training has ended and a dictionary with training metrics.
+        """
         num_cpus = None
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
@@ -285,6 +333,17 @@ class VDN_Agent(Basic_Agent):
                         env,
                         seed = None,
                         required_info = {}):
+        """
+        Executes a single episode in the environment without training.
+
+        # Args:
+        - env: The environment for the rollout.
+        - seed (int, optional): Seed for reproducibility.
+        - required_info (dict): Additional information required from the environment.
+
+        # Returns:
+        - dict: A dictionary containing episode results such as return, cost, and metadata.
+        """
         if hasattr(self.config,required_info):
             required_info = self.config.required_info
         with torch.no_grad():
@@ -318,6 +377,21 @@ class VDN_Agent(Basic_Agent):
                         Return, Reward,
                         predict_Q, target_Q,
                         extra_info = {}):
+        """
+        Logs training metrics to TensorBoard.
+
+        # Args:
+        - tb_logger: TensorBoard logger for logging training metrics.
+        - mini_step (int): Current mini-batch step.
+        - grad_norms (tuple): Gradient norms for the networks.
+        - loss (torch.Tensor): Training loss.
+        - Return (torch.Tensor): Episode return.
+        - Reward (torch.Tensor): Target reward.
+        - predict_Q (torch.Tensor): Predicted Q-values.
+        - target_Q (torch.Tensor): Target Q-values.
+        - extra_info (dict): Additional information to log.
+        """
+
         # Iterate over the extra_info dictionary and log data to tb_logger
         # extra_info: Dict[str, Dict[str, Union[List[str], List[Union[int, float]]]]] = {
         #     "loss": {"name": [], "data": [0.5]},  # No "name", logs under "loss"

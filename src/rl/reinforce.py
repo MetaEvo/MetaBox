@@ -21,15 +21,18 @@ class Memory:
     - __init__(): Initializes the memory by creating empty lists for log probabilities and rewards.
     - clear_memory(): Clears the stored memory by deleting the lists of log probabilities and rewards.
 
-    # Raises:
-
-    This class does not raise any exceptions.
     """
     def __init__(self):
+        """
+        Initializes the memory by creating empty lists for log probabilities and rewards.
+        """
         self.logprobs = []
         self.rewards = []
 
     def clear_memory(self):
+        """
+        Clears the stored memory by deleting the lists of log probabilities and rewards.
+        """
         del self.logprobs[:]
         del self.rewards[:]
 
@@ -39,12 +42,12 @@ class REINFORCE_Agent(Basic_Agent):
     The `REINFORCE_Agent` class implements a REINFORCE algorithm-based agent for reinforcement learning. This agent uses policy gradient methods to optimize the policy directly by maximizing the expected cumulative reward. It supports parallelized environments, logging to TensorBoard, and saving/loading checkpoints for training continuation.
     # Original paper
     "[**Simple Statistical Gradient-Following Algorithms for Connectionist Reinforcement Learning**](https://link.springer.com/article/10.1007/BF00992696)." 1992 (in Machine Learning journal)
-    # Official Implementation
-    None
+
     # Args
     - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
     - `networks` (dict): A dictionary of neural networks used by the agent, with keys as network names (e.g., 'actor', 'critic') and values as the corresponding network instances.
     - `learning_rates` (float): Learning rate for the optimizer.
+
     # Attributes
     - `gamma` (float): Discount factor for future rewards.
     - `max_grad_norm` (float): Maximum gradient norm for gradient clipping.
@@ -53,23 +56,24 @@ class REINFORCE_Agent(Basic_Agent):
     - `optimizer` (torch.optim.Optimizer): Optimizer for training the networks.
     - `learning_time` (int): Counter for the number of training steps completed.
     - `cur_checkpoint` (int): Counter for the current checkpoint index.
+
     # Methods
-    - `set_network(networks, learning_rates)`: Configures the networks and optimizer for the agent.
-    - `update_setting(config)`: Updates the agent's configuration and resets training-related attributes.
-    - `train_episode(envs, seeds, para_mode, compute_resource, tb_logger, required_info)`: Trains the agent for one episode using the REINFORCE algorithm.
-    - `rollout_episode(env, seed, required_info)`: Executes a single rollout episode in a given environment without training.
-    - `log_to_tb_train(tb_logger, mini_step, grad_norms, loss, Return, Reward, logprobs, extra_info)`: Logs training metrics and additional information to TensorBoard.
-    # Returns
-    - `train_episode`: A tuple containing:
-        - `is_train_ended` (bool): Whether the training has reached the maximum number of steps.
-        - `return_info` (dict): Dictionary containing training metrics such as return, learning steps, and additional requested information.
-    - `rollout_episode`: A dictionary containing rollout results such as return, cost, and metadata.
-    # Raises
-    - `AssertionError`: If required network attributes (e.g., `model` or `net`) are not set.
-    - `ValueError`: If the length of the learning rates list does not match the number of networks.
-    - `AttributeError`: If the specified optimizer in the configuration is not available in `torch.optim`.
+
+    - `set_network`(networks, learning_rates): Configures the networks and optimizer for the agent.
+    - `update_setting`(config): Updates the agent's configuration and resets training-related attributes.
+    - `train_episode`(envs, seeds, para_mode, compute_resource, tb_logger, required_info): Trains the agent for one episode using the REINFORCE algorithm.
+    - `rollout_episode`(env, seed, required_info): Executes a single rollout episode in a given environment without training.
+    - `log_to_tb_train`(tb_logger, mini_step, grad_norms, loss, Return, Reward, logprobs, extra_info): Logs training metrics and additional information to TensorBoard.
     """
     def __init__(self, config, networks: dict, learning_rates: float):
+        """
+        Initializes the REINFORCE agent with the given configuration, networks, and learning rates.Store the initial agent in the checkpoint directory.
+
+        # Args:
+        - config: Configuration object containing all necessary parameters for the experiment.
+        - networks (dict): A dictionary of neural networks used by the agent.
+        - learning_rates (float): Learning rate for the optimizer.
+        """
         super().__init__(config)
         self.config = config
 
@@ -93,6 +97,16 @@ class REINFORCE_Agent(Basic_Agent):
         self.cur_checkpoint += 1
 
     def set_network(self, networks: dict, learning_rates: float):
+        """
+        Configures the networks and optimizer for the agent.
+
+        # Args:
+        - networks (dict): A dictionary of neural networks used by the agent.
+        - learning_rates (float): Learning rate for the optimizer.
+
+        # Raises:
+        - ValueError: If the length of the learning rates list does not match the number of networks.
+        """
         Network_name = []
         if networks:
             for name, network in networks.items():
@@ -120,6 +134,12 @@ class REINFORCE_Agent(Basic_Agent):
             getattr(self, network_name).to(self.device)
 
     def update_setting(self, config):
+        """
+        Updates the agent's configuration and resets training-related attributes.
+
+        # Args:
+        - config: Configuration object containing updated parameters.
+        """
         self.config.max_learning_step = config.max_learning_step
         self.config.agent_save_dir = config.agent_save_dir
         self.learning_time = 0
@@ -137,6 +157,20 @@ class REINFORCE_Agent(Basic_Agent):
                       compute_resource={},
                       tb_logger=None,
                       required_info={}):
+        """
+        Trains the agent for one episode using the REINFORCE algorithm.
+
+        # Args:
+        - envs: List of environments for training.
+        - seeds: Seeds for reproducibility.
+        - para_mode (str): Parallelization mode for the environments.
+        - compute_resource (dict): Resources for computation (e.g., CPUs, GPUs).
+        - tb_logger: TensorBoard logger for logging training metrics.
+        - required_info (dict): Additional information required from the environment.
+
+        # Returns:
+        - tuple: A boolean indicating whether training has ended and a dictionary with training metrics.
+        """
         num_cpus = None
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
@@ -216,6 +250,17 @@ class REINFORCE_Agent(Basic_Agent):
                         env,
                         seed=None,
                         required_info={}):
+        """
+        Executes a single rollout episode in a given environment without training.
+
+        # Args:
+        - env: The environment for the rollout.
+        - seed (int, optional): Seed for reproducibility.
+        - required_info (dict): Additional information required from the environment.
+
+        # Returns:
+        - dict: A dictionary containing rollout results such as return, cost, and metadata.
+        """
         with torch.no_grad():
             if seed is not None:
                 env.seed(seed)
@@ -245,12 +290,26 @@ class REINFORCE_Agent(Basic_Agent):
                 results[key] = getattr(env, required_info[key])
             return results
 
+
     def log_to_tb_train(self, tb_logger, mini_step,
                         grad_norms,
                         loss,
                         Return, Reward,
                         logprobs,
                         extra_info={}):
+        """
+        Logs training metrics and additional information to TensorBoard.
+
+        # Args:
+        - tb_logger: TensorBoard logger for logging training metrics.
+        - mini_step (int): Current mini-batch step.
+        - grad_norms (tuple): Gradient norms for the networks.
+        - loss (torch.Tensor): Training loss.
+        - Return (torch.Tensor): Episode return.
+        - Reward (torch.Tensor): Target reward.
+        - logprobs (torch.Tensor): Log probabilities.
+        - extra_info (dict): Additional information to log.
+        """
         # Iterate over the extra_info dictionary and log data to tb_logger
         # extra_info: Dict[str, Dict[str, Union[List[str], List[Union[int, float]]]]] = {
         #     "loss": {"name": [], "data": [0.5]},  # No "name", logs under "loss"

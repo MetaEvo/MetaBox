@@ -8,39 +8,29 @@ class RLPSO_Optimizer(Learnable_Optimizer):
     RLPSO develops a reinforcement learning strategy to enhance PSO in convergence by replacing the uniformly distributed random number in the updating function with a random number generated from a selected normal distribution.
     # Original paper
     "[**Employing reinforcement learning to enhance particle swarm optimization methods**](https://www.tandfonline.com/doi/abs/10.1080/0305215X.2020.1867120)." Engineering Optimization (2022).Intelligence. (2021).
-    # Official Implementation
-    None
-    # Args:
-    - config (object): Configuration object containing optimizer parameters such as dimension (`dim`), inertia weight decay (`w_decay`), acceleration coefficient (`c`), population size (`NP`), maximum function evaluations (`maxFEs`), logging interval (`log_interval`), and meta-data logging flag (`full_meta_data`).
-    # Attributes:
-    - __config (object): Stores the configuration object.
-    - __dim (int): Dimensionality of the problem.
-    - __w_decay (bool): Flag indicating whether to use inertia weight decay.
-    - __w (float): Current inertia weight.
-    - __c (float): Acceleration coefficient.
-    - __NP (int): Number of particles in the swarm.
-    - __max_fes (int): Maximum number of function evaluations.
-    - fes (int or None): Current number of function evaluations.
-    - cost (list or None): List of global best costs at each logging interval.
-    - log_index (int or None): Current logging index.
-    - log_interval (int): Interval for logging global best cost.
-    - meta_X (list): List of particle positions for meta-data logging (if enabled).
-    - meta_Cost (list): List of particle costs for meta-data logging (if enabled).
-    # Methods:
-    - __init__(self, config): Initializes the optimizer with the given configuration.
-    - __str__(self): Returns the string representation of the optimizer.
-    - init_population(self, problem): Initializes the particle swarm population and returns the initial state.
-    - __get_state(self, index): Returns the concatenated state vector for the given particle index.
-    - __get_costs(self, problem, position): Evaluates the cost(s) of the given position(s) using the problem's evaluation function.
-    - update(self, action, problem): Updates the state of the optimizer using the provided action and returns the new state, reward, done flag, and additional info.
-    # Usage:
-    Instantiate with a configuration object and use `init_population` to initialize. Call `update` iteratively with actions to perform optimization steps.
-    # Raises:
-    - AttributeError: If required configuration attributes are missing.
-    - ValueError: If input dimensions do not match the problem specification.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the RLPSO optimizer with the provided configuration, setting up key hyperparameters and internal state.
+        # Args:
+        - config (object): Configuration object containing optimizer parameters such as inertia weight decay, acceleration coefficient, population size, maximum function evaluations, and logging interval.
+        # Built-in Attribute:
+        - self.__config (object): Stores the configuration object.
+        - self.__w_decay (bool): Indicates whether inertia weight decay is enabled.Default is True.
+        - self.__w (float): Inertia weight value, initialized based on `w_decay`.Default is 0.9 if `w_decay` is True, otherwise 0.729.
+        - self.__c (float): Acceleration coefficient. Default is 2.05.
+        - self.__NP (int): Population size.Default is 100.
+        - self.__max_fes (int): Maximum number of function evaluations.
+        - self.fes (Any): Tracks the number of function evaluations (initialized as None).
+        - self.cost (Any): Tracks the cost or fitness value (initialized as None).
+        - self.log_index (Any): Tracks the logging index (initialized as None).
+        - self.log_interval (int): Interval for logging progress.
+        # Returns:
+        - None
+        """
+        
         super().__init__(config)
         
         config.w_decay = True
@@ -64,6 +54,12 @@ class RLPSO_Optimizer(Learnable_Optimizer):
         self.log_interval = config.log_interval
 
     def __str__(self):
+        """
+        Returns a string representation of the RLPSO_Optimizer instance.
+        # Returns:
+        - str: The name of the optimizer, "RLPSO_Optimizer".
+        """
+        
         return "RLPSO_Optimizer"
 
     # initialize PSO environment
@@ -72,13 +68,22 @@ class RLPSO_Optimizer(Learnable_Optimizer):
         # Introduction
         Initializes the particle population for the RLPSO (Reinforcement Learning Particle Swarm Optimization) algorithm, setting up positions, velocities, and tracking variables for optimization.
         # Args:
-        - problem (object): An object representing the optimization problem, which must provide lower and upper bounds (`lb`, `ub`) for the search space.
+        - problem (object): The optimization problem object, which provides lower and upper bounds (`lb`, `ub`) for the search space.
+        # Built-in Attribute:
+        - self.__dim (int): The dimensionality of the problem, set to `problem.dim`.
+        - self.__particles (dict): A dictionary to hold particle attributes such as current position, cost, personal best position, global best position, and velocity.
+        - self.__max_velocity (float): The maximum velocity for particles, calculated based on the problem's bounds.
+        - self.fes (int): The number of function evaluations, initialized to 0.
+        - self.__max_cost (float): The maximum cost value among the particles, initialized based on the initial costs.
+        - self.__cur_index (int): The current index of the particle being updated, initialized to 0.
+        - self.log_index (int): The index for logging progress, initialized to 1.
+        - self.cost (list): A list to store the global best cost values at specified intervals.
+        - self.meta_X (list): A list to store the positions of particles for full meta-data logging.
+        - self.meta_Cost (list): A list to store the costs of particles for full meta-data logging.
+        - self.meta_tmp_x (list): A temporary list to store positions during a single iteration for full meta-data logging.
+        - self.meta_tmp_cost (list): A temporary list to store costs during a single iteration for full meta-data logging.
         # Returns:
         - object: The initial state of the optimizer, as returned by `self.__get_state(self.__cur_index)`.
-        # Side Effects:
-        - Initializes and updates internal attributes such as particle positions, velocities, personal and global bests, and logging structures.
-        - Resets function evaluation count and other tracking variables.
-        - Optionally stores meta-data if configured.
         # Notes:
         - Assumes that `self.rng` is a random number generator and that `self.__get_costs` and `self.__get_state` are defined elsewhere in the class.
         - The method is intended to be called at the start of the optimization process.
@@ -122,10 +127,34 @@ class RLPSO_Optimizer(Learnable_Optimizer):
         return self.__get_state(self.__cur_index)
 
     def __get_state(self, index):
+        """
+        # Introduction
+        Retrieves the current state representation for a given particle by concatenating the global best position and the current position of the specified particle.
+        # Args:
+        - index (int): The index of the particle whose state is to be retrieved.
+        # Returns:
+        - np.ndarray: A 1D array representing the concatenated state of the global best position and the current position of the specified particle.
+        # Raises:
+        - IndexError: If `index` is out of bounds for the current positions array.
+        """
         return np.concatenate((self.__particles['gbest_position'], self.__particles['current_position'][index]), axis=-1)
 
     # calculate costs of solutions
     def __get_costs(self, problem, position):
+        """
+        # Introduction
+        Computes the cost(s) of a given position or set of positions for a specified optimization problem, updating the function evaluation count.
+        # Args:
+        - problem: An object representing the optimization problem, expected to have `eval(position)` and `optimum` attributes.
+        - position (np.ndarray): The position(s) in the search space for which the cost is to be evaluated. Can be a 1D or 2D numpy array.
+        # Built-in Attribute:
+        - self.fes (int): Tracks the number of function evaluations performed.
+        # Returns:
+        - float or np.ndarray: The computed cost(s) for the given position(s). If `problem.optimum` is set, returns the difference between the evaluated value and the optimum.
+        # Raises:
+        - AttributeError: If `problem` does not have the required `eval` method or `optimum` attribute.
+        """
+        
         if len(position.shape) == 2:
             self.fes += position.shape[0]
         else:

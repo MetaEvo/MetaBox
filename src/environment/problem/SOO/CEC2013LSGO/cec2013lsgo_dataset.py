@@ -23,30 +23,6 @@ class CEC2013LSGO_Dataset(Dataset):
           2. Overlapping functions with conflicting subcomponents (F14)
       4. Fully-nonseparable functions (F15)
 
-    # Args:
-    - data (list): A list of function instances representing the dataset.
-    - batch_size (int, optional): The number of items per batch. Defaults to 1.
-    # Attributes:
-    - data (list): The dataset containing function instances.
-    - batch_size (int): The batch size for data loading.
-    - N (int): The total number of items in the dataset.
-    - ptr (list): List of starting indices for each batch.
-    - index (np.ndarray): Array of indices for shuffling and batching.
-    - maxdim (int): The maximum dimensionality among all function instances.
-    # Methods:
-    - get_datasets(version='numpy', train_batch_size=1, test_batch_size=1, difficulty=None, user_train_list=None, user_test_list=None):
-        Static method to construct training and testing datasets based on difficulty or user-specified lists.
-    - __getitem__(item):
-        Returns a batch of data corresponding to the batch index.
-    - __len__():
-        Returns the total number of items in the dataset.
-    - __add__(other):
-        Concatenates two datasets and returns a new CEC2013LSGO_Dataset.
-    - shuffle():
-        Randomly permutes the order of the dataset indices.
-    # Raises:
-    - ValueError: If neither `difficulty` nor user-specified train/test lists are provided in `get_datasets`.
-    - ValueError: If an invalid difficulty level is specified in `get_datasets`.
     """
     
     def __init__(self,

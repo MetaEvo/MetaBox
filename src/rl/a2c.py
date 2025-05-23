@@ -24,17 +24,20 @@ class Memory:
     - __init__(): Initializes the memory by creating empty lists for actions, states, log probabilities, and rewards.
     - clear_memory(): Clears the stored memory by deleting the lists of actions, states, log probabilities, and rewards.
 
-    # Raises:
-
-    This class does not raise any exceptions.
     """
     def __init__(self):
+        """
+        Initializes the memory by creating empty lists for actions, states, log probabilities, and rewards.
+        """
         self.actions = []
         self.states = []
         self.logprobs = []
         self.rewards = []
 
     def clear_memory(self):
+        """
+        Clears the stored memory by deleting the lists of actions, states, log probabilities, and rewards.
+        """
         del self.actions[:]
         del self.states[:]
         del self.logprobs[:]
@@ -44,14 +47,15 @@ class A2C_Agent(Basic_Agent):
     """
     # Introduction
     The `A2C_Agent` class implements an Advantage Actor-Critic (A2C) agent for reinforcement learning. This agent uses actor and critic networks to optimize policies and guide the low_level optimizer to optimize.
+
     # Original paper
     "[**Actor-Critic Algorithms**](https://proceedings.neurips.cc/paper/1999/file/6449f44a102fde848669bdd9eb6b76fa-Paper.pdf)." Advances in Neural Information Processing Systems (NIPS), 1999
-    # Official Implementation
-    None
+
     # Args
     - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
     - `networks` (dict): A dictionary of neural networks used by the agent, with keys as network names (e.g., 'actor', 'critic') and values as the corresponding network instances.
     - `learning_rates` (float): Learning rate for the optimizer.
+
     # Attributes
     - `gamma` (float): Discount factor for future rewards.
     - `n_step` (int): Number of steps for multi-step returns.
@@ -61,23 +65,27 @@ class A2C_Agent(Basic_Agent):
     - `optimizer` (torch.optim.Optimizer): Optimizer for training the networks.
     - `learning_time` (int): Counter for the number of training steps completed.
     - `cur_checkpoint` (int): Counter for the current checkpoint index.
+
     # Methods
-    - `set_network(networks, learning_rates)`: Initializes the networks and optimizer for the agent.
-    - `get_step()`: Returns the current training step count.
-    - `update_setting(config)`: Updates the agent's configuration and resets training-related attributes.
-    - `train_episode(envs, para_mode, compute_resource, tb_logger, required_info)`: Trains the agent for one episode in a parallelized environment.
-    - `log_to_tb_train(tb_logger, mini_step, grad_norms, reinforce_loss, baseline_loss, Return, Reward, memory_reward, critic_output, logprobs, entropy, approx_kl_divergence, extra_info)`: Logs training metrics to TensorBoard.
-    - `rollout_episode(env, seed, required_info)`: Executes a single rollout episode in the environment and returns the results.
-    # Returns
-    - `train_episode`: A tuple containing a boolean indicating whether training has ended and a dictionary with training metrics (e.g., return, loss, learning steps).
-    - `rollout_episode`: A dictionary containing the total return and additional requested information from the environment.
-    # Raises
-    - `AssertionError`: If required network attributes (e.g., 'actor', 'critic') are not set.
-    - `ValueError`: If the length of the learning rates list does not match the number of networks.
-    - `AttributeError`: If the specified optimizer in the configuration is not available in `torch.optim`.
+    - `set_network`(networks, learning_rates): Initializes the networks and optimizer for the agent.
+    - `get_step`(): Returns the current training step count.
+    - `update_setting`(config): Updates the agent's configuration and resets training-related attributes.
+    - `train_episode`(envs, para_mode, compute_resource, tb_logger, required_info): Trains the agent for one episode in a parallelized environment.
+    - `log_to_tb_train`(tb_logger, mini_step, grad_norms, reinforce_loss, baseline_loss, Return, Reward, memory_reward, critic_output, logprobs, entropy, approx_kl_divergence, extra_info): Logs training metrics to TensorBoard.
+    - `rollout_episode`(env, seed, required_info): Executes a single rollout episode in the environment and returns the results.
+    - `rollout_batch_episode`(envs, seeds, para_mode, compute_resource, required_info): Executes batch rollout episodes in parallelized environments and returns the results.
+
     """
 
     def __init__(self, config, networks: dict, learning_rates: float):
+        """
+        Initializes the A2C_Agent with the given configuration, networks, and learning rates.
+
+        # Args:
+        - config: Configuration object containing all necessary parameters for the experiment.
+        - networks (dict): A dictionary of neural networks used by the agent.
+        - learning_rates (float): Learning rate for the optimizer.
+        """
         super().__init__(config)
         self.config = config
 
@@ -94,6 +102,18 @@ class A2C_Agent(Basic_Agent):
         self.cur_checkpoint = 0
         
     def set_network(self, networks: dict, learning_rates: float):
+        """
+        Initializes the networks and optimizer for the agent.
+
+        # Args:
+        - networks (dict): A dictionary of neural networks used by the agent.
+        - learning_rates (float): Learning rate for the optimizer.
+
+        # Raises:
+        - AssertionError: If required network attributes (e.g., 'actor', 'critic') are not set.
+        - ValueError: If the length of the learning rates list does not match the number of networks.
+        - AttributeError: If the specified optimizer in the configuration is not available in `torch.optim`.
+        """
         Network_name = []
         if networks:
             for name, network in networks.items():
@@ -121,9 +141,21 @@ class A2C_Agent(Basic_Agent):
             getattr(self, network_name).to(self.device)
 
     def get_step(self):
+        """
+        Returns the current training step count.
+
+        # Returns:
+        - int: The current training step count.
+        """
         return self.learning_time
 
     def update_setting(self, config):
+        """
+        Updates the agent's configuration and resets training-related attributes.Store the initial agent in the checkpoint directory.
+
+        # Args:
+        - config: Configuration object containing updated parameters.
+        """
         self.config.max_learning_step = config.max_learning_step
         self.config.agent_save_dir = config.agent_save_dir
         self.learning_time = 0
@@ -140,6 +172,19 @@ class A2C_Agent(Basic_Agent):
                       compute_resource = {},
                       tb_logger = None,
                       required_info = {}):
+        """
+        Trains the agent for one episode in a parallelized environment.
+
+        # Args:
+        - envs: List of environments for training.
+        - para_mode (str): Parallelization mode for the environments.
+        - compute_resource (dict): Resources for computation (e.g., CPUs, GPUs).
+        - tb_logger: TensorBoard logger for logging training metrics.
+        - required_info (dict): Additional information required from the environment.
+
+        # Returns:
+        - tuple: A boolean indicating whether training has ended and a dictionary with training metrics.
+        """
         num_cpus = None
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
@@ -278,6 +323,25 @@ class A2C_Agent(Basic_Agent):
                         logprobs, entropy,
                         approx_kl_divergence,
                         extra_info = {}):
+        """
+        Logs training metrics to TensorBoard.
+
+        # Args:
+        - tb_logger: TensorBoard logger for logging training metrics.
+        - mini_step (int): Current mini-batch step.
+        - grad_norms (tuple): Gradient norms for the networks.
+        - reinforce_loss (torch.Tensor): Actor loss.
+        - baseline_loss (torch.Tensor): Critic loss.
+        - Return (torch.Tensor): Episode return.
+        - Reward (torch.Tensor): Target reward.
+        - memory_reward (list): List of rewards from memory.
+        - critic_output (torch.Tensor): Critic network output.
+        - logprobs (torch.Tensor): Log probabilities of actions.
+        - entropy (torch.Tensor): Entropy of the policy.
+        - approx_kl_divergence (torch.Tensor): Approximate KL divergence.
+        - extra_info (dict): Additional information to log.
+        """
+
         # Iterate over the extra_info dictionary and log data to tb_logger
         # extra_info: Dict[str, Dict[str, Union[List[str], List[Union[int, float]]]]] = {
         #     "loss": {"name": [], "data": [0.5]},  # No "name", logs under "loss"
@@ -328,6 +392,17 @@ class A2C_Agent(Basic_Agent):
                         env,
                         seed=None,
                         required_info={}):
+        """
+        Executes a single rollout episode in the environment and returns the results.
+
+        # Args:
+        - env: The environment for the rollout.
+        - seed (int, optional): Seed for reproducibility.
+        - required_info (dict): Additional information required from the environment.
+
+        # Returns:
+        - dict: A dictionary containing the total return and additional requested information.
+        """
         with torch.no_grad():
             if seed is not None:
                 env.seed(seed)
@@ -347,4 +422,5 @@ class A2C_Agent(Basic_Agent):
             for key in required_info.keys():
                 results[key] = getattr(env, required_info[key])
             return results
+
 

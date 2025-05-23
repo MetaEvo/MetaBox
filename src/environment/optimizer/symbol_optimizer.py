@@ -15,6 +15,20 @@ class Myreplace(object):
         self.count = 0
 
     def replace(self, match):
+        """
+        # Introduction
+        Replaces matched patterns in a string with a modified pattern based on the number of replacements performed.
+        # Args:
+        - match (re.Match): The match object corresponding to the current regex match.
+        # Built-in Attribute:
+        - self.count (int): Tracks the number of replacements performed.
+        - self.pattern (str): The pattern string to use for replacement.
+        # Returns:
+        - str: The replacement string. If this is the first match, returns the original matched string; otherwise, returns the pattern with a numeric suffix.
+        # Raises:
+        - AttributeError: If `self.count` or `self.pattern` are not defined in the instance.
+        """
+        
         self.count += 1
         if self.count > 1:
             return self.pattern + str(self.count - 1)
@@ -22,6 +36,20 @@ class Myreplace(object):
             return match.group()
 
     def process_string(self, string, pattern):
+        """
+        # Introduction
+        Processes the input string by replacing all occurrences that match the given pattern using a custom replacement method.
+        # Args:
+        - string (str): The input string to be processed.
+        - pattern (str or Pattern): The regular expression pattern to search for in the string.
+        # Built-in Attribute:
+        - self.pattern: Stores the current pattern being used for replacement.
+        - self.count: Tracks the number of replacements made.Default is 0.
+        # Returns:
+        - str: The processed string with all pattern matches replaced.
+        # Raises:
+        - re.error: If the provided pattern is not a valid regular expression.
+        """
         self.pattern = pattern
         self.count = 0
         new_string = re.sub(pattern, self.replace, string)
@@ -29,6 +57,48 @@ class Myreplace(object):
 
 
 def symbol_config(config):
+    """
+    # Introduction
+    Configures the parameters for the symbolic optimizer by setting various attributes on the provided configuration object.
+    # Args:
+    - config (object): A configuration object whose attributes will be set to define the optimizer's behavior.
+        - The attributes needed for the Symbol include:
+            - init_pop (str): Method for initializing the population (default: 'random').
+            - teacher (str): The teacher algorithm to use (default: 'MadDE').
+            - population_size (int): Number of individuals in the population (default: 100).
+            - boarder_method (str): Method for handling boundary conditions (default: 'clipping').
+            - skip_step (int): Number of steps to skip during training (default: 5).
+            - test_skip_step (int): Number of steps to skip during testing (default: 5).
+            - max_c (float): Maximum value for coefficient c (default: 1.0).
+            - min_c (float): Minimum value for coefficient c (default: -1.0).
+            - c_interval (float): Interval for coefficient c (default: 0.4).
+            - max_layer (int): Maximum number of layers allowed (default: 6).
+            - value_dim (int): Dimensionality of the value (default: 1).
+            - hidden_dim (int): Dimensionality of the hidden layer (default: 16).
+            - num_layers (int): Number of layers in the model (default: 1).
+            - lr (float): Learning rate for the optimizer (default: 1e-3).
+            - lr_critic (float): Learning rate for the critic (default: 1e-3).
+            
+    # Built-in Attributes:
+    - init_pop (str): Method for initializing the population (default: 'random').
+    - teacher (str): The teacher algorithm to use (default: 'MadDE').
+    - population_size (int): Number of individuals in the population (default: 100).
+    - boarder_method (str): Method for handling boundary conditions (default: 'clipping').
+    - skip_step (int): Number of steps to skip during training (default: 5).
+    - test_skip_step (int): Number of steps to skip during testing (default: 5).
+    - max_c (float): Maximum value for coefficient c (default: 1.0).
+    - min_c (float): Minimum value for coefficient c (default: -1.0).
+    - c_interval (float): Interval for coefficient c (default: 0.4).
+    - max_layer (int): Maximum number of layers allowed (default: 6).
+    - value_dim (int): Dimensionality of the value (default: 1).
+    - hidden_dim (int): Dimensionality of the hidden layer (default: 16).
+    - num_layers (int): Number of layers in the model (default: 1).
+    - lr (float): Learning rate for the optimizer (default: 1e-3).
+    - lr_critic (float): Learning rate for the critic (default: 1e-3).
+    # Returns:
+    - None
+    """
+    
     config.init_pop = 'random'
     config.teacher = 'MadDE'
     config.population_size = 100
@@ -54,42 +124,39 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
     "[Surrogate Learning in Meta-Black-Box Optimization: A Preliminary Study](https://arxiv.org/abs/2503.18060)." arXiv preprint arXiv:2503.18060 (2025).
     # Official Implementation
     [SurrRLDE](https://github.com/GMC-DRL/Surr-RLDE)
-    # Args:
-    - config (object): Configuration object containing optimizer parameters such as dimension, maximum function evaluations, logging intervals, initialization methods, and other relevant settings.
-    # Attributes:
-    - tokenizer (MyTokenizer): Tokenizer for parsing symbolic expressions.
-    - __config (object): Internal reference to the configuration object.
-    - dim (int): Dimensionality of the optimization problem.
-    - NP (int): Population size.
-    - no_improve (int): Counter for stagnation in improvement.
-    - per_no_improve (np.ndarray): Array tracking stagnation per individual.
-    - evaling (bool): Evaluation mode flag.
-    - max_fes (int): Maximum number of function evaluations.
-    - boarder_method (str): Method for handling boundary conditions ('clipping' or 'periodic').
-    - replace (Myreplace): Utility for processing symbolic expressions.
-    - log_interval (int): Interval for logging progress.
-    - teacher_optimizer (object): Teacher optimizer instance for imitation learning.
-    - is_train (bool): Training mode flag.
-    - population (Population): Current population of candidate solutions.
-    - log_index (int): Logging index for tracking progress.
-    - cost (list): List of best costs at each logging point.
-    - meta_X (list): (Optional) List of population positions for meta-data logging.
-    - meta_Cost (list): (Optional) List of population costs for meta-data logging.
-    # Methods:
-    - __str__(): Returns the string representation of the optimizer.
-    - init_population(problem): Initializes the population for a given problem, possibly using a teacher optimizer for imitation.
-    - eval(): Sets the optimizer to evaluation mode.
-    - train(): Sets the optimizer to training mode.
-    - observe(): Encodes and returns the current population features.
-    - update(action, problem): Applies a symbolic update rule to the population, computes reward, and checks termination.
-    - cal_reward(tea_pop, max_step): Calculates the reward based on imitation and optimization progress.
-    # Returns:
-    - Various methods return encoded features, rewards, termination flags, and logging information as appropriate for integration with reinforcement learning environments.
-    # Raises:
-    - AssertionError: If symbolic expression parsing or boundary handling encounters unsupported or inconsistent states.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the SymbolOptimizer with the provided configuration, setting up tokenizer, replacement strategy, and various optimization parameters.
+        # Args:
+        - config (object): Configuration object.
+            - The attributes needed for the Symbol include:
+                - init_pop (str): Method for initializing the population (default: 'random').
+                - teacher (str): The teacher algorithm to use (default: 'MadDE').
+                - population_size (int): Number of individuals in the population (default: 100).
+                - boarder_method (str): Method for handling boundary conditions (default: 'clipping').
+                - skip_step (int): Number of steps to skip during training (default: 5).
+                - test_skip_step (int): Number of steps to skip during testing (default: 5).
+                
+        # Built-in Attribute:
+        - self.tokenizer (MyTokenizer): Tokenizer instance for processing symbols.
+        - self.__config (object): Stores the configuration object.
+        - self.NP (int): Number of particles or population size, set to 100.
+        - self.no_improve (int): Counter for iterations without improvement.
+        - self.per_no_improve (np.ndarray): Array tracking no-improvement status per particle.
+        - self.evaling (bool): Flag indicating if evaluation is in progress.
+        - self.max_fes (int): Maximum number of function evaluations.
+        - self.boarder_method (str): Method for handling boundaries, default is 'periodic'.
+        - self.replace (Myreplace): Replacement strategy instance.
+        - self.log_interval (int): Interval for logging progress.
+        - self.teacher_optimizer (object or None): Optional teacher optimizer for advanced strategies.
+        - self.is_train (bool): Indicates if the optimizer is in training mode.
+        # Raises:
+        - None
+        """
+        
         super().__init__(config)
 
         # !add
@@ -119,6 +186,12 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
         self.log_interval = config.log_interval
 
     def __str__(self):
+        """
+        Returns a string representation of the SYMBOL_Optimizer object.
+        # Returns:
+            str: The string "SYMBOL_Optimizer" representing the object.
+        """
+        
         return "SYMBOL_Optimizer"
 
     # the interface for environment reseting
@@ -184,11 +257,10 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
         - action (dict): A dictionary containing the update expression (`'expr'`) and the number of steps to skip (`'skip_step'`).
         - problem: The optimization problem instance, which may provide information such as the optimum value.
         # Returns:
-        - tuple: A tuple containing:
-            - observation: The current observation of the optimizer's state.
-            - reward (float): The reward calculated for this update step.
-            - is_end (bool): Whether the optimization process has reached its end condition.
-            - info (dict): Additional information (currently an empty dictionary).
+        - observation: The current observation of the optimizer's state.
+        - reward (float): The reward calculated for this update step.
+        - is_end (bool): Whether the optimization process has reached its end condition.
+        - info (dict): Additional information (currently an empty dictionary).
         # Raises:
         - AssertionError: If the number of 'randx' replacements does not match the expected count.
         - AssertionError: If the shapes of the update variables do not match.
@@ -278,6 +350,17 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
         return self.observe(), reward, is_end, {}
 
     def cal_reward(self, tea_pop, max_step):
+        """
+        # Introduction
+        Calculates the reward value based on the imitation distance and the improvement in global best cost for the current population.
+        # Args:
+        - tea_pop (Population): The target or teacher population used for imitation comparison.
+        - max_step (int): The maximum number of steps or iterations allowed in the optimization process.
+        # Returns:
+        - float: The computed reward, which is the sum of the imitation reward and the base reward.
+        # Raises:
+        - ZeroDivisionError: If `self.population.init_cost` is zero, as division by zero is not allowed.
+        """
         dist = cal_gap_nearest(self.population, tea_pop)
 
         imitation_r = -dist / max_step
@@ -293,6 +376,19 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
 
 
 def get_init_pop(tea_pop, stu_pop, method, rng):
+    """
+    # Introduction
+    Initializes the population of a student population (`stu_pop`) based on a teacher population (`tea_pop`) using a specified initialization method.
+    # Args:
+    - tea_pop: An object representing the teacher population, expected to have attributes `c_cost`, `current_position`, and `pop_size`.
+    - stu_pop: An object representing the student population, expected to have attributes `pop_size` and a `reset` method.
+    - method (str): The initialization method to use. Supported values are `'best'`, `'harf'`, `'random'`, and `'uniform'`.
+    - rng: A random number generator object with a `randint` method.
+    # Returns:
+    - None: The function modifies `stu_pop` in place by resetting its population.
+    # Raises:
+    - ValueError: If the specified `method` is not supported.
+    """
     if method == 'best':
         sort_index = np.argsort(tea_pop.c_cost)
         init_pos = tea_pop.current_position[sort_index[:stu_pop.pop_size]]
@@ -314,6 +410,18 @@ def get_init_pop(tea_pop, stu_pop, method, rng):
 
 
 def cal_gap_nearest(stu_pop, tea_pop):
+    """
+    # Introduction
+    Calculates the normalized maximum minimum Euclidean distance ("gap") between each student position and its nearest teacher position in a normalized search space.
+    # Args:
+    - stu_pop: An object representing the student population, expected to have attributes `current_position` (numpy.ndarray of shape [n_students, dim]) and `max_x` (float or array-like for normalization).
+    - tea_pop: An object representing the teacher population, expected to have attribute `current_position` (numpy.ndarray of shape [n_teachers, dim]).
+    # Returns:
+    - float: The normalized gap, defined as the maximum of the minimum distances from each student to the nearest teacher, divided by the maximum possible distance in the normalized space.
+    # Raises:
+    - AttributeError: If `stu_pop` or `tea_pop` do not have the required attributes.
+    - ValueError: If the shapes of `current_position` arrays are incompatible.
+    """
     max_x = stu_pop.max_x
 
     stu_position = stu_pop.current_position
@@ -333,6 +441,16 @@ def cal_gap_nearest(stu_pop, tea_pop):
 
 
 def dist(x, y):
+    """
+    Calculates the Euclidean distance between two arrays.
+    # Args:
+    - x (np.ndarray): The first input array.
+    - y (np.ndarray): The second input array.
+    # Returns:
+    - np.ndarray or float: The Euclidean distance(s) between `x` and `y`.
+    # Raises:
+    - ValueError: If `x` and `y` have incompatible shapes for broadcasting.
+    """
     return np.sqrt(np.sum((x - y) ** 2, axis = -1))
 
 

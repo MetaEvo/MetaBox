@@ -62,16 +62,6 @@ class CEC2017MTO_Dataset(Dataset):
         P7. No intersection and high similarity(NI+HS)
         P8. No intersection and medium similarity(NI+MS) 
         P9. No intersection and low similarity(NI+LS)
-    # Args:
-    - `data` (list): A list of task datasets, where each dataset contains multiple tasks.
-    - `batch_size` (int, optional): The size of each batch for data retrieval. Defaults to 1.
-    # Attributes:
-    - `data` (list): The dataset containing tasks for the CEC2017MTO problem suite.
-    - `batch_size` (int): The size of each batch for data retrieval.
-    - `maxdim` (int): The maximum dimensionality across all tasks in the dataset.
-    - `N` (int): The total number of datasets in the collection.
-    - `ptr` (list): A list of indices for batching the dataset.
-    - `index` (numpy.ndarray): An array of shuffled indices for dataset access.
     # Methods:
     - `__getitem__(item)`: Retrieves a batch of data based on the specified index.
     - `__len__()`: Returns the total number of datasets in the collection.
@@ -88,6 +78,21 @@ class CEC2017MTO_Dataset(Dataset):
     def __init__(self,
                  data,
                  batch_size=1):
+        """
+        # Introduction
+        Initializes the CEC2017MTO Dataset with datas.
+        # Args:
+        - `data` (list): A list of task datasets, where each dataset contains multiple tasks.
+        - `batch_size` (int, optional): The size of each batch for data retrieval. Defaults to 1.
+        # Attributes:
+        - `data` (list): The dataset containing tasks for the CEC2017MTO problem suite.
+        - `batch_size` (int): The size of each batch for data retrieval. Defaults to 1.
+        - `maxdim` (int): The maximum dimensionality across all tasks in the dataset.
+        - `N` (int): The total number of datasets in the collection.
+        - `ptr` (list): A list of indices for batching the dataset.
+        - `index` (numpy.ndarray): An array of shuffled indices for dataset access.
+        """
+
         super().__init__()
         self.data = data
         self.batch_size = batch_size
@@ -100,7 +105,14 @@ class CEC2017MTO_Dataset(Dataset):
         self.index = np.arange(self.N)
 
     def __getitem__(self, item):
-        
+        """
+        # Introduction
+        Retrieves a batch of tasks of the the CEC2017MTO benchmark suite based on the given index.
+        # Args:
+        - `item` (int, optional): Specifies which batch of tasks of the CEC2017MTO benchmark is selected.
+        # Returns:
+        - list: A list containing a batch of tasks of the CEC2017MTO benchmark.
+        """
         ptr = self.ptr[item]
         index = self.index[ptr: min(ptr + self.batch_size, self.N)]
         res = []
@@ -109,13 +121,29 @@ class CEC2017MTO_Dataset(Dataset):
         return res
     
     def __len__(self):
+        """
+        # Introduction
+        Returns the total number of tasks in the CEC2017MTO benchmark suite.
+        # Returns:
+        - int: The size of the CEC2017MTO benchmark suite.
+        """
         return self.N
 
     
     def __add__(self, other: 'CEC2017MTO_Dataset'):
+        """
+        # Introduction
+        Combines two datasets into a single dataset.
+        # Returns:
+        - Object: The combined new dataset of the CEC2017MTO benchmark suite.
+        """
         return CEC2017MTO_Dataset(self.data + other.data, self.batch_size)
 
     def shuffle(self):
+        """
+        # Introduction
+        Randomly shuffles the order of tasks in the dataset.
+        """
         self.index = np.random.permutation(self.N)
 
 
@@ -126,6 +154,27 @@ class CEC2017MTO_Dataset(Dataset):
                      difficulty=None,
                      user_train_list=None,
                      user_test_list=None):
+        """
+        # Introduction
+        Generates training and testing datasets for the CEC2017MTO Dataset benchmark suite based on specified difficulty or user-defined function lists.
+        # Args:
+        - `version` (str, optional): Specifies the implementation version to use for function instances. 
+          Accepts 'numpy' or any other string for alternative (e.g., 'torch'). Defaults to 'numpy'.
+        - `train_batch_size` (int, optional): Batch size for the training dataset. Defaults to 1.
+        - `test_batch_size` (int, optional): Batch size for the testing dataset. Defaults to 1.
+        - `difficulty` (str, optional): Difficulty level for dataset split. Accepts 'easy', 'difficult', 'all', or None. 
+          If None, `user_train_list` and `user_test_list` must be provided.
+        - `user_train_list` (list of int, optional): List of function IDs to include in the training set. Used if `difficulty` is None.
+        - `user_test_list` (list of int, optional): List of function IDs to include in the testing set. Used if `difficulty` is None.
+        # Returns:
+        - tuple: A tuple containing two `CEC2017MTO_Dataset` objects:
+            - The first is the training dataset.
+            - The second is the testing dataset.
+        # Raises:
+        - `ValueError`: If neither `difficulty` nor both `user_train_list` and `user_test_list` are provided.
+        - `ValueError`: If an invalid `difficulty` value is specified.
+        """
+
         if difficulty == None and user_test_list == None and user_train_list == None:
             raise ValueError('Please set difficulty or user_train_list and user_test_list.')
         if difficulty not in ['easy', 'difficult', 'all', None]:

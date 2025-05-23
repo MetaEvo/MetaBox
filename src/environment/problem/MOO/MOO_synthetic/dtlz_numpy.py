@@ -6,26 +6,48 @@ from scipy.special import comb
 import math
 
 def crtup(n_obj, n_ref_points=1000):
+    """
+    # Introduction
+    Generates a set of uniformly distributed reference points (weight vectors) for a given number of objectives.
+    This function is typically used in multi-objective optimization algorithms such as NSGA-III and RVEA,
+    where reference points are required to guide the selection process.
+
+    # Args:
+    - n_obj (int): Number of objectives (i.e., the dimensionality of the reference points).
+    - n_ref_points (int): Approximate number of desired reference points (default: 1000).
+
+    # Returns:
+    - W (np.ndarray): A 2D array of shape (n_comb, n_obj) representing the generated reference vectors.
+    - n_comb (int): Actual number of generated reference vectors.
+    """
     def find_H_for_closest_points(N, M):
         """
-        根据目标点数 N 和维数 M，找到最接近的 H，使得生成的点数不超过 N。
+        # Introduction
+        Finds the closest integer H such that the number of combinations C(H+M-1, M-1)
+        is as close as possible to N without exceeding it.
+
+        # Args:
+        - N (int): Desired number of reference points.
+        - M (int): Number of objectives.
+
+        # Returns:
+        - closest_H (int): The value of H that generates the closest number of points ≤ N.
+        - closest_N (int): The actual number of points generated using closest_H.
         """
-        # 设定初始搜索范围
-        H_min, H_max = 1, 100000  # 假设 H 的范围在 1 到 100 之间，具体可根据实际情况调整
+        H_min, H_max = 1, 100000
         closest_H = H_min
         closest_diff = float('inf')
         closest_N = 0
-        # 搜索最接近 N 的 H
-        for H in range(H_min, H_max + 1):
-            generated_points = int(comb(H + M - 1, M - 1))  # 计算生成的点数
 
-            # 如果生成的点数超过目标 N，跳过此 H
+        for H in range(H_min, H_max + 1):
+            generated_points = int(comb(H + M - 1, M - 1))
+
+
             if generated_points > N:
                 break
 
-            diff = abs(generated_points - N)  # 计算与目标 N 的差异
+            diff = abs(generated_points - N) 
 
-            # 如果当前差异更小，则更新最接近的 H 和差异
             if diff < closest_diff:
                 closest_H = H
                 closest_diff = diff
@@ -41,38 +63,47 @@ def crtup(n_obj, n_ref_points=1000):
     if len(combinations) == len(temp):
         result = []
         for combination, arr in zip(combinations, temp):
-            # 元组元素与数组元素相减
             sub_result = np.array(combination) - arr - 1
             result.append(sub_result)
     else:
-        print("两个列表长度不一致，无法相减。")
+        print("Length mismatch between combinations and temp array. Cannot compute reference points.")
     result = np.array(result)
     W = np.zeros((n_comb, M))
-    W[:, 0] = result[:, 0] - 0  # 第一列直接是 Temp 的第一列
+    W[:, 0] = result[:, 0] - 0
     for i in range(1, M - 1):
-        W[:, i] = result[:, i] - result[:, i - 1]  # 后续列是 Temp 当前列减去前一列
-    W[:, -1] = H - result[:, -1]  # 最后一列是 H - Temp 最后一列
+        W[:, i] = result[:, i] - result[:, i - 1]
+    W[:, -1] = H - result[:, -1]
 
     W = W / H
     return W, n_comb
 
 def crtgp(dim, N):
-    # 计算一个大致的划分数目
-    n_points_per_dim = int(np.floor(N ** (1 / dim)))  # 计算每个维度上大致的点数
+    """
+    # Introduction
+    Generate a set of evenly distributed grid points in a unit hypercube of specified dimension.
 
-    # 计算生成的网格点数
+    This function tries to generate at most N points that are uniformly spread in a `dim`-dimensional unit cube [0,1]^dim
+    by using a Cartesian grid (meshgrid) approach.
+
+    # Args:
+    - dim (int): Dimensionality of the grid (number of variables).
+    - N (int): Maximum number of grid points to generate.
+
+    # Returns:
+    - grid_points (np.ndarray): A 2D array of shape (total_points, dim) representing the generated grid points.
+    - total_points (int): Actual number of points generated (≤ N).
+    """
+    n_points_per_dim = int(np.floor(N ** (1 / dim)))
+
     total_points = n_points_per_dim ** dim
 
-    # 调整每个维度的点数，使得总点数最接近N且不超过N
     while total_points > N:
         n_points_per_dim -= 1
         total_points = n_points_per_dim ** dim
 
-    # 生成网格点
     grid_points = np.meshgrid(*[np.linspace(0, 1, n_points_per_dim)] * dim)
-    grid_points = np.vstack([g.ravel() for g in grid_points]).T  # 将网格点扁平化并合并为一个数组
+    grid_points = np.vstack([g.ravel() for g in grid_points]).T 
 
-    # Sizes = [n_points_per_dim] * dim  # 每个维度的点数
     return grid_points, total_points
 
 class DTLZ(Basic_Problem):
@@ -109,6 +140,20 @@ class DTLZ(Basic_Problem):
     """
 
     def __init__(self, n_var, n_obj, k=None, **kwargs):
+        """
+        # Introduction
+        Initializes a specific instance of the DTLZ problem suite.  
+        If `k` is not provided, it is computed based on the number of decision variables and objectives.
+
+        # Args:
+        - n_var (int): Number of decision variables. If not provided explicitly, will be computed from `k` and `n_obj`.
+        - n_obj (int): Number of objectives.
+        - k (int, optional): Number of distance-related variables. Optional; computed if not given.
+        - **kwargs: Additional keyword arguments for extension or metadata (currently unused).
+        
+        # Raises:
+        - Exception: If neither `n_var` nor `k` is provided.
+        """
 
         if n_var:
             self.k = n_var - n_obj + 1
@@ -124,12 +169,44 @@ class DTLZ(Basic_Problem):
         self.ub = np.ones(n_var)
 
     def g1(self, X_M):
+        """
+        # Introduction
+        Computes the `g1` function of the DTLZ problem, which includes a complex multimodal landscape to test algorithm robustness.
+
+        # Args:
+        - X_M (np.ndarray): A 2D numpy array representing the distance-related variables (shape: [n_samples, k]).
+
+        # Returns:
+        - np.ndarray: Computed g1 values for each input vector.
+        """
         return 100 * (self.k + np.sum(np.square(X_M - 0.5) - np.cos(20 * np.pi * (X_M - 0.5)), axis=1))
 
     def g2(self, X_M):
+        """
+        # Introduction
+        Computes the `g2` function of the DTLZ problem, representing a simpler sphere-like landscape.
+
+        # Args:
+        - X_M (np.ndarray): A 2D numpy array representing the distance-related variables (shape: [n_samples, k]).
+
+        # Returns:
+        - np.ndarray: Computed g2 values for each input vector.
+        """
         return np.sum(np.square(X_M - 0.5), axis=1)
 
     def obj_func(self, X_, g, alpha=1):
+        """
+        # Introduction
+        Computes the multi-objective values for a population of decision variables using the DTLZ objective function formulation.
+
+        # Args:
+        - X_ (np.ndarray): A 2D array of decision variables (shape: [n_samples, n_var - k]).
+        - g (np.ndarray): A 1D array of `g` values (shape: [n_samples, ]) computed by `g1` or `g2`.
+        - alpha (float, optional): An exponent applied to the decision variables (default is 1, i.e., linear).
+
+        # Returns:
+        - np.ndarray: A 2D array of shape [n_samples, n_obj], where each row is a vector of objective values.
+        """
         f = []
 
         for i in range(0, self.n_obj):
@@ -143,15 +220,68 @@ class DTLZ(Basic_Problem):
         f = np.column_stack(f)
         return f
     def __str__(self):
+        """
+        # Introduction
+        Return a string representation of the problem class.
+
+        # Returns
+        - str: A string describing the problem's name, number of objectives, and variables.
+        """
         return  self.__class__.__name__ + "_n" + str(self.n_obj) + "_d" + str(self.n_var)
 
 
 class DTLZ1(DTLZ):
+    """
+    # Introduction
+    DTLZ1 is a scalable benchmark problem in multi-objective optimization, designed to evaluate an algorithm's ability to converge to and maintain a diverse set of solutions along a linear Pareto front.
+
+    # Args:
+    - n_var (int): Number of decision variables.
+    - n_obj (int): Number of objectives.
+    - **kwargs: Additional keyword arguments passed to the parent class.
+
+    # Attributes:
+    - n_var (int): Number of decision variables.
+    - n_obj (int): Number of objectives.
+    - k (int): Number of distance-related variables.
+    - lb (np.ndarray): Lower bound of decision variables (all zeros).
+    - ub (np.ndarray): Upper bound of decision variables (all ones).
+    - vtype (type): Variable type, default is float.
+
+    # Methods:
+    - obj_func(X_, g): Compute objective values given shape-related variables X_ and function g.
+    - func(x): Evaluate the full decision vector x and return its objective values.
+    - get_ref_set(n_ref_points): Generate a reference Pareto front (true PF) consisting of uniformly spaced points.
+
+    # Raises:
+    - Exception: Raised during parent initialization if neither `n_var` nor `k` is properly specified.
+    """
+    
     def __init__(self, n_var=7, n_obj=3, **kwargs):
+        """
+        # Introduction
+        Initialize the DTLZ1 problem instance.
+
+        # Args:
+        - n_var (int): Number of decision variables.Default is 7.
+        - n_obj (int): Number of objectives.Default is 3.
+        - **kwargs: Additional arguments passed to the parent class.
+        """
         super().__init__(n_var=n_var, n_obj=n_obj, **kwargs)
 
 
     def obj_func(self, X_, g):
+        """
+        # Introduction
+        Compute the objective function values for the DTLZ1 problem.
+
+        # Args:
+        - X_ (np.ndarray): The shape-related decision variables (first n_obj-1 columns).
+        - g (np.ndarray): The distance function value computed from the remaining variables.
+
+        # Returns:
+        - np.ndarray: Objective values for each solution in the population.
+        """
         f = []
 
         for i in range(0, self.n_obj):
@@ -164,6 +294,16 @@ class DTLZ1(DTLZ):
         return np.column_stack(f)
 
     def func(self, x, *args, **kwargs):
+        """
+        # Introduction
+        Evaluate the DTLZ1 objective function given a set of decision variables.
+
+        # Args:
+        - x (np.ndarray): Decision variable array, can be 1D or 2D.
+
+        # Returns:
+        - np.ndarray: Evaluated objective values.
+        """
         if x.ndim == 1:
             x = np.expand_dims(x, axis=0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
@@ -171,18 +311,71 @@ class DTLZ1(DTLZ):
         out = self.obj_func(X_, g)
         return out
 
-    def get_ref_set(self,n_ref_points=1000): # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
+    def get_ref_set(self,n_ref_points=1000): 
+        """
+        # Introduction
+        Generate a reference set of uniformly distributed points on the true Pareto front.
+
+        # Args:
+        - n_ref_points (int): Number of reference points to generate.
+
+        # Returns:
+        - np.ndarray: Reference objective values on the Pareto front.
+        """
         uniformPoint, ans = crtup(self.n_obj, n_ref_points)
         referenceObjV = uniformPoint / 2
         return referenceObjV
 
 
 class DTLZ2(DTLZ):
+    """
+    # Introduction
+    DTLZ2 is a scalable benchmark problem in multi-objective optimization. It is designed to test an algorithm's ability to maintain a uniform distribution of solutions on a spherical Pareto front.
+
+    # Args:
+    - n_var (int): Number of decision variables.
+    - n_obj (int): Number of objectives.
+    - **kwargs: Additional keyword arguments passed to the parent class.
+
+    # Attributes:
+    - n_var (int): Number of decision variables.
+    - n_obj (int): Number of objectives.
+    - k (int): Number of distance-related variables.
+    - lb (np.ndarray): Lower bound of decision variables (all zeros).
+    - ub (np.ndarray): Upper bound of decision variables (all ones).
+    - vtype (type): Variable type, default is float.
+
+    # Methods:
+    - func(x): Evaluate the objective values for input decision vector(s).
+    - get_ref_set(n_ref_points): Generate reference points uniformly distributed on the true spherical Pareto front.
+
+    # Raises:
+    - Exception: Raised during parent initialization if parameters are invalid.
+    """
     def __init__(self, n_var=10, n_obj=3, **kwargs):
+        """
+        # Introduction
+        Initialize the DTLZ2 problem instance.
+
+        # Args:
+        - n_var (int): Number of decision variables. Default is 10.
+        - n_obj (int): Number of objectives. Default is 3.
+        - **kwargs: Additional arguments passed to the parent class.
+        """
         super().__init__(n_var=n_var, n_obj=n_obj, **kwargs)
 
 
     def func(self, x, *args, **kwargs):
+        """
+        # Introduction
+        Evaluate the DTLZ2 objective function given a set of decision variables.
+
+        # Args:
+        - x (np.ndarray): Decision variable array. Can be 1D or 2D.
+
+        # Returns:
+        - np.ndarray: Evaluated objective values.
+        """
         if x.ndim == 1:
             x = np.expand_dims(x, axis=0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
@@ -190,17 +383,70 @@ class DTLZ2(DTLZ):
         out= self.obj_func(X_, g, alpha=1)
         return out
 
-    def get_ref_set(self,n_ref_points=1000): # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
+    def get_ref_set(self,n_ref_points=1000): 
+        """
+        # Introduction
+        Generate a reference set of uniformly distributed points on the true spherical Pareto front.
+
+        # Args:
+        - n_ref_points (int): Number of reference points to generate.
+
+        # Returns:
+        - np.ndarray: Reference objective values on the Pareto front.
+        """
         uniformPoint, ans = crtup(self.n_obj, n_ref_points)
         referenceObjV = uniformPoint / np.tile(np.sqrt(np.sum(uniformPoint ** 2, 1, keepdims=True)), (1, self.n_obj))
         return referenceObjV
 
 
 class DTLZ3(DTLZ):
+    """
+    # Introduction
+    DTLZ3 is a scalable benchmark problem in multi-objective optimization. It is designed to test an algorithm’s ability to maintain convergence and diversity in the presence of many local Pareto-optimal fronts.
+
+    # Args:
+    - n_var (int): Number of decision variables.
+    - n_obj (int): Number of objectives.
+    - **kwargs: Additional keyword arguments passed to the parent class.
+
+    # Attributes:
+    - n_var (int): Number of decision variables.
+    - n_obj (int): Number of objectives.
+    - k (int): Number of distance-related variables.
+    - lb (np.ndarray): Lower bound of decision variables (all zeros).
+    - ub (np.ndarray): Upper bound of decision variables (all ones).
+    - vtype (type): Variable type, default is float.
+
+    # Methods:
+    - func(x): Evaluate the objective values for input decision vector(s).
+    - get_ref_set(n_ref_points): Generate reference points uniformly distributed on the true spherical Pareto front.
+
+    # Raises:
+    - Exception: Raised during parent initialization if parameters are invalid.
+    """
     def __init__(self, n_var=10, n_obj=3, **kwargs):
+        """
+        # Introduction
+        Initialize the DTLZ3 problem instance.
+
+        # Args:
+        - n_var (int): Number of decision variables. Default is 10.
+        - n_obj (int): Number of objectives. Default is 3.
+        - **kwargs: Additional arguments passed to the parent class.
+        """
         super().__init__(n_var=n_var, n_obj=n_obj, **kwargs)
 
     def func(self, x, *args, **kwargs):
+        """
+        # Introduction
+        Evaluate the DTLZ3 objective function given a set of decision variables.
+
+        # Args:
+        - x (np.ndarray): Decision variable array. Can be 1D or 2D.
+
+        # Returns:
+        - np.ndarray: Evaluated objective values.
+        """
         if x.ndim == 1:
             x = np.expand_dims(x, axis=0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
@@ -208,20 +454,79 @@ class DTLZ3(DTLZ):
         out = self.obj_func(X_, g, alpha=1)
         return out
 
-    def get_ref_set(self,n_ref_points=1000): # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
+    def get_ref_set(self,n_ref_points=1000): 
+        """
+        # Introduction
+        Generate a reference set of uniformly distributed points on the true spherical Pareto front.
+
+        # Args:
+        - n_ref_points (int): Number of reference points to generate.
+
+        # Returns:
+        - np.ndarray: Reference objective values on the Pareto front.
+        """
         uniformPoint, ans = crtup(self.n_obj, n_ref_points)
         referenceObjV = uniformPoint / np.tile(np.sqrt(np.sum(uniformPoint ** 2, 1, keepdims=True)), (1, self.n_obj))
         return referenceObjV
 
 
 class DTLZ4(DTLZ):
+    """
+    # Introduction
+    DTLZ4 is a benchmark problem in multi-objective optimization that introduces a parameterized distortion to bias the distribution of solutions along the Pareto front, challenging the diversity maintenance of optimization algorithms.
+
+    # Args:
+    - n_var (int): Number of decision variables.
+    - n_obj (int): Number of objectives.
+    - alpha (float): Exponent used to bias the distribution of decision variables. Default is 100.
+    - d (int): Number of distance-related variables. Default is 100.
+    - **kwargs: Additional keyword arguments passed to the parent class.
+
+    # Attributes:
+    - n_var (int): Number of decision variables.
+    - n_obj (int): Number of objectives.
+    - alpha (float): Distribution distortion parameter.
+    - d (int): Number of distance-related variables.
+    - lb (np.ndarray): Lower bound of decision variables (all zeros).
+    - ub (np.ndarray): Upper bound of decision variables (all ones).
+    - vtype (type): Variable type, default is float.
+
+    # Methods:
+    - func(x): Evaluate the objective values for input decision vector(s).
+    - get_ref_set(n_ref_points): Generate reference points uniformly distributed on the true spherical Pareto front.
+
+    # Raises:
+    - Exception: Raised during parent initialization if parameters are invalid.
+    """
+
     def __init__(self, n_var=10, n_obj=3, alpha=100, d=100, **kwargs):
+        """
+        # Introduction
+        Initialize the DTLZ4 problem instance with the specified number of variables, objectives, and distortion parameters.
+
+        # Args:
+        - n_var (int): Number of decision variables. Default is 10.
+        - n_obj (int): Number of objectives. Default is 3.
+        - alpha (float): Exponent to control the distribution of solutions. Default is 100.
+        - d (int): Number of distance-related variables. Default is 100.
+        - **kwargs: Additional arguments passed to the parent class.
+        """
         super().__init__(n_var=n_var, n_obj=n_obj, **kwargs)
         self.alpha = alpha
         self.d = d
 
 
     def func(self, x,  *args, **kwargs):
+        """
+        # Introduction
+        Evaluate the DTLZ4 objective function given a set of decision variables.
+
+        # Args:
+        - x (np.ndarray): Decision variable array. Can be 1D or 2D.
+
+        # Returns:
+        - np.ndarray: Evaluated objective values.
+        """
         if x.ndim == 1:
             x = np.expand_dims(x, axis=0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
@@ -229,18 +534,70 @@ class DTLZ4(DTLZ):
         out =  self.obj_func(X_, g, alpha=self.alpha)
         return out
 
-    def get_ref_set(self,n_ref_points=1000): # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
+    def get_ref_set(self,n_ref_points=1000):
+        """
+        # Introduction
+        Generate a reference set of uniformly distributed points on the true spherical Pareto front.
+
+        # Args:
+        - n_ref_points (int): Number of reference points to generate.
+
+        # Returns:
+        - np.ndarray: Reference objective values on the Pareto front.
+        """
         uniformPoint, ans = crtup(self.n_obj, n_ref_points)
         referenceObjV = uniformPoint / np.tile(np.sqrt(np.sum(uniformPoint ** 2, 1, keepdims=True)), (1, self.n_obj))
         return referenceObjV
 
 
 class DTLZ5(DTLZ):
+    """
+    # Introduction
+    DTLZ5 is a benchmark problem in multi-objective optimization that introduces a non-linear transformation of the decision variables to reduce the dimensionality of the objective space, thereby increasing the difficulty for algorithms to maintain diversity.
+
+    # Args:
+    - n_var (int): Number of decision variables.
+    - n_obj (int): Number of objectives.
+    - **kwargs: Additional keyword arguments passed to the parent class.
+
+    # Attributes:
+    - n_var (int): Number of decision variables.
+    - n_obj (int): Number of objectives.
+    - lb (np.ndarray): Lower bound of decision variables (all zeros).
+    - ub (np.ndarray): Upper bound of decision variables (all ones).
+    - vtype (type): Variable type, default is float.
+
+    # Methods:
+    - func(x): Evaluate the objective values for input decision vector(s).
+    - get_ref_set(n_ref_points): Generate reference points on the true Pareto front with a degenerate shape.
+
+    # Raises:
+    - Exception: Raised during parent initialization if parameters are invalid.
+    """
     def __init__(self, n_var=10, n_obj=3, **kwargs):
+        """
+        # Introduction
+        Initialize the DTLZ5 problem instance with specified variables and objectives.
+
+        # Args:
+        - n_var (int): Number of decision variables. Default is 10.
+        - n_obj (int): Number of objectives. Default is 3.
+        - **kwargs: Additional arguments passed to the parent class.
+        """
         super().__init__(n_var=n_var, n_obj=n_obj, **kwargs)
 
 
     def func(self, x, *args, **kwargs):
+        """
+        # Introduction
+        Evaluate the DTLZ5 objective function using transformed decision variables to reduce the effective dimensionality.
+
+        # Args:
+        - x (np.ndarray): Decision variable array. Can be 1D or 2D.
+
+        # Returns:
+        - np.ndarray: Evaluated objective values.
+        """
         if x.ndim == 1:
             x = np.expand_dims(x, axis=0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
@@ -252,7 +609,16 @@ class DTLZ5(DTLZ):
         out = self.obj_func(theta, g)
         return out
     def get_ref_set(self,n_ref_points=1000):
-        # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
+        """
+        # Introduction
+        Generate a reference set of solutions on the true Pareto front for DTLZ5, which lies on a lower-dimensional manifold.
+
+        # Args:
+        - n_ref_points (int): Number of reference points to generate.
+
+        # Returns:
+        - np.ndarray: Reference objective values on the Pareto front.
+        """
         N = n_ref_points
         P = np.vstack([np.linspace(0, 1, N), np.linspace(1, 0, N)]).T
         P = P / np.tile(np.sqrt(np.sum(P ** 2, 1, keepdims=True)), (1, P.shape[1]))
@@ -262,11 +628,54 @@ class DTLZ5(DTLZ):
         return referenceObjV
 
 class DTLZ6(DTLZ):
+    """
+    # Introduction
+    DTLZ6 is a benchmark problem in multi-objective optimization with a deceptive Pareto-optimal front, 
+    designed to test the convergence and diversity capabilities of algorithms under non-uniform mappings.
+
+    # Args:
+    - n_var (int): Number of decision variables.
+    - n_obj (int): Number of objectives.
+    - **kwargs: Additional keyword arguments passed to the parent class.
+
+    # Attributes:
+    - n_var (int): Number of decision variables.
+    - n_obj (int): Number of objectives.
+    - lb (np.ndarray): Lower bound of decision variables (all zeros).
+    - ub (np.ndarray): Upper bound of decision variables (all ones).
+    - vtype (type): Variable type, default is float.
+
+    # Methods:
+    - func(x): Evaluate the objective values for input decision vector(s).
+    - get_ref_set(n_ref_points): Generate reference points on the true Pareto front.
+
+    # Raises:
+    - Exception: Raised during parent initialization if parameters are invalid.
+    """
     def __init__(self, n_var=10, n_obj=3, **kwargs):
+        """
+        # Introduction
+        Initialize the DTLZ6 problem instance.
+
+        # Args:
+        - n_var (int): Number of decision variables. Default is 10.
+        - n_obj (int): Number of objectives. Default is 3.
+        - **kwargs: Additional arguments passed to the parent class.
+        """
         super().__init__(n_var=n_var, n_obj=n_obj, **kwargs)
 
 
     def func(self, x, *args, **kwargs):
+        """
+        # Introduction
+        Evaluate the DTLZ6 objective function with a non-linear transformation and biased distribution.
+
+        # Args:
+        - x (np.ndarray): Decision variable array. Can be 1D or 2D.
+
+        # Returns:
+        - np.ndarray: Evaluated objective values.
+        """
         if x.ndim == 1:
             x = np.expand_dims(x, axis=0)
         X_, X_M = x[:, :self.n_obj - 1], x[:, self.n_obj - 1:]
@@ -279,6 +688,16 @@ class DTLZ6(DTLZ):
         return out
 
     def get_ref_set(self,n_ref_points = 1000):
+        """
+        # Introduction
+        Generate a reference set of solutions lying on the true Pareto front for DTLZ6.
+
+        # Args:
+        - n_ref_points (int): Number of reference points to generate.
+
+        # Returns:
+        - np.ndarray: Reference objective values on the Pareto front.
+        """
         N = n_ref_points  #
         P = np.vstack([np.linspace(0, 1, N), np.linspace(1, 0, N)]).T
         P = P / np.tile(np.sqrt(np.sum(P ** 2, 1, keepdims=True)), (1, P.shape[1]))
@@ -290,10 +709,43 @@ class DTLZ6(DTLZ):
 
 class DTLZ7(DTLZ):
     def __init__(self, n_var=10, n_obj=3, **kwargs):
+        """
+    # Introduction
+    DTLZ7 is a benchmark problem featuring a disconnected and non-convex Pareto front, 
+    designed to test the algorithm’s ability to maintain diversity across multiple isolated regions.
+
+    # Args:
+    - n_var (int): Number of decision variables.
+    - n_obj (int): Number of objectives.
+    - **kwargs: Additional keyword arguments passed to the parent class.
+
+    # Attributes:
+    - n_var (int): Number of decision variables.
+    - n_obj (int): Number of objectives.
+    - lb (np.ndarray): Lower bound of decision variables (all zeros).
+    - ub (np.ndarray): Upper bound of decision variables (all ones).
+    - vtype (type): Variable type, default is float.
+
+    # Methods:
+    - func(x): Evaluate the objective values for input decision vector(s).
+    - get_ref_set(n_ref_points): Generate reference points on the true disconnected Pareto front.
+
+    # Raises:
+    - Exception: Raised during parent initialization if parameters are invalid.
+    """
         super().__init__(n_var=n_var, n_obj=n_obj, **kwargs)
 
 
     def func(self, x,*args, **kwargs):
+        """
+        # Introduction
+        Initialize the DTLZ7 problem instance.
+
+        # Args:
+        - n_var (int): Number of decision variables. Default is 10.
+        - n_obj (int): Number of objectives. Default is 3.
+        - **kwargs: Additional arguments passed to the parent class.
+        """
         if x.ndim == 1:
             x = np.expand_dims(x, axis=0)
         f = []
@@ -307,13 +759,21 @@ class DTLZ7(DTLZ):
         out = np.column_stack([f, (1 + g) * h])
         return out
     def get_ref_set(self,n_ref_points = 1000):
-        # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
-        N = n_ref_points  # 欲生成10000个全局帕累托最优解
-        # 参数a,b,c为求解方程得到，详见DTLZ7的参考文献
+        """
+        # Introduction
+        Evaluate the DTLZ7 objective function featuring a disconnected Pareto front.
+
+        # Args:
+        - x (np.ndarray): Decision variable array. Can be 1D or 2D.
+
+        # Returns:
+        - np.ndarray: Evaluated objective values.
+        """
+        N = n_ref_points  
         a = 0.2514118360889171
         b = 0.6316265307000614
         c = 0.8594008566447239
-        Vars, Sizes = crtgp(self.n_obj - 1, N)  # 生成单位超空间内均匀的网格点集
+        Vars, Sizes = crtgp(self.n_obj - 1, N) 
         middle = 0.5
         left = Vars <= middle
         right = Vars > middle

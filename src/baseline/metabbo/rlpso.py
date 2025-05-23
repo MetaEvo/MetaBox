@@ -180,5 +180,5 @@ class RLPSO(REINFORCE_Agent):
         for key in required_info.keys():
             return_info[key] = env.get_env_attr(required_info[key])
         env.close()
-
         return is_train_ended, return_info
+

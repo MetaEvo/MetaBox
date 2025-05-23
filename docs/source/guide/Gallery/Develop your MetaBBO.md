@@ -8,14 +8,15 @@
 MetaBOX not only supports RL-based MetaBBO methods, \
 but also supports MetaBBO methods based on SL, NE, and ICL. \
 Below, we use the RL-based method as an example; \
-for other methods, please refer to xxx. to **Gallery > Config** for details.
+for other methods, the overall development logic remains the same, except that you should define and develop your own internal learning logic.
 ```
 
-#### 1.1. Create your own RL
+#### 1.1. Create your own Meta-level Policy
 
 ```{important}
-MetaBOX has pre-implemented various RL methods — refer to **Gallery > Config** for details. \
-You just need to inherit it and design your own Agent — Jump directly to [Create your own Agent](#create-your-own-optimizer) ！
+The Meta-level policy is a learning agent that could be either RL or other learning paradigm. \
+MetaBOX has pre-implemented various RL methods — refer to [here](https://github.com/MetaEvo/MetaBox/tree/v2.0.0/src/rl) for details. \
+You just need to inherit a RL class and design your own Agent — Jump directly to [Create your own Agent](#create-your-own-optimizer) ！
 ```
 
 

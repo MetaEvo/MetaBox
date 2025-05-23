@@ -37,36 +37,33 @@ class bbob_surrogate_model(Basic_Problem):
     "[Surrogate Learning in Meta-Black-Box Optimization: A Preliminary Study](https://arxiv.org/abs/2503.18060)." arXiv preprint arXiv:2503.18060 (2025).
     # Official Implementation
     [BBOB-Surrogate](https://github.com/GMC-DRL/Surr-RLDE)
-    # License
-    None
-    # Problem Suite Composition
-    BBOB-Surrogate contains a total of 72 optimization problems, corresponding to three dimensions (2, 5, 10), each dimension contains 24 problems. Each problem consists of a trained KAN or MLP network, which is used to fit 24 black box functions in the COCO-BBOB benchmark. The network here is a surrogate model of the original function.
-    # Args:
-    - dim (int): Dimensionality of the problem.
-    - func_id (int): Identifier for the BBOB function.
-    - lb (float or np.ndarray): Lower bound(s) of the input domain.
-    - ub (float or np.ndarray): Upper bound(s) of the input domain.
-    - shift (np.ndarray): Shift vector for the function.
-    - rotate (np.ndarray): Rotation matrix for the function.
-    - bias (float): Bias term for the function.
-    - config (object): Configuration object containing device information.
-    # Attributes:
-    - dim (int): Problem dimensionality.
-    - func_id (int): BBOB function identifier.
-    - instance (object): Instantiated BBOB function.
-    - device (str or torch.device): Device for computation (CPU or GPU).
-    - optimum (Any): Placeholder for the optimum value (not set in this class).
-    - model (KAN or MLP): Loaded surrogate model for the function.
-    - ub (float or np.ndarray): Upper bound(s) of the input domain.
-    - lb (float or np.ndarray): Lower bound(s) of the input domain.
-    # Methods:
-    - func(x): Evaluates the surrogate model for a given input `x`, supporting both numpy arrays and torch tensors.
-    - eval(x): General evaluation method that adapts to both individual and population inputs, measuring evaluation time.
-    - __str__(): Returns a string representation of the surrogate model instance.
-    # Raises:
-    - ValueError: If the specified dimension is not supported for training.
     """
     def __init__(self, dim, func_id, lb, ub, shift, rotate, bias, config):
+        """
+        # Introduction
+        Initializes the surrogate model for a BBOB (Black-Box Optimization Benchmarking) function with a specified dimension, function ID, and transformation parameters. Depending on the function ID and dimension, loads either a KAN or MLP surrogate model from the appropriate directory and prepares it for evaluation on the specified device.
+        # Args:
+        - dim (int): The dimensionality of the optimization problem.
+        - func_id (int): The ID of the BBOB function to be modeled.
+        - lb (float or np.ndarray): The lower bound(s) of the search space.
+        - ub (float or np.ndarray): The upper bound(s) of the search space.
+        - shift (np.ndarray): The shift vector applied to the function.
+        - rotate (np.ndarray): The rotation matrix applied to the function.
+        - bias (float): The bias added to the function value.
+        - config (object): Configuration object containing device information.
+        # Attributes:
+        - dim (int): Problem dimensionality.
+        - func_id (int): BBOB function ID.
+        - instance (object): Instantiated BBOB function with transformations.
+        - device (str or torch.device): Device for model computation.
+        - optimum (None): Placeholder for the optimum value.
+        - model (KAN or MLP): Loaded surrogate model for the function.
+        - ub (float or np.ndarray): Upper bound(s) of the search space.
+        - lb (float or np.ndarray): Lower bound(s) of the search space.
+        # Raises:
+        - ValueError: If the specified dimension is not supported for training.
+        """
+        
         self.dim = dim
         self.func_id = func_id
 
@@ -202,6 +199,19 @@ class bbob_surrogate_model(Basic_Problem):
         self.lb = lb
 
     def func(self, x):
+        """
+        # Introduction
+        Evaluates the surrogate model on the given input `x`, normalizing it to the model's expected input range, and returns the model's output.
+        # Args:
+        - x (np.ndarray or torch.Tensor): The input vector(s) to evaluate. Can be a NumPy array or a PyTorch tensor.
+        # Returns:
+        - np.ndarray: If `x` is a NumPy array, returns the model output as a flattened NumPy array.
+        - torch.Tensor: If `x` is a PyTorch tensor, returns the model output as a tensor.
+        # Notes:
+        - The input is normalized using the lower (`self.lb`) and upper (`self.ub`) bounds before being passed to the model.
+        - The computation is performed without tracking gradients.
+        """
+        
         if isinstance(x, np.ndarray):
             x = torch.tensor(x).to(self.device)
             input_x = (x - self.lb) / (self.ub - self.lb)
@@ -221,7 +231,17 @@ class bbob_surrogate_model(Basic_Problem):
     # return y
     def eval(self, x):
         """
-        A general version of func() with adaptation to evaluate both individual and population.
+        # Introduction
+        Evaluates the objective function for a given input, supporting both single individuals and populations. Measures and accumulates the evaluation time.
+        # Args:
+        - x (np.ndarray): Input array representing either a single individual (1D) or a population (2D or higher).
+        # Built-in Attribute:
+        - self.func: The objective function to be evaluated.
+        - self.T1: Accumulates the total evaluation time in milliseconds.
+        # Returns:
+        - float or np.ndarray: The evaluated objective value(s) for the input individual or population.
+        # Raises:
+        - ValueError: If the input array `x` does not have at least one dimension.
         """
         start=time.perf_counter()
 
@@ -252,33 +272,24 @@ class bbob_surrogate_Dataset(Dataset):
     "[Surrogate Learning in Meta-Black-Box Optimization: A Preliminary Study](https://arxiv.org/abs/2503.18060)." arXiv preprint arXiv:2503.18060 (2025).
     # Official Implementation
     [BBOB-Surrogate](https://github.com/GMC-DRL/Surr-RLDE)
-    # License
-    None
-    # Problem Suite Composition
-    BBOB-Surrogate contains a total of 72 optimization problems, corresponding to three dimensions (2, 5, 10), each dimension contains 24 problems. Each problem consists of a trained KAN or MLP network, which is used to fit 24 black box functions in the COCO-BBOB benchmark. The network here is a surrogate model of the original function.
-    # Args:
-    - data (list): List of surrogate or BBOB function instances.
-    - batch_size (int, optional): Number of items per batch. Defaults to 1.
-    # Attributes:
-    - data (list): The dataset containing function instances.
-    - batch_size (int): The batch size for data loading.
-    - N (int): Total number of items in the dataset.
-    - ptr (list): List of starting indices for each batch.
-    - index (np.ndarray): Array of indices for shuffling and sampling.
-    - maxdim (int): Maximum dimensionality among all function instances.
-    # Methods:
-    - get_datasets(...): Static method to generate train and test datasets based on configuration, difficulty, and user-specified splits.
-    - __len__(): Returns the number of items in the dataset.
-    - __getitem__(item): Returns a batch of data at the specified batch index.
-    - __add__(other): Concatenates two datasets.
-    - shuffle(): Randomly permutes the dataset indices for shuffling.
-    # Raises:
-    - ValueError: If configuration or arguments are invalid (e.g., unsupported suit, missing difficulty, or conflicting train/test splits).
     """
     
     def __init__(self,
                  data,
                  batch_size=1):
+        """
+        Initializes the object with provided data and batch size, and computes relevant attributes.
+        # Args:
+        - data (list): A list of data items, each expected to have a `dim` attribute.
+        - batch_size (int, optional): The number of items per batch. Defaults to 1.
+        # Attributes:
+        - data (list): Stores the input data.
+        - batch_size (int): Stores the batch size.
+        - N (int): The total number of data items.
+        - ptr (list): List of starting indices for each batch.
+        - index (np.ndarray): Array of indices for the data.
+        - maxdim (int): The maximum `dim` value among all data items.
+        """
         super().__init__()
         self.data = data
         self.batch_size = batch_size
@@ -296,7 +307,29 @@ class bbob_surrogate_Dataset(Dataset):
                      user_train_list=None, user_test_list=None,
                      seed=3849, shifted=True, biased=True, rotated=True,
                      config=None, upperbound=5):
-
+        """
+        # Introduction
+        Generates training and testing datasets for BBOB surrogate benchmark problems, supporting different dimensions, difficulty levels, and custom configurations. The function creates surrogate and true BBOB function instances with optional shifting, rotation, and bias, and returns them as datasets suitable for machine learning workflows.
+        # Args:
+        - version (str, optional): Dataset version, default is 'torch'.
+        - suit (str, optional): Benchmark suite, one of 'bbob-surrogate-10D', 'bbob-surrogate-5D', or 'bbob-surrogate-2D'. Default is 'bbob-surrogate-10D'.
+        - train_batch_size (int, optional): Batch size for the training dataset. Default is 1.
+        - test_batch_size (int, optional): Batch size for the testing dataset. Default is 1.
+        - difficulty (str or None, optional): Difficulty level of the problem. One of 'easy', 'difficult', 'all', or None. Default is 'easy'.
+        - user_train_list (list or None, optional): Custom list of function IDs for the training set. Default is None.
+        - user_test_list (list or None, optional): Custom list of function IDs for the testing set. Default is None.
+        - seed (int, optional): Random seed for reproducibility. Default is 3849.
+        - shifted (bool, optional): Whether to apply a random shift to the functions. Default is True.
+        - biased (bool, optional): Whether to add a random bias to the functions. Default is True.
+        - rotated (bool, optional): Whether to apply a random rotation to the functions. Default is True.
+        - config (object or None, optional): Configuration object to set additional parameters (e.g., dimension). Default is None.
+        - upperbound (float, optional): Upper bound for the function domain. Default is 5.
+        # Returns:
+        - bbob_surrogate_Dataset: Training dataset containing surrogate function instances.
+        - bbob_surrogate_Dataset: Testing dataset containing true BBOB function instances.
+        # Raises:
+        - ValueError: If the difficulty or suite is invalid, or if required arguments are missing or inconsistent.
+        """
         if difficulty == None and user_test_list == None and user_train_list == None:
             raise ValueError('Please set difficulty or user_train_list and user_test_list.')
         if difficulty != 'easy' and difficulty != 'difficult' and difficulty != 'all' and difficulty is not None:
@@ -383,11 +416,33 @@ class bbob_surrogate_Dataset(Dataset):
         return bbob_surrogate_Dataset(train_set, train_batch_size), bbob_surrogate_Dataset(test_set, test_batch_size)
 
     def __len__(self):
+        """
+        # Introduction
+        Returns the number of elements or items in the object.
+        # Built-in Attribute:
+        - __len__ is a special method used by Python's built-in len() function.
+        # Returns:
+        - int: The number of elements contained in the object, as defined by the attribute `self.N`.
+        """
         return self.N
 
     def __getitem__(self, item):
-
-        
+        """
+        # Introduction
+        Retrieves a batch of data items corresponding to the given index or slice.
+        # Args:
+        - item (int or slice): The index or slice specifying which batch to retrieve.
+        # Built-in Attribute:
+        - self.ptr (list or array-like): Pointer(s) to the start of each batch.
+        - self.index (list or array-like): Indices mapping to the data storage.
+        - self.batch_size (int): The size of each batch.
+        - self.N (int): The total number of data items.
+        - self.data (list or array-like): The data storage from which items are retrieved.
+        # Returns:
+        - list: A list containing the data items for the specified batch.
+        # Raises:
+        - IndexError: If the provided index is out of range.
+        """
         ptr = self.ptr[item]
         index = self.index[ptr: min(ptr + self.batch_size, self.N)]
         res = []
@@ -396,7 +451,29 @@ class bbob_surrogate_Dataset(Dataset):
         return res
 
     def __add__(self, other: 'bbob_surrogate_Dataset'):
+        """
+        # Introduction
+        Implements the addition operator for `bbob_surrogate_Dataset` objects, allowing two datasets to be combined.
+        # Args:
+        - other (bbob_surrogate_Dataset): Another dataset to add to the current instance.
+        # Returns:
+        - bbob_surrogate_Dataset: A new dataset containing the combined data from both datasets, using the batch size of the current instance.
+        # Raises:
+        - AttributeError: If `other` does not have a `data` attribute.
+        """
         return bbob_surrogate_Dataset(self.data + other.data, self.batch_size)
 
     def shuffle(self):
+        """
+        # Introduction
+        Randomly shuffles the indices of the dataset and updates the `index` attribute with a new random permutation.
+        # Built-in Attribute:
+        - self.N (int): The total number of elements to shuffle.
+        - self.index (torch.Tensor): Stores the shuffled indices.
+        # Returns:
+        - None
+        # Notes:
+        Uses `torch.randperm` to generate a random permutation of indices for the dataset.
+        """
+
         self.index = torch.randperm(self.N)

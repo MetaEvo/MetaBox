@@ -42,6 +42,17 @@ class UAV_Dataset(Dataset):
     """
 
     def __init__(self, data, batch_size = 1):
+        """
+        # Introduction
+        Initialize the UAV dataset with problem instances and batch size.
+
+        # Args
+        - `data` (list): List of UAV problem instances.
+        - `batch_size` (int, optional): Batch size. Defaults to 1.
+
+        # Attributes
+        - Sets `N`, `ptr`, `index`, and computes `maxdim` based on problem dimensionality.
+        """
         super().__init__()
         self.data = data
         self.batch_size = batch_size
@@ -67,6 +78,30 @@ class UAV_Dataset(Dataset):
                      mode = "standard",
                      path = None
                      ):
+        """
+        # Introduction
+        Generate training and testing UAV datasets according to difficulty, user-specified splits, and generation modes.
+
+        # Args
+        - `version` (str, optional): 'numpy' or 'torch' implementation version. Defaults to 'numpy'.
+        - `train_batch_size` (int, optional): Batch size for training data. Defaults to 1.
+        - `test_batch_size` (int, optional): Batch size for testing data. Defaults to 1.
+        - `difficulty` (str, optional): Difficulty level ('easy', 'difficult', 'all'). Defaults to None.
+        - `user_train_list` (list, optional): List of training instance IDs specified by user. Defaults to None.
+        - `user_test_list` (list, optional): List of testing instance IDs specified by user. Defaults to None.
+        - `dv` (float, optional): Dimensionality parameter for problem instances. Defaults to 5.0.
+        - `j_pen` (float, optional): Penalty parameter for objective function. Defaults to 1e4.
+        - `seed` (int, optional): Random seed for reproducibility. Defaults to 3849.
+        - `num` (int, optional): Total number of problem instances. Defaults to 56.
+        - `mode` (str, optional): Dataset generation mode ('standard' or 'custom'). Defaults to "standard".
+        - `path` (str, optional): File path to precomputed data for 'standard' mode.
+
+        # Returns
+        - Tuple of two `UAV_Dataset` instances: (train_dataset, test_dataset).
+
+        # Raises
+        - `ValueError`: If difficulty or user lists are not set correctly or invalid difficulty string provided.
+        """
         # easy 15 diff 30
         easy_id = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54] # 28
         diff_id = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55] # 28
@@ -226,6 +261,16 @@ class UAV_Dataset(Dataset):
                UAV_Dataset(test_set, test_batch_size)
 
     def __getitem__(self, item):
+        """
+        # Introduction
+        Retrieve a batch of UAV problem instances by batch index.
+
+        # Args
+        - `item` (int): Batch index.
+
+        # Returns
+        - List of UAV problem instances for the batch.
+        """
         ptr = self.ptr[item]
         index = self.index[ptr: min(ptr + self.batch_size, self.N)]
         res = []
@@ -234,10 +279,32 @@ class UAV_Dataset(Dataset):
         return res
 
     def __len__(self):
+        """
+        # Introduction
+        Return the total number of UAV problem instances.
+
+        # Returns
+        - `int`: Total dataset size.
+        """
         return self.N
 
     def __add__(self, other: 'UAV_Dataset'):
+        """
+        # Introduction
+        Combine two UAV_Dataset instances into one.
+
+        # Args
+        - `other` (UAV_Dataset): Another UAV_Dataset instance.
+
+        # Returns
+        - A new UAV_Dataset instance containing combined data.
+        """
         return UAV_Dataset(self.data + other.data, self.batch_size)
 
     def shuffle(self):
+        """
+        # Introduction
+        Randomly permute the dataset indices for shuffling.
+
+        """
         self.index = np.random.permutation(self.N)

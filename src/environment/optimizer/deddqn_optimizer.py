@@ -14,40 +14,59 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
     "[**Deep reinforcement learning based parameter control in differential evolution**](https://dl.acm.org/doi/abs/10.1145/3321707.3321813)." Proceedings of the Genetic and Evolutionary Computation Conference (2019).
     # Official Implementation
     [DE-DDQN](https://github.com/mudita11/DE-DDQN)
-    # Args:
-    - config (object): A configuration object containing the following attributes:
-        - F (float): Mutation factor for DE.
-        - Cr (float): Crossover probability for DE.
-        - NP (int): Population size.
-        - gen_max (int): Maximum number of generations for DE.
-        - W (int): Window size for storing recent operation metrics.
-        - maxFEs (int): Maximum number of function evaluations.
-        - dim (int): Dimensionality of the problem.
-        - dim_max (int): Maximum dimensionality of the problem.
-        - log_interval (int): Interval for logging optimization progress.
-        - full_meta_data (bool): Whether to store full metadata during optimization.
-        - n_logpoint (int): Number of log points for cost tracking.
-    # Methods:
-    - `__str__() -> str`: Returns the string representation of the optimizer.
-    - `init_population(problem) -> np.ndarray`: Initializes the population and returns the initial state.
-    - `update(action, problem) -> Tuple[np.ndarray, float, bool, dict]`: Updates the optimizer based on the selected action 
-      and returns the next state, reward, termination status, and additional information.
-    # Attributes:
-    - `fes (int)`: Tracks the number of function evaluations performed.
-    - `cost (list)`: Stores the best cost values at each logging interval.
-    - `log_index (int)`: Tracks the current logging index.
-    - `meta_X (list)`: Stores the population at each step (if `full_meta_data` is enabled).
-    - `meta_Cost (list)`: Stores the cost values at each step (if `full_meta_data` is enabled).
-    # Raises:
-    - ValueError: If an invalid action is provided during the `update` method.
-    # Notes:
-    - The optimizer uses four mutation strategies: 'rand/1', 'rand/2', 'rand-to-best/2', and 'cur-to-rand/1'.
-    - The optimizer maintains detailed metrics for each mutation strategy to adaptively select the most effective one.
-    - The `__get_state` method extracts features from the current population and optimization progress to represent the state 
-      for the reinforcement learning agent.
     """
     
     def __init__(self, config):
+        """
+        # Introduction
+        Initializes the optimizer with the provided configuration, setting up algorithm-specific parameters and internal state variables for the optimization process.
+        # Args:
+        - config (object): Config object containing hyperparameters and settings for the optimizer.
+            - The Attributes needed for the DEDDQN_Optimizer are the following:
+                - log_interval (int): Interval at which logs are recorded.Default is config.maxFEs/config.n_logpoint.
+                - n_logpoint (int): Number of log points to record.Default is 50.
+                - full_meta_data (bool): Flag indicating whether to use full meta data.Default is False.
+                - maxFEs (int): Maximum number of function evaluations.
+                - dim (int): Dimensionality of the problem.Default is 10.
+                - fes (int): Counter for the number of function evaluations.Default is 0.
+                - cost (float): Current cost of the best solution found.Default is None.
+                - log_index (int): Index for logging.Default is 1.
+                - log_interval (int): Interval for logging progress.Default is config.maxFEs/config.n_logpoint.
+                - full_meta_data (bool): Flag indicating whether to use full meta data.Default is False.
+                - __config (object): Stores the config object from src/config.py.
+                - __F (float): Mutation factor for the optimizer.Default is 0.5.
+                - __Cr (float): Crossover rate for the optimizer.Default is 1.0.
+                - __NP (int): Population size.Default is 100.
+                - __maxFEs (int): Maximum number of function evaluations.
+                - __gen_max (int): Maximum number of generations.Default is 10.
+                - __W (int): Window size.Default is 50.
+                - __dim_max (int): Maximum dimensionality of the problem.Default is 10.
+                
+        # Built-in Attribute:
+        - __config (object): Configuration object containing algorithm parameters.
+        - __gen (int): Current generation number.
+        - __pointer (int): Pointer to the current individual being updated.
+        - __stagcount (int): Stagnation counter for tracking progress.
+        - __X (ndarray): Population of individuals.
+        - __cost (ndarray): Cost values of the population.
+        - __X_gbest (ndarray): Global best individual.
+        - __c_gbest (float): Cost of the global best individual.
+        - __c_gworst (float): Cost of the worst individual in the population.
+        - __X_prebest (ndarray): Previous best individual.
+        - __c_prebest (float): Cost of the previous best individual.
+        - __OM (list): Operator metadata for tracking operator performance.
+        - __N_succ (list): Success counts for each operator.
+        - __N_tot (list): Total counts for each operator.
+        - __OM_W (list): Operator weights for adaptive selection.
+        - __r (ndarray): Random indexes used for generating states and mutation.
+        - fes (int): Total number of function evaluations.
+        - cost (list): List of best costs at each generation.
+        - log_index (int): Index for logging progress.
+        
+        # Returns:
+        - None
+        """
+        
         super().__init__(config)
         config.F = 0.5
         config.Cr = 1.0
@@ -85,6 +104,12 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
         self.log_interval = config.log_interval
 
     def __str__(self):
+        """
+        Returns a string representation of the DEDDQN optimizer instance.
+        # Returns:
+        - str: The name of the optimizer, "DEDDQN_Optimizer".
+        """
+        
         return "DEDDQN_Optimizer"
 
     def init_population(self, problem):
@@ -99,26 +124,28 @@ class DEDDQN_Optimizer(Learnable_Optimizer):
             - `eval(X)` (callable): A method to evaluate the cost of a given population `X`.
         # Returns:
         - dict: The initial state of the optimizer, including population, costs, and other relevant metadata.
-        # Attributes Initialized:
-        - `self.__X` (ndarray): The initialized population within the search space bounds.
-        - `self.__cost` (ndarray): The evaluated costs of the population.
-        - `self.fes` (int): The number of function evaluations performed.
-        - `self.__gen` (int): The current generation counter.
-        - `self.__pointer` (int): A pointer for tracking operations.
-        - `self.__stagcount` (int): A counter for stagnation detection.
-        - `self.__X_gbest` (ndarray): The best solution found so far.
-        - `self.__c_gbest` (float): The cost of the best solution found so far.
-        - `self.__c_gworst` (float): The cost of the worst solution in the population.
-        - `self.__X_prebest` (ndarray): The best solution from the previous generation.
-        - `self.__c_prebest` (float): The cost of the best solution from the previous generation.
-        - `self.__OM` (list): A list of deques for tracking operator metadata.
-        - `self.__N_succ` (list): A list of deques for tracking successful operations.
-        - `self.__N_tot` (list): A list of deques for tracking total operations.
-        - `self.__OM_W` (list): A list for tracking operator weights.
-        - `self.log_index` (int): An index for logging purposes.
-        - `self.cost` (list): A list to store the best cost at each generation.
-        - `self.meta_X` (list, optional): A list to store the population at each generation (if `full_meta_data` is enabled).
-        - `self.meta_Cost` (list, optional): A list to store the costs at each generation (if `full_meta_data` is enabled).
+        # Built-in Attributes:
+        - __dim (int): Dimensionality of the problem.
+        - __X (ndarray): Initial population of solutions.Default is None.
+        - __cost (ndarray): Costs of the initial population.Default is None.
+        - __X_gbest (ndarray): Global best solution found so far.Default is None.
+        - __c_gbest (float): Cost of the global best solution.Default is None.
+        - __c_gworst (float): Cost of the worst solution in the population.Default is None.
+        - __X_prebest (ndarray): Previous best solution.Default is None.
+        - __c_prebest (float): Cost of the previous best solution.Default is None.
+        - __OM (list): Operator metadata for tracking operator performance.Default is a list of empty lists.
+        - __N_succ (list): Success counts for each operator.Default is a list of empty lists.
+        - __N_tot (list): Total counts for each operator.Default is a list of empty lists.
+        - __OM_W (list): Operator weights for adaptive selection.Default is a list of empty lists.
+        - fes (int): Total number of function evaluations.Default is 0.
+        - cost (list): List of best costs at each generation.Default is a list with the initial global best cost.
+        - log_index (int): Index for logging progress.Default is 1.        
+        - log_interval (int): Interval for logging progress.Default is config.maxFEs/config.n_logpoint.
+        - meta_X (list): List to store the population positions at each iteration.Default is an empty list.
+        - meta_Cost (list): List to store the corresponding costs for each population.Default is an empty list.
+        - meta_tmp_x (list): Temporary list to store the current population positions.Default is an empty list.
+        - meta_tmp_cost (list): Temporary list to store the current costs.Default is an empty list.
+        
         # Notes:
         - This method assumes that the `problem` object provides the necessary attributes and methods for population initialization and evaluation.
         - If `problem.optimum` is provided, the costs are adjusted relative to the optimum.
@@ -368,9 +395,35 @@ def clipping(x: Union[np.ndarray, Iterable],
              lb: Union[np.ndarray, Iterable, int, float, None],
              ub: Union[np.ndarray, Iterable, int, float, None]
              ) -> np.ndarray:
+    """
+    Clips the input array or iterable `x` element-wise to the specified lower and upper bounds.
+    # Args:
+    - x (Union[np.ndarray, Iterable]): The input array or iterable to be clipped.
+    - lb (Union[np.ndarray, Iterable, int, float, None]): The lower bound(s) for clipping. If None, no lower bound is applied.
+    - ub (Union[np.ndarray, Iterable, int, float, None]): The upper bound(s) for clipping. If None, no upper bound is applied.
+    # Returns:
+    - np.ndarray: The clipped array, with values limited to the interval [`lb`, `ub`].
+    # Raises:
+    - ValueError: If the shapes of `x`, `lb`, and `ub` are not broadcastable to a common shape.
+    """
     return np.clip(x, lb, ub)
 
 def binomial(x: np.ndarray, v: np.ndarray, Cr: Union[np.ndarray, float], rng) -> np.ndarray:
+    """
+    # Introduction
+    Performs binomial (crossover) operation commonly used in evolutionary algorithms, combining two populations (`x` and `v`) based on a crossover rate (`Cr`). Ensures at least one element from `v` is selected for each individual.
+    # Args:
+    - x (np.ndarray): The current population array of shape (NP, dim) or (dim,).
+    - v (np.ndarray): The donor population array of the same shape as `x`.
+    - Cr (Union[np.ndarray, float]): The crossover rate(s), either a float or a 1D array of length NP.
+    - rng: A random number generator with `rand` and `randint` methods (e.g., numpy.random.Generator).
+    # Returns:
+    - np.ndarray: The trial population array after binomial crossover, with the same shape as `x`.
+    # Notes:
+    - If `x` and `v` are 1D arrays, they are reshaped to 2D for processing and squeezed back before returning.
+    - Guarantees that at least one dimension per individual is inherited from `v`.
+    """
+    
     if x.ndim == 1:
         x = x.reshape(1, -1)
         v = v.reshape(1, -1)
@@ -463,6 +516,21 @@ def rand_to_best_2_single(x: np.ndarray, best: np.ndarray, F: float, pointer: in
     return x[r[0]] + F * (best - x[r[0]] + x[r[1]] - x[r[2]] + x[r[3]] - x[r[4]])
 
 def cur_to_rand_1_single(x: np.ndarray, F: float, pointer: int, r: np.ndarray = None, rng: np.random.RandomState = None) -> np.ndarray:
+    """
+    # Introduction
+    Generates a new vector using the "current-to-rand/1" mutation strategy commonly used in Differential Evolution algorithms. The function perturbs the vector at the specified pointer index by adding a scaled difference of randomly selected vectors.
+    # Args:
+    - x (np.ndarray): Population array of candidate solutions, where each row is an individual.
+    - F (float): Scaling factor for the mutation.
+    - pointer (int): Index of the target vector in the population to be mutated.
+    - r (np.ndarray, optional): Array of three unique random indices for mutation. If None, they are generated automatically.
+    - rng (np.random.RandomState, optional): Random number generator for reproducibility. If None, the default NumPy RNG is used.
+    # Returns:
+    - np.ndarray: The mutated vector generated by the current-to-rand/1 strategy.
+    # Raises:
+    - ValueError: If the generated or provided indices in `r` are not unique or include the `pointer` index.
+    """
+    
     if r is None:
         r = generate_random_int_single(x.shape[0], 3, pointer, rng=rng)
     return x[pointer] + F * (x[r[0]] - x[pointer] + x[r[1]] - x[r[2]])

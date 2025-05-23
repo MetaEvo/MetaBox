@@ -215,6 +215,7 @@ class LES(Basic_Agent):
 
         return results
 
+
     def log_to_tb_train(self, tb_logger, mini_step,gbest,
                         extra_info = {}):
         # Iterate over the extra_info dictionary and log data to tb_logger

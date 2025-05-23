@@ -189,6 +189,22 @@ def generate_terrain(n = 8, map_size = 900, h0 = 130, r0 = None, rr = None, rng 
     return hm
 
 def interpolate(x0, y0, v0, xn, yn):
+    """
+    # Introduction
+    - Performs scattered 2D linear interpolation from known (x0, y0, v0) to new points (xn, yn).
+    - Adds artificial boundary points to ensure smooth interpolation near edges.
+
+    # Args
+    - x0 (ndarray): Known x-coordinates.
+    - y0 (ndarray): Known y-coordinates.
+    - v0 (ndarray): Known values at (x0, y0).
+    - xn (ndarray): New x-coordinates to interpolate.
+    - yn (ndarray): New y-coordinates to interpolate.
+
+    # Returns
+    - v (ndarray): Interpolated values at coordinates (xn, yn), shape matches `xn`.
+
+    """
 
     x_ext = np.concatenate([100 * np.array([-1, -1, 1, 1]), x0.flatten()])
     y_ext = np.concatenate([100 * np.array([-1, 1, -1, 1]), y0.flatten()])

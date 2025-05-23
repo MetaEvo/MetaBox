@@ -20,20 +20,6 @@ class QLPSO_Optimizer(Learnable_Optimizer):
     QLPSO is a problem-free PSO which integrates a reinforcement learning method.
     # Original paper
     "[**A reinforcement learning-based communication topology in particle swarm optimization**](https://link.springer.com/article/10.1007/s00521-019-04527-9)." Neural Computing and Applications (2020).
-    # Official Implementation
-    None
-    # Args:
-    - config (object): Configuration object containing hyperparameters such as population size (`NP`), acceleration coefficients (`C`, `W`), problem dimensionality (`dim`), maximum function evaluations (`maxFEs`), logging interval (`log_interval`), and meta-data options (`full_meta_data`, `n_logpoint`).
-    # Methods:
-    - __init__(self, config): Initializes the optimizer with the given configuration and sets up internal state.
-    - __cal_diversity(self): Computes the diversity of the current population.
-    - __cal_velocity(self, action): Calculates the velocity update for the current solution based on the selected action and neighborhood.
-    - init_population(self, problem): Initializes the population within the problem bounds and evaluates initial costs.
-    - update(self, action, problem): Updates the current solution using the specified action, applies boundary control, evaluates the new solution, updates personal/global bests, logs progress, and returns the next state, reward, done flag, and info dictionary.
-    # Returns:
-    - Various methods return updated states, rewards, done flags, and logging information as appropriate for reinforcement learning and optimization workflows.
-    # Raises:
-    - No explicit exceptions are raised, but underlying operations (e.g., array indexing, problem evaluation) may raise exceptions if misconfigured.
     """
     
     def __init__(self, config):
@@ -41,25 +27,31 @@ class QLPSO_Optimizer(Learnable_Optimizer):
         # Introduction
         Initializes the QLPSO optimizer with the provided configuration, setting up hyperparameters and internal state variables required for optimization.
         # Args:
-        - config (object): Configuration object containing optimizer parameters such as population size, acceleration coefficients, inertia weight, problem dimensionality, maximum function evaluations, and logging interval.
-        # Attributes:
-        - __C (float): Acceleration coefficient.
-        - __W (float): Inertia weight.
-        - __NP (int): Population size.
-        - __dim (int): Dimensionality of the problem.
-        - __maxFEs (int): Maximum number of function evaluations.
-        - __solution_pointer (int): Index indicating which solution receives the action.
-        - __population (np.ndarray or None): Population of candidate solutions.
-        - __pbest (np.ndarray or None): Personal best solutions.
-        - __velocity (np.ndarray or None): Velocities of particles.
-        - __cost (np.ndarray or None): Costs of current solutions.
-        - __gbest_cost (float or None): Global best cost found so far.
-        - __diversity (float or None): Diversity measure of the population.
-        - __state (object or None): Internal state for optimizer.
-        - fes (int or None): Current number of function evaluations.
-        - cost (list or None): List of costs maintained by the optimizer.
-        - log_index (int or None): Index for logging.
-        - log_interval (int): Interval for logging progress.
+        - config (object): Config object containing optimizer parameters.
+            - The Attributes needed for QLPSO are the following:
+                - maxFEs: Maximum function evaluations allowed.
+                - n_logpoint: Number of log points for cost history.
+                - log_interval: Interval for logging progress
+                - full_meta_data: Flag to enable/disable full metadata logging
+        # Built-in Attributes:
+        - `self.__config`: Configuration object containing optimizer parameters.
+        - `self.__C`: Cognitive coefficient for PSO. Default is 1.49618.
+        - `self.__W`: Inertia weight for PSO. Default is 0.729844.
+        - `self.__NP`: Population size for PSO. Default is 30.
+        - `self.solution_pointer`: Pointer to the current solution in the population.
+        - `self.__population`: Current population of solutions.
+        - `self.__pbest`: Personal best positions of the population.
+        - `self.__velocity`: Current velocities of the population.
+        - `self.__cost`: Current costs of the population.
+        - `self.__gbest_cost`: Global best cost found so far.
+        - `self.__diversity`: Diversity of the population.
+        - `self.__state`: State of each individual in the population.
+        - `self.fes`: Function evaluation count.
+        - `self.cost`: List of costs that need to be maintained by every backbone optimizer.
+        - `self.log_index`: Logging index for tracking progress.
+        
+        
+        
         """
         
         super().__init__(config)
@@ -87,9 +79,33 @@ class QLPSO_Optimizer(Learnable_Optimizer):
         self.log_interval = config.log_interval
 
     def __cal_diversity(self):
+        """
+        # Introduction
+        Calculates the diversity of the current population in the optimizer.
+        The diversity is computed as the mean Euclidean distance of each individual in the population from the population mean.
+        # Returns:
+        - float: The average Euclidean distance representing the diversity of the population.
+        """
+        
         return np.mean(np.sqrt(np.sum(np.square(self.__population - np.mean(self.__population,0)),1)))
 
     def __cal_velocity(self, action):
+        """
+        # Introduction
+        Calculates the updated velocity vector for a particle in the QLPSO (Quantum-behaved Learning Particle Swarm Optimization) algorithm based on the selected neighborhood size determined by the `action` parameter.
+        # Args:
+        - action (int): Determines the neighborhood size for local best selection. Possible values are:
+            - 0: Neighborhood size 4
+            - 1: Neighborhood size 8
+            - 2: Neighborhood size 16
+            - 3: Neighborhood size 30
+        # Returns:
+        - np.ndarray: The updated velocity vector for the current particle.
+        # Notes:
+        - The method uses the current particle's position, velocity, personal best, and the best position found in the selected neighborhood to compute the new velocity.
+        - The random number generator (`self.rng.rand()`) is used for stochastic updates.
+        """
+        
         i = self.__solution_pointer
         x = self.__population[i]
         v = self.__velocity[i]
@@ -120,21 +136,28 @@ class QLPSO_Optimizer(Learnable_Optimizer):
         Initializes the population and related attributes for the QLPSO optimizer based on the provided optimization problem.
         # Args:
         - problem: An object representing the optimization problem, which must have attributes `ub` (upper bounds), `lb` (lower bounds), `optimum` (optional known optimum), and an `eval` method for evaluating solutions.
+        # Built-in Attributes:
+        - `self.__dim`: Dimension of the problem.
+        - `self.__population`: Current population of solutions.
+        - `self.__pbest`: Personal best positions of the population.
+        - `self.__velocity`: Current velocities of the population.
+        - `self.__cost`: Current costs of the population.
+        - `self.__gbest_cost`: Global best cost found so far.
+        - `self.__diversity`: Diversity of the population.
+        - `self.__state`: State of each individual in the population.
+        - `self.fes`: Function evaluation count.
+        - `self.cost`: List of costs that need to be maintained by every backbone optimizer.
+        - `self.log_index`: Logging index for tracking progress.Default is 1.
+        - `self.cost`: List of costs that need to be maintained by every backbone optimizer.
+        - `self.__state`: State of each individual in the population.
+        - `self.meta_X`: List to store population positions for metadata logging.
+        - `self.meta_Cost`: List to store population costs for metadata logging.
+        - `self.meta_tmp_x`: Temporary list to store population positions for metadata logging.
+        - `self.meta_tmp_cost`: Temporary list to store population costs for metadata logging.
+        
         # Returns:
         - int: The state value of the solution pointer after initialization.
-        # Side Effects:
-        - Initializes or updates the following instance attributes:
-            - `__population`: The randomly generated initial population within the problem bounds.
-            - `__pbest`: The personal best positions, initialized to the population.
-            - `__velocity`: The initial velocities, set to zero.
-            - `__diversity`: The diversity of the population.
-            - `__cost`: The evaluated cost of the population (optionally offset by the problem optimum).
-            - `__gbest_cost`: The best cost found in the initial population.
-            - `fes`: The function evaluation count.
-            - `log_index`: The logging index.
-            - `cost`: The history of global best costs.
-            - `__state`: The state of each individual in the population.
-            - `meta_X`, `meta_Cost`: (If `full_meta_data` is enabled) Lists storing the population and cost history.
+        
         # Notes:
         - If the problem's optimum is provided, the cost is offset by this value.
         - If `full_meta_data` is enabled in the configuration, additional metadata is stored for analysis.
@@ -169,11 +192,10 @@ class QLPSO_Optimizer(Learnable_Optimizer):
         - action (Any): The action to be applied to the current solution, typically representing a velocity or direction in the search space.
         - problem (object): The optimization problem instance, which must provide `lb`, `ub`, `eval()`, and `optimum` attributes/methods.
         # Returns:
-        - tuple: A tuple containing:
-            - state (Any): The updated state after applying the action.
-            - reward (float): The calculated reward based on the change in cost and diversity.
-            - is_done (bool): Whether the optimization episode should be terminated.
-            - info (dict): Additional information (currently empty).
+        - state (Any): The updated state after applying the action.
+        - reward (float): The calculated reward based on the change in cost and diversity.
+        - is_done (bool): Whether the optimization episode should be terminated.
+        - info (dict): Additional information (currently empty).
         # Notes:
         - The method updates internal population, velocity, cost, diversity, and logging information.
         - Handles boundary control and personal/global best updates.

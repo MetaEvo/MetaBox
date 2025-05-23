@@ -13,63 +13,6 @@ class CEC2013MMO_Torch_Problem(Basic_Problem_Torch):
     """
     # CEC2013MMO_Torch_Problem
     A pyTorch-based implementation of the CEC 2013 Multi-Modal Optimization (MMO) benchmark suite.
-    # Introduction
-    CEC2013 MMO benchmark puts together 20 multimodal problems (including several identical functions with different dimension sizes), with different characteristics, for evaluating niching algorithms.
-    # Original Paper
-    "[Benchmark Functions for CEC’2013 Special Session and Competition on Niching Methods for Multimodal Function Optimization](https://al-roomi.org/multimedia/CEC_Database/CEC2015/NichingMultimodalOptimization/CEC2015_NichingMethods_TechnicalReport.pdf)"
-    # Official Implementation
-    [CEC2013MMO](https://github.com/mikeagn/CEC2013)
-    # License
-    Simplified BSD License
-    # Problem Suite Composition
-    The CEC 2013 Multi-Modal Optimization (MMO) benchmark suite is a collection of optimization problems designed to test algorithms' ability to locate multiple global optima in a search space. Each problem is characterized by its dimensionality, bounds, number of global optima, and other parameters. This class provides a PyTorch-based implementation for evaluating solutions and analyzing their performance against the benchmark.
-    # Args:
-    - `dim` (int): Dimensionality of the problem.
-    - `lb` (float): Lower bound of the search space.
-    - `ub` (float): Upper bound of the search space.
-    - `fopt` (float): The global optimum value of the objective function.
-    - `rho` (float): Radius used to determine the proximity of solutions to global optima.
-    - `nopt` (int): Number of global optima in the problem.
-    - `maxfes` (int): Maximum number of function evaluations allowed.
-    # Attributes:
-    - `dim` (int): Dimensionality of the problem.
-    - `lb` (float): Lower bound of the search space.
-    - `ub` (float): Upper bound of the search space.
-    - `FES` (int): Current count of function evaluations.
-    - `optimum` (float): The global optimum value of the objective function.
-    - `rho` (float): Radius used to determine the proximity of solutions to global optima.
-    - `nopt` (int): Number of global optima in the problem.
-    - `maxfes` (int): Maximum number of function evaluations allowed.
-    # Methods:
-    - `eval(x)`: Evaluates the objective function for a given solution or population.
-        - **Args**: 
-            - `x` (torch.Tensor or array-like): Input solution(s) to evaluate.
-        - **Returns**: 
-            - Objective function value(s) for the input solution(s).
-        - **Raises**: 
-            - `NotImplementedError`: If the `func` method is not implemented in a subclass.
-    - `func(x)`: Abstract method to define the objective function for the problem.
-        - **Args**: 
-            - `x` (torch.Tensor): Input solution(s).
-        - **Returns**: 
-            - Objective function value(s).
-        - **Raises**: 
-            - `NotImplementedError`: Must be implemented in a subclass.
-    - `how_many_goptima_torch(pop, accuracy)`: Determines the number of global optima found in a given population.
-        - **Args**: 
-            - `pop` (torch.Tensor): Population of solutions.
-            - `accuracy` (float): Accuracy threshold for identifying global optima.
-        - **Returns**: 
-            - `count` (int): Number of global optima found.
-            - `seeds` (torch.Tensor): Solutions corresponding to the global optima.
-    - `__find_seeds_indices(sorted_pop, radius)`: Identifies seed solutions in a sorted population based on a given radius.
-        - **Args**: 
-            - `sorted_pop` (torch.Tensor): Sorted population of solutions.
-            - `radius` (float): Radius for determining proximity.
-        - **Returns**: 
-            - `seeds_idx` (list): Indices of seed solutions.
-    # Raises:
-    - `NotImplementedError`: Raised if the `func` method is not implemented in a subclass.
     """
     def __init__(self, dim, lb, ub, fopt, rho, nopt, maxfes):
         self.dim = dim
@@ -82,9 +25,6 @@ class CEC2013MMO_Torch_Problem(Basic_Problem_Torch):
         self.maxfes = maxfes
 
     def eval(self, x):
-        """
-        A general version of func() with adaptation to evaluate both individual and population.
-        """
         start=time.perf_counter()
         if not isinstance(x, torch.Tensor):
             x = torch.tensor(x)

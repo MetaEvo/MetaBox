@@ -5,52 +5,8 @@ import torch
 
 class CEC2017_Torch_Problem(Basic_Problem_Torch):
     """
-    # CEC2017_Torch_Problem
-      A Pytorch-based implementation of base class for defining basic functions in CEC2017 Multitask Optimization(MTO) benchmark problems.
     # Introduction
-      CEC2017MTO proposes 9 multi-task benchmark problems to represent a wider range of multi-task optimization problems.
-    # Original Paper
-       "[Evolutionary Multitasking for Single-objective Continuous Optimization: Benchmark Problems, Performance Metric, and Bseline Results](https://arxiv.org/pdf/1706.03470)."
-    # Official Implementation
-      [CEC2017MTO](http://www.bdsc.site/websites/MTO/index.html)
-    # License
-    None
-    # Problem Suite Composition
-      The CEC2017MTO problem suite contains a total of 9 benchmark problems, each consisting of two basic functions.
-      These nine benchmark problems are classified according to the degree of intersection and the inter-task similarity between the two constitutive functions:
-        P1. Complete intersection and high similarity(CI+HS)
-        P2. Complete intersection and medium similarity(CI+MS)  
-        P3. Complete intersection and low similarity(CI+LS)
-        P4. Partial intersection and high similarity(PI+HS)
-        P5. Partial intersection and medium similarity(PI+MS)  
-        P6. Partial intersection and low similarity(PI+LS)
-        P7. No intersection and high similarity(NI+HS)
-        P8. No intersection and medium similarity(NI+MS) 
-        P9. No intersection and low similarity(NI+LS)
-    # Args:
-    - `dim` (int): Dimensionality of the problem.
-    - `shift` (list or None): Shift vector applied to the problem. If `None`, no shift is applied.
-    - `rotate` (list or None): Rotation matrix applied to the problem. If `None`, no rotation is applied.
-    - `bias` (float): Bias value added to the problem's objective function.
-    # Attributes:
-    - `T1` (float): Accumulated time (in milliseconds) spent evaluating the problem.
-    - `dim` (int): Dimensionality of the problem.
-    - `shift` (torch.Tensor or None): Shift vector as a PyTorch tensor.
-    - `rotate` (torch.Tensor or None): Rotation matrix as a PyTorch tensor.
-    - `bias` (float): Bias value for the problem.
-    - `lb` (float): Lower bound of the problem's search space.
-    - `ub` (float): Upper bound of the problem's search space.
-    - `FES` (int): Function evaluation count.
-    - `opt` (torch.Tensor): Optimal solution for the problem.
-    - `optimum` (float): Optimal objective value for the problem.
-    # Methods:
-    - `get_optimal() -> torch.Tensor`: Returns the optimal solution for the problem.
-    - `func(x: torch.Tensor) -> torch.Tensor`: Abstract method to compute the objective function value(s) for input `x`. Must be implemented in subclasses.
-    - `decode(x: torch.Tensor) -> torch.Tensor`: Decodes a solution from the normalized space [0, 1] to the problem's actual search space.
-    - `sr_func(x: torch.Tensor, shift: torch.Tensor, rotate: torch.Tensor) -> torch.Tensor`: Applies shift and rotation transformations to the input `x`.
-    - `eval(x: torch.Tensor) -> torch.Tensor`: Evaluates the objective function for a single solution or a population of solutions. Supports inputs of different dimensions (1D, 2D, or 3D).
-    # Raises:
-    - `NotImplementedError`: Raised if the `func` method is not implemented in a subclass.
+      The class is the Pytorch version of the CEC2017MTO_Numpy_Problem.
     """
 
     def __init__(self, dim, shift, rotate, bias):

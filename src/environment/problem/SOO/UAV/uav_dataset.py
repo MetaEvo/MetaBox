@@ -6,37 +6,36 @@ import pickle
 
 class UAV_Dataset(Dataset):
     """
-    # Args:
-    - data (list): List of environment instances or data samples.
-    - batch_size (int, optional): Number of samples per batch. Defaults to 1.
-    # Attributes:
-    - data (list): The dataset samples.
-    - batch_size (int): Batch size for data loading.
-    - N (int): Total number of samples in the dataset.
-    - ptr (list): List of starting indices for each batch.
-    - index (np.ndarray): Array of indices for shuffling and sampling.
-    - maxdim (int): Maximum dimension among all data samples.
-    # Methods:
-    - get_datasets(...): Static method to generate train and test UAV_Dataset instances based on difficulty, custom splits, and data source.
-    - __getitem__(item): Returns a batch of data samples at the specified batch index.
-    - __len__(): Returns the total number of samples in the dataset.
-    - __add__(other): Concatenates two UAV_Dataset instances.
-    - shuffle(): Randomly shuffles the dataset indices.
-    # Raises:
-    - ValueError: If required arguments for dataset splitting are not provided or if an invalid difficulty is specified.
-    # Usage Example:
-    ```python
-    train_set, test_set = UAV_Dataset.get_datasets(
-        version='numpy',
-        train_batch_size=8,
-        test_batch_size=8,
-        difficulty='easy',
-        path='path/to/data.pkl'
-    )
-    ```
+    # Introduction
+    UAV provides 56 terrain-based landscapes as realistic Unmanned Aerial Vehicle(UAV) path planning problems, each of which is 30D. The objective is to select given number of path nodes (x,y,z coordinates) from the 3D space, so the the UAV could fly as shortly as possible in a collision-free way.
+    # Original paper
+    "[Benchmarking global optimization techniques for unmanned aerial vehicle path planning.](https://arxiv.org/abs/2501.14503)" arXiv preprint arXiv:2501.14503 (2025).
+    # Official Implementation
+    [UAV](https://zenodo.org/records/12793991)
+    # License
+    None
     """
     
     def __init__(self, data, batch_size = 1):
+        """
+        # Introduction
+        Initializes the dataset object for UAV problems, setting up batching and dimension tracking.
+        # Args:
+        - data (list): A list of data items, each expected to have a `dim` attribute.
+        - batch_size (int, optional): The number of samples per batch. Defaults to 1.
+        # Built-in Attribute:
+        - data (list): Stores the input data.
+        - batch_size (int): Stores the batch size.
+        - N (int): The total number of data items.
+        - ptr (list): List of starting indices for each batch.
+        - index (np.ndarray): Array of indices for the data.
+        - maxdim (int): The maximum dimension found among all data items.
+        # Returns:
+        - None
+        # Raises:
+        - AttributeError: If any item in `data` does not have a `dim` attribute.
+        """
+        
         super().__init__()
         self.data = data
         self.batch_size = batch_size
@@ -62,6 +61,29 @@ class UAV_Dataset(Dataset):
                      mode = "standard",
                      path = None
                      ):
+        """
+        # Introduction
+        Generates and returns training and testing datasets for UAV (Unmanned Aerial Vehicle) terrain navigation problems, supporting both standard (from file) and custom (generated) modes. Allows flexible selection of dataset difficulty, batch sizes, and custom train/test splits.
+        # Args:
+        - version (str, optional): Dataset version, either 'numpy' or 'torch'. Defaults to 'numpy'.
+        - train_batch_size (int, optional): Batch size for the training dataset. Defaults to 1.
+        - test_batch_size (int, optional): Batch size for the testing dataset. Defaults to 1.
+        - difficulty (str, optional): Difficulty level of the dataset. One of ['easy', 'difficult', 'all', None]. If None, user_train_list and user_test_list must be provided.
+        - user_train_list (list of int, optional): Custom list of instance indices for the training set. Defaults to None.
+        - user_test_list (list of int, optional): Custom list of instance indices for the testing set. Defaults to None.
+        - dv (float, optional): Parameter for terrain data (e.g., number of divisions). Defaults to 5.0.
+        - j_pen (float, optional): Penalty parameter for the terrain data. Defaults to 1e4.
+        - seed (int, optional): Random seed for reproducibility. Defaults to 3849.
+        - num (int, optional): Total number of terrain instances to generate or load. Defaults to 56.
+        - mode (str, optional): Dataset mode, either 'standard' (load from file) or 'custom' (generate on the fly). Defaults to "standard".
+        - path (str, optional): Path to the dataset file (required if mode is "standard"). Defaults to None.
+        # Returns:
+        - UAV_Dataset: Training dataset object.
+        - UAV_Dataset: Testing dataset object.
+        # Raises:
+        - ValueError: If neither `difficulty` nor both `user_train_list` and `user_test_list` are provided.
+        - ValueError: If `difficulty` is not one of ['easy', 'difficult', 'all', None].
+        """
         # easy 15 diff 30
         easy_id = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54] # 28
         diff_id = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55] # 28
@@ -221,6 +243,16 @@ class UAV_Dataset(Dataset):
                UAV_Dataset(test_set, test_batch_size)
 
     def __getitem__(self, item):
+        """
+        # Introduction
+        Retrieves a batch of data samples corresponding to the specified index.
+        # Args:
+        - item (int): The index of the batch to retrieve.
+        # Returns:
+        - list: A list containing the data samples for the specified batch.
+        # Raises:
+        - IndexError: If `item` is out of range of the available batches.
+        """
         ptr = self.ptr[item]
         index = self.index[ptr: min(ptr + self.batch_size, self.N)]
         res = []
@@ -229,10 +261,38 @@ class UAV_Dataset(Dataset):
         return res
 
     def __len__(self):
+        """
+        # Introduction
+        Returns the number of elements in the dataset.
+        # Returns:
+        - int: The total number of elements in the dataset.
+        """
         return self.N
 
     def __add__(self, other: 'UAV_Dataset'):
+        """
+        # Introduction
+        Combines two UAV_Dataset instances by concatenating their data attributes.
+        # Args:
+        - other (UAV_Dataset): Another UAV_Dataset instance to be added.
+        # Returns:
+        - UAV_Dataset: A new UAV_Dataset instance containing the combined data from both datasets, with the same batch size as the original.
+        # Raises:
+        - AttributeError: If `other` does not have a `data` attribute.
+        - TypeError: If `other` is not an instance of UAV_Dataset.
+        """
+        
         return UAV_Dataset(self.data + other.data, self.batch_size)
 
     def shuffle(self):
+        """
+        # Introduction
+        Randomly shuffles the indices of the dataset to change the order of data access.
+        # Built-in Attribute:
+        - self.N (int): The total number of data samples in the dataset.
+        # Returns:
+        - None
+        # Side Effects:
+        - Updates `self.index` with a new permutation of indices for the dataset.
+        """
         self.index = np.random.permutation(self.N)

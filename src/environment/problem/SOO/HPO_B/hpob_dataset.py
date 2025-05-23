@@ -9,37 +9,35 @@ import xgboost as xgb
 
 class HPOB_Dataset(Dataset):
     """
-    # HPOB_Dataset
-    # Args:
-    - data (list): A list of HPOB_Problem instances or similar objects representing individual optimization problems.
-    - batch_size (int, optional): The number of problems per batch. Defaults to 1.
-    # Attributes:
-    - data (list): The dataset containing problem instances.
-    - maxdim (int): The maximum dimensionality among all problems in the dataset.
-    - batch_size (int): The batch size used for iteration.
-    - N (int): The total number of problems in the dataset.
-    - ptr (list): List of starting indices for each batch.
-    - index (np.ndarray): Array of indices for shuffling and batching.
-    # Methods:
-    - get_datasets(datapath=None, train_batch_size=1, test_batch_size=1, upperbound=None, difficulty=None, user_train_list=None, user_test_list=None, cost_normalize=False):
-        Loads and processes the HPO-B dataset, returning train and test HPOB_Dataset instances according to the specified parameters.
-    - __getitem__(item):
-        Returns a batch of problems corresponding to the given batch index.
-    - __len__():
-        Returns the total number of problems in the dataset.
-    - __add__(other):
-        Concatenates two HPOB_Dataset instances and returns a new dataset.
-    - shuffle():
-        Randomly permutes the order of problems in the dataset for shuffling during training.
-    # Returns:
-    - HPOB_Dataset: An instance of the dataset, or a tuple of train and test datasets when using `get_datasets`.
-    # Raises:
-    - NotImplementedError: If user-specified train/test lists are not provided correctly in `get_datasets`.
+    # Introduction
+    HPO-B is an autoML hyper-parameter optimization benchmark which includes a wide range of hyperparameter optimization tasks for 16 different model types (e.g., SVM, XGBoost, etc.), resulting in a total of 935 problem instances. The dimension of these problem instances range from 2 to 16. We also note that HPO-B represents problems with ill-conditioned landscape such as huge flattern.
+    # Original paper
+    "[Hpo-b: A large-scale reproducible benchmark for black-box hpo based on openml.](https://arxiv.org/pdf/2106.06257)" arXiv preprint arXiv:2106.06257 (2021).
+    # Official Implementation
+    [HPO-B](https://github.com/machinelearningnuremberg/HPO-B)
+    # License
+    None
     """
     
     def __init__(self,
                  data,
                  batch_size = 1):
+        """
+        # Introduction
+        Initializes the dataset object for handling batches of data items, determining the maximum dimension among items, and setting up batch pointers and indices.
+        # Args:
+        - data (list): A list of data items, each expected to have a `dim` attribute.
+        - batch_size (int, optional): The number of items per batch. Defaults to 1.
+        # Built-in Attribute:
+        - self.data (list): Stores the input data.
+        - self.maxdim (int): The maximum dimension found among all data items.Defaults to 0.
+        - self.batch_size (int): The batch size for processing data.
+        - self.N (int): The total number of data items.
+        - self.ptr (list): List of starting indices for each batch.
+        - self.index (np.ndarray): Array of indices for the data items.
+        # Returns:
+        - None
+        """
         super().__init__()
         self.data = data
         self.maxdim = 0
@@ -59,6 +57,25 @@ class HPOB_Dataset(Dataset):
                      user_train_list = None,
                      user_test_list = None,
                      cost_normalize = False, ):
+        """
+        # Introduction
+        Loads and processes the HPO-B benchmark datasets, returning train and test sets as `HPOB_Dataset` objects. Handles dataset downloading, extraction, and filtering based on user-specified lists or difficulty level.
+        # Args:
+        - datapath (str, optional): Path to the root directory containing the HPO-B data. If `None`, defaults to a subdirectory in the current working directory.
+        - train_batch_size (int, optional): Batch size for the training dataset. Defaults to 1.
+        - test_batch_size (int, optional): Batch size for the test dataset. Defaults to 1.
+        - upperbound (float, optional): Upper bound for the problem domain. Used to set the search space limits.
+        - difficulty (str, optional): If set to 'all', merges train and test sets. Otherwise, uses user-specified lists for filtering.
+        - user_train_list (list of str, optional): List of problem identifiers to include in the training set.
+        - user_test_list (list of str, optional): List of problem identifiers to include in the test set.
+        - cost_normalize (bool, optional): Whether to normalize the cost values in the problems. Defaults to False.
+        # Returns:
+        - tuple: A tuple containing:
+            - HPOB_Dataset: The training dataset.
+            - HPOB_Dataset: The test dataset.
+        # Raises:
+        - NotImplementedError: If neither `user_train_list` nor `user_test_list` is provided when required for filtering.
+        """
         # get functions ID of indicated suit
         if datapath is None:
             datapath = os.path.join(os.getcwd(), "metabox_data")
@@ -147,7 +164,16 @@ class HPOB_Dataset(Dataset):
         return HPOB_Dataset(train_set, train_batch_size), HPOB_Dataset(test_set, test_batch_size)
 
     def __getitem__(self, item):
-
+        """
+        # Introduction
+        Retrieves a batch of data samples corresponding to the given index.
+        # Args:
+        - item (int): The index of the batch to retrieve.
+        # Returns:
+        - list: A list containing the data samples for the specified batch.
+        # Raises:
+        - IndexError: If `item` is out of range of the available batches.
+        """
         ptr = self.ptr[item]
         index = self.index[ptr: min(ptr + self.batch_size, self.N)]
         res = []
@@ -156,16 +182,57 @@ class HPOB_Dataset(Dataset):
         return res
 
     def __len__(self):
+        """
+        Returns the number of elements in the dataset.
+        # Returns:
+            int: The total number of elements in the dataset.
+        """
         return self.N
 
     def __add__(self, other: 'HPOB_Dataset'):
+        """
+        # Introduction
+        Combines two `HPOB_Dataset` instances by concatenating their data attributes.
+        # Args:
+        - other (HPOB_Dataset): Another dataset instance to be added.
+        # Returns:
+        - HPOB_Dataset: A new dataset containing the combined data from both instances.
+        # Raises:
+        - AttributeError: If `other` does not have a `data` attribute.
+        """
         return HPOB_Dataset(self.data + other.data, self.batch_size)
 
     def shuffle(self):
+        """
+        # Introduction
+        Randomly shuffles the indices of the dataset to change the order of data access.
+        # Built-in Attribute:
+        - self.N (int): The total number of data points in the dataset.
+        # Returns:
+        - None
+        # Side Effects:
+        - Updates `self.index` with a new permutation of indices from 0 to `self.N - 1`.
+        """
         self.index = np.random.permutation(self.N)
 
 
 def get_data(mode, surrogates_dir, root_dir):
+    """
+    # Introduction
+    Loads and returns training, validation, and test datasets along with Bayesian Optimization (BO) initializations and surrogate statistics based on the specified mode and directory paths.
+    # Args:
+    - mode (str): The mode specifying which dataset version or configuration to load. Supported values are "v1", "v2", "v3", "v3-test", and "v3-train-augmented".
+    - surrogates_dir (str): Directory path where the surrogate statistics file ("summary-stats.json") is located.
+    - root_dir (str): Root directory path containing the dataset files.
+    # Returns:
+    - train_set: The training dataset, or None if not applicable for the selected mode.
+    - vali_set: The validation dataset, or None if not applicable for the selected mode.
+    - test_set: The test dataset.
+    - bo_initializations: Initializations for Bayesian Optimization.
+    - surrogates_stats (dict): Dictionary containing surrogate statistics loaded from "summary-stats.json".
+    # Raises:
+    - ValueError: If an invalid mode is provided.
+    """
     train_set, vali_set, test_set = None, None, None
     if mode == "v3-test":
         train_set, vali_set, test_set, bo_initializations = load_data(root_dir, only_test = True)
@@ -186,13 +253,21 @@ def get_data(mode, surrogates_dir, root_dir):
 
 def load_data(rootdir = "", version = "v3", only_test = True, augmented_train = False):
     """
-    Loads data with some specifications.
-    Inputs:
-        * root_dir: path to directory with the benchmark data.
-        * version: name indicating what HPOB version to use. Options: v1, v2, v3).
-        * Only test: Whether to load only testing data (valid only for version v3).  Options: True/False
-        * augmented_train: Whether to load the augmented train data (valid only for version v3). Options: True/False
-
+    # Introduction
+    Loads HPOB benchmark datasets according to specified parameters, supporting different dataset versions, test/train splits, and augmented training data.
+    # Args:
+    - rootdir (str, optional): Path to the directory containing the benchmark data files. Defaults to "".
+    - version (str, optional): HPOB dataset version to use. Options are "v1", "v2", or "v3". Defaults to "v3".
+    - only_test (bool, optional): If True, loads only the test data (valid only for version "v3"). Defaults to True.
+    - augmented_train (bool, optional): If True, loads the augmented training data (valid only for version "v3"). Defaults to False.
+    # Returns:
+    - meta_train_data (dict or None): The meta-training dataset, or None if only_test is True.
+    - meta_validation_data (dict or None): The meta-validation dataset, or None if only_test is True.
+    - meta_test_data (dict): The meta-testing dataset.
+    - bo_initializations (dict): The Bayesian optimization initializations.
+    # Raises:
+    - FileNotFoundError: If any of the required dataset files are missing in the specified root directory.
+    - json.JSONDecodeError: If any of the dataset files are not valid JSON.
     """
 
     print("Reading data...")
@@ -251,6 +326,21 @@ def load_data(rootdir = "", version = "v3", only_test = True, augmented_train = 
 
 
 def get_bst(surrogates_dir, search_space_id, dataset_id, surrogates_stats):
+    """
+    # Introduction
+    Loads a pre-trained XGBoost surrogate model and retrieves its associated normalization statistics for a given search space and dataset.
+    # Args:
+    - surrogates_dir (str): Directory path where surrogate models are stored.
+    - search_space_id (str): Identifier for the search space.
+    - dataset_id (str): Identifier for the dataset.
+    - surrogates_stats (dict): Dictionary containing normalization statistics for each surrogate model.
+    # Returns:
+    - bst_surrogate (xgboost.Booster): Loaded XGBoost surrogate model.
+    - y_min (float): Minimum target value used for normalization.
+    - y_max (float): Maximum target value used for normalization.
+    # Raises:
+    - AssertionError: If `y_min` is None for the specified surrogate model.
+    """
     surrogate_name = 'surrogate-' + search_space_id + '-' + dataset_id
     bst_surrogate = xgb.Booster()
     bst_surrogate.load_model(surrogates_dir + surrogate_name + '.json')

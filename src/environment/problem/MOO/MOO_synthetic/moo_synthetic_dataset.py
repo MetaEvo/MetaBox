@@ -53,6 +53,17 @@ class MOO_Synthetic_Dataset(Dataset):
     def __init__(self,
                  data,
                  batch_size = 1):
+        """
+        # Introduction
+        Initializes the dataset with a list of problem instances and a batch size.
+
+        # Args
+        - `data` (list): List of problem instances.
+        - `batch_size` (int, optional): Batch size for data loading. Defaults to 1.
+
+        # Attributes
+        - Sets `N`, `ptr`, `index`, and computes `maxdim` from `data`.
+        """
         super().__init__()
         self.data = data
         self.batch_size = batch_size
@@ -71,6 +82,24 @@ class MOO_Synthetic_Dataset(Dataset):
                      user_train_list = None,
                      user_test_list = None,
                      ):
+        """
+        # Introduction
+        Generates training and testing datasets of multi-objective optimization problems based on difficulty or user-defined lists.
+
+        # Args
+        - `version` (str, optional): Specifies the implementation ('numpy' or 'torch'). Defaults to 'numpy'.
+        - `train_batch_size` (int, optional): Batch size for training dataset. Defaults to 1.
+        - `test_batch_size` (int, optional): Batch size for testing dataset. Defaults to 1.
+        - `difficulty` (str, optional): Difficulty level ('easy', 'difficult', 'all'). Defaults to None.
+        - `user_train_list` (list, optional): User-specified training problem names. Defaults to None.
+        - `user_test_list` (list, optional): User-specified testing problem names. Defaults to None.
+
+        # Returns
+        - Tuple of two `MOO_Synthetic_Dataset` instances: (train_dataset, test_dataset).
+
+        # Raises
+        - `ValueError`: If neither `difficulty` nor user lists are provided, or if difficulty is invalid.
+        """
         # get functions ID of indicated suit
         if difficulty == None and user_test_list == None and user_train_list == None:
             raise ValueError('Please set difficulty or user_train_list and user_test_list.')
@@ -83,14 +112,12 @@ class MOO_Synthetic_Dataset(Dataset):
             for problem in user_train_list:
                 parts = problem.split("_")
                 problem_name = parts[0]
-                # 提取维数和目标数
-                n_var = int([p for p in parts if p.startswith("d")][0][1:])  # 去掉前缀 'd'
-                n_obj = int([p for p in parts if p.startswith("n")][0][1:])  # 去掉前缀 'n'
+                n_var = int([p for p in parts if p.startswith("d")][0][1:])  
+                n_obj = int([p for p in parts if p.startswith("n")][0][1:])  
                 train_set.append(eval(problem_name)(n_obj = n_obj, n_var = n_var))
             for problem in user_test_list:
                 parts = problem.split("_")
                 problem_name = parts[0]
-                # 提取维数和目标数
                 n_var = int([p for p in parts if p.startswith("d")][0][1:])
                 n_obj = int([p for p in parts if p.startswith("n")][0][1:])
                 test_set.append(eval(problem_name)(n_obj = n_obj, n_var = n_var))
@@ -190,7 +217,6 @@ class MOO_Synthetic_Dataset(Dataset):
                             instance_set.append(eval(f"WFG{wfg_id}_Torch")(n_obj = n_obj, n_var = n_var))
 
             print(f"Total instances: {len(instance_set)}")
-            # === 排序 ===
             instance_set.sort(key = lambda x: x.n_obj * x.n_var)
             if difficulty == 'easy':
                 train_set = instance_set[:int(0.8 * len(instance_set))]
@@ -209,6 +235,16 @@ class MOO_Synthetic_Dataset(Dataset):
         return MOO_Synthetic_Dataset(train_set, train_batch_size), MOO_Synthetic_Dataset(test_set, test_batch_size)
 
     def __getitem__(self, item):
+        """
+        # Introduction
+        Retrieves a batch of problem instances based on batch index.
+
+        # Args
+        - `item` (int): Batch index.
+
+        # Returns
+        - List of problem instances for the batch.
+        """
 
         ptr = self.ptr[item]
         index = self.index[ptr: min(ptr + self.batch_size, self.N)]
@@ -218,12 +254,33 @@ class MOO_Synthetic_Dataset(Dataset):
         return res
 
     def __len__(self):
+        """
+        # Introduction
+        Returns the total number of problem instances in the dataset.
+
+        # Returns
+        - `int`: Total dataset size.
+        """
         return self.N
 
     def __add__(self, other: 'MOO_Synthetic_Dataset'):
+        """
+        # Introduction
+        Combines this dataset with another to form a larger dataset.
+
+        # Args
+        - `other` (MOO_Synthetic_Dataset): Another dataset instance.
+
+        # Returns
+        - A new `MOO_Synthetic_Dataset` instance containing combined data.
+        """
         return MOO_Synthetic_Dataset(self.data + other.data, self.batch_size)
 
     def shuffle(self):
+        """
+        # Introduction
+        Randomly permutes the internal index order for dataset shuffling.
+        """
         self.index = np.random.permutation(self.N)
 
 

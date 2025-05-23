@@ -12,40 +12,42 @@ class QLearning_Agent(Basic_Agent):
     """
     # Introduction
     The `QLearning_Agent` class implements a Q-Learning agent for reinforcement learning. This agent uses a tabular Q-learning approach to learn optimal policies in discrete state and action spaces. It supports parallelized environments, epsilon-greedy exploration, and provides methods for training, action selection, and evaluation.
+
     # Original paper
     "Learning from Delayed Rewards" (Chapter 5 introduces Q-Learning)
     The First Journal Publication：
     "[**Q-Learning**](https://link.springer.com/article/10.1007/BF00992698)." 1992 (in Machine Learning journal)
-    # Official Implementation
-    None
+
     # Args
     - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
+
     # Attributes
-    - `gamma` (float): Discount factor for future rewards.
-    - `n_act` (int): Number of possible actions.
-    - `n_state` (int): Number of possible states.
-    - `epsilon` (float): Exploration rate for epsilon-greedy policy.
-    - `lr_model` (float): Learning rate for updating the Q-table.
+    - `gamma` (float): Discount factor for future rewards.(default: 0.8)
+    - `n_act` (int): Number of possible actions.(default: 4)
+    - `n_state` (int): Number of possible states.(default: 4)
+    - `epsilon` (float): Exploration rate for epsilon-greedy policy.(default: None)
+    - `lr_model` (float): Learning rate for updating the Q-table.(default: 1)
     - `q_table` (torch.Tensor): Q-table storing the state-action values.
     - `learning_time` (int): Counter for the number of learning steps taken.
     - `cur_checkpoint` (int): Counter for the current checkpoint index.
     - `config` (object): Configuration object passed during initialization.
+
     # Methods
     - `__init__(config)`: Initializes the Q-Learning agent with the given configuration.
-    - `update_setting(config)`: Updates the agent's settings and resets learning time and checkpoints.
-    - `get_action(state, epsilon_greedy=False)`: Selects an action based on the current state using an epsilon-greedy policy.
-    - `train_episode(envs, seeds, para_mode, compute_resource, tb_logger, required_info)`: Trains the agent for one episode in the given environment(s).
-    - `rollout_episode(env, seed, required_info)`: Executes a single episode in the environment without training and returns the results.
-    - `log_to_tb_train(tb_logger, mini_step, loss, Return, Reward, extra_info)`: Logs training metrics and additional information to TensorBoard.
-    # Returns
-    - `train_episode`: A tuple containing:
-        - `is_train_ended` (bool): Whether the training has reached the maximum learning steps.
-        - `return_info` (dict): Dictionary containing training results such as cumulative rewards, learning steps, and evaluation metrics.
-    - `rollout_episode`: A dictionary containing evaluation results such as cumulative rewards, environment costs, and metadata.
-    # Raises
-    - `AssertionError`: If required attributes or configurations are missing during execution.
+    - `update_setting`(config): Updates the agent's settings and resets learning time and checkpoints.
+    - `get_action`(state, epsilon_greedy=False): Selects an action based on the current state using an epsilon-greedy policy.
+    - `train_episode`(envs, seeds, para_mode, compute_resource, tb_logger, required_info): Trains the agent for one episode in the given environment(s).
+    - `rollout_episode`(env, seed, required_info): Executes a single episode in the environment without training and returns the results.
+    - `log_to_tb_train`(tb_logger, mini_step, loss, Return, Reward, extra_info): Logs training metrics and additional information to TensorBoard.
+
     """
     def __init__(self, config):
+        """
+        Initializes the Q-Learning agent with the given configuration.Store the initial agent in the checkpoint directory.
+
+        # Args:
+        - config: Configuration object containing all necessary parameters for the experiment.
+        """
         super().__init__(config)
         self.config = config
 
@@ -67,6 +69,12 @@ class QLearning_Agent(Basic_Agent):
         self.cur_checkpoint += 1
 
     def update_setting(self, config):
+        """
+        Updates the agent's settings and resets learning time and checkpoints.
+
+        # Args:
+        - config: Configuration object containing updated parameters.
+        """
         self.config.max_learning_step = config.max_learning_step
         self.config.agent_save_dir = config.agent_save_dir
         self.learning_time = 0
@@ -83,6 +91,16 @@ class QLearning_Agent(Basic_Agent):
     #     return action
 
     def get_action(self, state, epsilon_greedy=False):
+        """
+        Selects an action based on the current state using an epsilon-greedy policy.
+
+        # Args:
+        - state (torch.Tensor): The current state.
+        - epsilon_greedy (bool): Whether to use epsilon-greedy exploration.
+
+        # Returns:
+        - np.ndarray: The selected action(s).
+        """
         Q_list = torch.stack([self.q_table[st] for st in state])
         if epsilon_greedy and np.random.rand() < self.epsilon:
             action = np.random.randint(low=0, high=self.n_act, size=len(state))
@@ -100,6 +118,20 @@ class QLearning_Agent(Basic_Agent):
                       compute_resource={},
                       tb_logger=None,
                       required_info={}):
+        """
+        Trains the agent for one episode in the given environment(s).
+
+        # Args:
+        - envs: List of environments for training.
+        - seeds: Seeds for reproducibility.
+        - para_mode (str): Parallelization mode for the environments.
+        - compute_resource (dict): Resources for computation (e.g., CPUs, GPUs).
+        - tb_logger: TensorBoard logger for logging training metrics.
+        - required_info (dict): Additional information required from the environment.
+
+        # Returns:
+        - tuple: A boolean indicating whether training has ended and a dictionary with training metrics.
+        """
         num_cpus = None
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
@@ -164,6 +196,17 @@ class QLearning_Agent(Basic_Agent):
                         env,
                         seed=None,
                         required_info={}):
+        """
+        Executes a single episode in the environment without training and returns the results.
+
+        # Args:
+        - env: The environment for the rollout.
+        - seed (int, optional): Seed for reproducibility.
+        - required_info (dict): Additional information required from the environment.
+
+        # Returns:
+        - dict: A dictionary containing evaluation results such as cumulative rewards, environment costs, and metadata.
+        """
         with torch.no_grad():
             if seed is not None:
                 env.seed(seed)
@@ -189,10 +232,22 @@ class QLearning_Agent(Basic_Agent):
                 results[key] = getattr(env, required_info[key])
             return results
 
+
     def log_to_tb_train(self, tb_logger, mini_step,
                         loss,
                         Return, Reward,
                         extra_info={}):
+        """
+        Logs training metrics and additional information to TensorBoard.
+
+        # Args:
+        - tb_logger: TensorBoard logger for logging training metrics.
+        - mini_step (int): Current mini-batch step.
+        - loss (torch.Tensor): Training loss.
+        - Return (torch.Tensor): Episode return.
+        - Reward (torch.Tensor): Target reward.
+        - extra_info (dict): Additional information to log.
+        """
         # Iterate over the extra_info dictionary and log data to tb_logger
         # extra_info: Dict[str, Dict[str, Union[List[str], List[Union[int, float]]]]] = {
         #     "loss": {"name": [], "data": [0.5]},  # No "name", logs under "loss"
