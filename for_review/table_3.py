@@ -26,7 +26,7 @@ for i, baseline in enumerate(baseline_list):
             for run in data:
                 run_cost = run['Cost']
                 y_0 = np.min(run_cost[0])
-                y_min = y_0
+                y_min = np.min(run_cost[0])
                 for cost in run_cost:
                     y_min = np.minimum(y_min, np.min(cost))
                 total_.append(y_min)

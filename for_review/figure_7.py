@@ -46,7 +46,7 @@ for baseline in metabbo_list:
         for metarun in c0_metadata:
             cost_run = metarun['Cost']
             y_0 = np.min(cost_run[0])
-            y_min = y_0.copy()
+            y_min = np.min(cost_run[0])
             for cost in cost_run:
                 y_min = np.minimum(y_min, np.min(cost))
             c0_performance.append((y_min - y_0) / (0 - y_0 + 1e-20))
