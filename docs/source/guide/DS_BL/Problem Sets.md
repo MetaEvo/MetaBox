@@ -1,3 +1,15 @@
+```{toctree}
+
+:maxdepth: 1
+
+Single-Object Optimization
+Multi-Object Optimization
+Multi-Modal Optimization
+Multi-Task Optimization
+```
+
+
+
 # Problem Sets
 | 🚩 **Problem Category**           | 📚 **Problem set**                                                                                                         |
 | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
