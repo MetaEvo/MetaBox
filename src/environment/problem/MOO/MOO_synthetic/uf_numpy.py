@@ -93,8 +93,7 @@ class UF1(Basic_Problem):
     # Problem Suite Composition
     The UF problem suite contains a set of unconstrained multi-objective optimization problems designed for benchmarking optimization algorithms. 
     Each problem in the suite has a specific number of objectives and variables, with known theoretical Pareto fronts.
-    # Args:
-    None
+
    # Attributes
     - n_obj (int): Number of objectives (default 2).
     - n_var (int): Number of decision variables (default 30).
@@ -113,12 +112,6 @@ class UF1(Basic_Problem):
         """
         # Introduction
         Initialize UF1 problem parameters.
-
-        # Args
-        None
-
-        # Returns
-        None
         """
         self.n_obj = 2
         self.n_var = 30
@@ -172,10 +165,7 @@ class UF1(Basic_Problem):
         """
         # Introduction
         Return a string representation of the problem class.
-
-        # Args
-        None
-
+        
         # Returns
         - str: A string describing the problem's name, number of objectives, and variables.
         """
@@ -204,12 +194,7 @@ class UF2(Basic_Problem):
         """
         # Introduction
         Initialize UF2 problem parameters.
-
-        # Args
-        None
-
-        # Returns
-        None
+        
         """
         self.n_obj = 2  
         self.n_var = 30  
@@ -268,9 +253,6 @@ class UF2(Basic_Problem):
         # Introduction
         Return a string representation of the problem class.
 
-        # Args
-        None
-
         # Returns
         - str: A string describing the problem's name, number of objectives, and variables.
         """
@@ -304,12 +286,6 @@ class UF3(Basic_Problem):
         """
         # Introduction
         Initialize UF3 problem parameters.
-
-        # Args
-        None
-
-        # Returns
-        None
         """
         self.n_obj = 2  
         self.n_var = 30  
@@ -369,9 +345,6 @@ class UF3(Basic_Problem):
         # Introduction
         Return a string representation of the problem class.
 
-        # Args
-        None
-
         # Returns
         - str: A string describing the problem's name, number of objectives, and variables.
         """
@@ -405,11 +378,6 @@ class UF4(Basic_Problem):
         # Introduction
         Initialize UF4 problem parameters.
 
-        # Args
-        None
-
-        # Returns
-        None
         """
         self.n_obj = 2  
         self.n_var = 30  
@@ -469,9 +437,6 @@ class UF4(Basic_Problem):
         # Introduction
         Return a string representation of the problem class.
 
-        # Args
-        None
-
         # Returns
         - str: A string describing the problem's name, number of objectives, and variables.
         """
@@ -504,12 +469,6 @@ class UF5(Basic_Problem):
         """
         # Introduction
         Initialize UF5 problem parameters.
-
-        # Args
-        None
-
-        # Returns
-        None
         """
         self.n_obj = 2  
         self.n_var = 30  
@@ -568,9 +527,6 @@ class UF5(Basic_Problem):
         # Introduction
         Return a string representation of the problem class.
 
-        # Args
-        None
-
         # Returns
         - str: A string describing the problem's name, number of objectives, and variables.
         """
@@ -603,11 +559,6 @@ class UF6(Basic_Problem):
         # Introduction
         Initialize UF6 problem parameters.
 
-        # Args
-        None
-
-        # Returns
-        None
         """
         self.n_obj = 2 
         self.n_var = 30 
@@ -672,9 +623,6 @@ class UF6(Basic_Problem):
         # Introduction
         Return a string representation of the problem class.
 
-        # Args
-        None
-
         # Returns
         - str: A string describing the problem's name, number of objectives, and variables.
         """
@@ -707,11 +655,6 @@ class UF7(Basic_Problem):
         # Introduction
         Initialize UF7 problem parameters.
 
-        # Args
-        None
-
-        # Returns
-        None
         """
         self.n_obj = 2 
         self.n_var = 30 
@@ -769,9 +712,6 @@ class UF7(Basic_Problem):
         # Introduction
         Return a string representation of the problem class.
 
-        # Args
-        None
-
         # Returns
         - str: A string describing the problem's name, number of objectives, and variables.
         """
@@ -804,11 +744,6 @@ class UF8(Basic_Problem):
         # Introduction
         Initialize UF8 problem parameters, including bounds and variable types.
 
-        # Args
-        None
-
-        # Returns
-        None
         """
         self.n_obj = 3 
         self.n_var = 30 
@@ -869,9 +804,6 @@ class UF8(Basic_Problem):
         # Introduction
         Return a string representation of the problem class.
 
-        # Args
-        None
-
         # Returns
         - str: A string describing the problem's name, number of objectives, and variables.
         """
@@ -901,11 +833,6 @@ class UF9(Basic_Problem):
         # Introduction
         Initialize UF9 problem parameters, including bounds and variable types.
 
-        # Args
-        None
-
-        # Returns
-        None
         """
         self.n_obj = 3  
         self.n_var = 30  
@@ -967,8 +894,6 @@ class UF9(Basic_Problem):
         # Introduction
         Return a string representation of the problem class.
 
-        # Args
-        None
 
         # Returns
         - str: A string describing the problem's name, number of objectives, and variables.
@@ -1000,11 +925,6 @@ class UF10(Basic_Problem):
         # Introduction
         Initialize UF10 problem parameters, including bounds and variable types.
 
-        # Args
-        None
-
-        # Returns
-        None
         """
         self.n_obj = 3  
         self.n_var = 30  
@@ -1062,9 +982,6 @@ class UF10(Basic_Problem):
         """
         # Introduction
         Return a string representation of the problem class.
-
-        # Args
-        None
 
         # Returns
         - str: A string describing the problem's name, number of objectives, and variables.
