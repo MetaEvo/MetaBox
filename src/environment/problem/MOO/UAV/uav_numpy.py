@@ -1,34 +1,3 @@
-"""
-=========================================================
-File Name: uav_numpy.py
-Author: Sijie Ma (GitHub: Feather_red)
-Date: 2025-02-17
-=========================================================
-
-Description:
-This script implements UAV path planning based on the paper:
-"Benchmarking Global Optimization Techniques for Unmanned Aerial Vehicle Path Planning."
-It provides a Python migration of a MATLAB implementation.
-
-Features:
-- Implements UAV path planning in a real-world scenario.
-- Uses NumPy for numerical computations.
-- Translates MATLAB code to Python.
-
-Dependencies:
-- numpy
-- torch
-- pickle
-
-References:
-- Shehadeh, M. A., & Kudela, J. (2025). Benchmarking global optimization techniques for unmanned aerial vehicle path planning.
-  arXiv. https://arxiv.org/abs/2501.14503
-
-Version:
-- Python implementation using NumPy
-
-=========================================================
-"""
 from ....problem.basic_problem import Basic_Problem
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
