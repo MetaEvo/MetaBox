@@ -1754,17 +1754,33 @@ class MOO_Logger(Basic_Logger):
 
 
 class MMO_Logger(Basic_Logger):
+    """
+    #Introduction:
+    The customized logger for multi-modal optimization(MTO) scenario.
+    """
     def __init__(self, config: argparse.Namespace) -> None:
         super().__init__(config)
 
     def data_wrapper_prsr_rollout(self, data, ):
+        """
+        #Introduction:
+        Wrapper function to extract pr/sr data for logging rollout results.
+        """
         res = np.array(data)
         return res[:, -1, 3]
 
     def data_wrapper_prsr_hist(self,data,):
+        """
+        #Introduction:
+        Wrapper function to extract pr/sr historical information.
+        """
         return np.array(data)[:, :, 3]
 
     def data_wrapper_cost_rollout(self,data, ):
+        """
+        #Introduction:
+        Wrapper function to extract cost data for logging rollout results.
+        """
         res = np.array(data)
         return res[:, -1]
 
