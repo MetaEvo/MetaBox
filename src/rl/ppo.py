@@ -20,9 +20,6 @@ class Memory:
     - __init__(): Initializes the memory by creating empty lists for actions, states, log probabilities, and rewards.
     - clear_memory(): Clears the stored memory by deleting the lists of actions, states, log probabilities, and rewards.
 
-    # Raises:
-
-    This class does not raise any exceptions.
     """
     def __init__(self):
         self.actions = []
@@ -40,14 +37,15 @@ class PPO_Agent(Basic_Agent):
     """
     # Introduction
     The `PPO_Agent` class implements a Proximal Policy Optimization (PPO) agent for reinforcement learning. This agent uses actor-critic architecture, generalized advantage estimation, and clipping techniques to optimize policies in a stable and efficient manner. It supports parallelized environments, logging to TensorBoard, and saving/loading checkpoints for training continuation.
+
     # Original paper
     "[**Proximal Policy Optimization Algorithms**](https://arxiv.org/abs/1707.06347)."
-    # Official Implementation
-    None
+
     # Args
     - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
     - `networks` (dict): A dictionary of neural networks used by the agent, with keys as network names (e.g., 'actor', 'critic') and values as the corresponding network instances.
     - `learning_rates` (float): Learning rate for the optimizer.
+
     # Attributes
     - `gamma` (float): Discount factor for future rewards.
     - `n_step` (int): Number of steps for n-step returns.
@@ -59,25 +57,25 @@ class PPO_Agent(Basic_Agent):
     - `optimizer` (torch.optim.Optimizer): Optimizer for training the networks.
     - `learning_time` (int): Counter for the total number of training steps.
     - `cur_checkpoint` (int): Counter for the current checkpoint index.
+
     # Methods
-    - `set_network(networks, learning_rates)`: Initializes the actor and critic networks, sets up the optimizer, and moves networks to the specified device.
-    - `get_step()`: Returns the current training step count.
-    - `update_setting(config)`: Updates the agent's configuration and resets training-related attributes.
-    - `train_episode(envs, seeds, para_mode, compute_resource, tb_logger, required_info)`: Trains the agent for one episode using the PPO algorithm.
-    - `rollout_episode(env, seed, required_info)`: Executes a single rollout in the environment and collects results.
-    - `rollout_batch_episode(envs, seeds, para_mode, compute_resource, required_info)`: Executes rollouts in parallel environments and collects results.
-    - `log_to_tb_train(tb_logger, mini_step, grad_norms, reinforce_loss, baseline_loss, Return, Reward, memory_reward, critic_output, logprobs, entropy, approx_kl_divergence, extra_info)`: Logs training metrics to TensorBoard.
-    # Returns
-    - `train_episode`: A tuple `(is_train_ended, return_info)` where:
-        - `is_train_ended` (bool): Indicates whether the training has reached the maximum number of steps.
-        - `return_info` (dict): Contains training metrics such as rewards, learning steps, and environment-specific information.
-    - `rollout_episode`: A dictionary containing rollout results such as rewards, costs, and metadata.
-    - `rollout_batch_episode`: A dictionary containing batch rollout results such as rewards, costs, and metadata.
-    # Raises
-    - `AssertionError`: If required network attributes (e.g., 'actor', 'critic') are not set or if the optimizer specified in the configuration is invalid.
-    - `ValueError`: If the length of the learning rates list does not match the number of networks.
+    - `set_network`(networks, learning_rates): Initializes the actor and critic networks, sets up the optimizer, and moves networks to the specified device.
+    - `get_step`(): Returns the current training step count.
+    - `update_setting`(config): Updates the agent's configuration and resets training-related attributes.
+    - `train_episode`(envs, seeds, para_mode, compute_resource, tb_logger, required_info): Trains the agent for one episode using the PPO algorithm.
+    - `rollout_episode`(env, seed, required_info): Executes a single rollout in the environment and collects results.
+    - `rollout_batch_episode`(envs, seeds, para_mode, compute_resource, required_info): Executes rollouts in parallel environments and collects results.
+    - `log_to_tb_train`(tb_logger, mini_step, grad_norms, reinforce_loss, baseline_loss, Return, Reward, memory_reward, critic_output, logprobs, entropy, approx_kl_divergence, extra_info): Logs training metrics to TensorBoard.
     """
     def __init__(self, config, networks: dict, learning_rates: float):
+        """
+        Initializes the PPO agent with the given configuration, networks, and learning rates.
+
+        # Args:
+        - config: Configuration object containing all necessary parameters for the experiment.
+        - networks (dict): A dictionary of neural networks used by the agent.
+        - learning_rates (float): Learning rate for the optimizer.
+        """
         super().__init__(config)
         self.config = config
 
@@ -118,6 +116,16 @@ class PPO_Agent(Basic_Agent):
         self.cur_checkpoint += 1
 
     def set_network(self, networks: dict, learning_rates: float):
+        """
+        Initializes the actor and critic networks, sets up the optimizer, and moves networks to the specified device.
+
+        # Args:
+        - networks (dict): A dictionary of neural networks used by the agent.
+        - learning_rates (float): Learning rate for the optimizer.
+
+        # Raises:
+        - ValueError: If the length of the learning rates list does not match the number of networks.
+        """
         Network_name = []
         if networks:
             for name, network in networks.items():
@@ -145,9 +153,21 @@ class PPO_Agent(Basic_Agent):
             getattr(self, network_name).to(self.device)
 
     def get_step(self):
+        """
+        Returns the current training step count.
+
+        # Returns:
+        - int: The current training step count.
+        """
         return self.learning_time
 
     def update_setting(self, config):
+        """
+        Updates the agent's configuration and resets training-related attributes.
+
+        # Args:
+        - config: Configuration object containing updated parameters.
+        """
         self.config.max_learning_step = config.max_learning_step
         self.config.agent_save_dir = config.agent_save_dir
         self.learning_time = 0
@@ -165,6 +185,20 @@ class PPO_Agent(Basic_Agent):
                       compute_resource = {},
                       tb_logger = None,
                       required_info = {}):
+        """
+        Trains the agent for one episode using the PPO algorithm.
+
+        # Args:
+        - envs: List of environments for training.
+        - seeds: Seeds for reproducibility.
+        - para_mode (str): Parallelization mode for the environments.
+        - compute_resource (dict): Resources for computation (e.g., CPUs, GPUs).
+        - tb_logger: TensorBoard logger for logging training metrics.
+        - required_info (dict): Additional information required from the environment.
+
+        # Returns:
+        - tuple: A boolean indicating whether training has ended and a dictionary with training metrics.
+        """
         num_cpus = None
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
@@ -363,6 +397,17 @@ class PPO_Agent(Basic_Agent):
                         env,
                         seed = None,
                         required_info = {}):
+        """
+        Executes a single rollout in the environment and collects results.
+
+        # Args:
+        - env: The environment for the rollout.
+        - seed (int, optional): Seed for reproducibility.
+        - required_info (dict): Additional information required from the environment.
+
+        # Returns:
+        - dict: A dictionary containing results of the rollout episode, including return and environment-specific metrics.
+        """
         with torch.no_grad():
             if seed is not None:
                 env.seed(seed)
@@ -395,6 +440,19 @@ class PPO_Agent(Basic_Agent):
                               # num_gpus: int = 0,
                               compute_resource = {},
                               required_info = {}):
+        """
+        Executes rollouts in parallel environments and collects results.
+
+        # Args:
+        - envs: List of environments for the rollout.
+        - seeds (list, optional): List of seeds for reproducibility.
+        - para_mode (str): Parallelization mode for the environments.
+        - compute_resource (dict): Resources for computation (e.g., CPUs, GPUs).
+        - required_info (dict): Additional information required from the environments.
+
+        # Returns:
+        - dict: A dictionary containing results of the batch rollout episodes, including return and environment-specific metrics.
+        """
         num_cpus = None
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
@@ -455,6 +513,24 @@ class PPO_Agent(Basic_Agent):
                         logprobs, entropy,
                         approx_kl_divergence,
                         extra_info = {}):
+        """
+        Logs training metrics to TensorBoard.
+
+        # Args:
+        - tb_logger: TensorBoard logger for logging training metrics.
+        - mini_step (int): Current mini-batch step.
+        - grad_norms (tuple): Gradient norms for the networks.
+        - reinforce_loss (torch.Tensor): Actor loss.
+        - baseline_loss (torch.Tensor): Critic loss.
+        - Return (torch.Tensor): Episode return.
+        - Reward (torch.Tensor): Target reward.
+        - memory_reward (torch.Tensor): Memory reward.
+        - critic_output (torch.Tensor): Critic output.
+        - logprobs (torch.Tensor): Log probabilities.
+        - entropy (torch.Tensor): Entropy of the policy.
+        - approx_kl_divergence (torch.Tensor): Approximate KL divergence.
+        - extra_info (dict): Additional information to log.
+        """
         # Iterate over the extra_info dictionary and log data to tb_logger
         # extra_info: Dict[str, Dict[str, Union[List[str], List[Union[int, float]]]]] = {
         #     "loss": {"name": [], "data": [0.5]},  # No "name", logs under "loss"

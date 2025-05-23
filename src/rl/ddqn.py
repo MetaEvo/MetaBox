@@ -14,14 +14,15 @@ class DDQN_Agent(Basic_Agent):
     """
     # Introduction
     The `DDQN_Agent` class implements a Double Deep Q-Network (DDQN) agent for reinforcement learning. This agent leverages experience replay, target networks, and epsilon-greedy exploration to learn optimal policies in a given environment.
+
     # Original paper
     "[**Deep Reinforcement Learning with Double Q-learning**](https://arxiv.org/abs/1509.06461)."Proceedings of the AAAI Conference on Artificial Intelligence, 2016
-    # Official Implementation
-    None
+
     # Args
     - `config`: Configuration object containing all necessary parameters for experiment.For details you can visit config.py.
     - `networks` (dict): A dictionary of neural networks used by the agent, with keys as network names (e.g., 'actor', 'critic') and values as the corresponding network instances.
     - `learning_rates` (float): Learning rate for the optimizer.
+
     # Attributes
     - `gamma` (float): Discount factor for future rewards.
     - `n_act` (int): Number of possible actions in the environment.
@@ -38,27 +39,27 @@ class DDQN_Agent(Basic_Agent):
     - `criterion` (torch.nn.Module): Loss function used for training.
     - `learning_time` (int): Counter for the number of training steps.
     - `cur_checkpoint` (int): Counter for the current checkpoint index.
+
     # Methods
     - `__init__(config, networks, learning_rates)`: Initializes the DDQN agent with the given configuration, networks, and learning rates.
-    - `set_network(networks, learning_rates)`: Sets up the networks, optimizer, and loss function for the agent.
-    - `get_step()`: Returns the current training step.
-    - `update_setting(config)`: Updates the agent's configuration settings.
-    - `get_action(state, epsilon_greedy=False)`: Selects an action based on the current state and exploration strategy.
-    - `train_episode(envs, seeds, para_mode, compute_resource, tb_logger, required_info)`: Trains the agent for one episode in a parallelized environment.
-    - `rollout_episode(env, seed, required_info)`: Executes a single episode in the environment without training.
-    - `rollout_batch_episode(envs, seeds, para_mode, compute_resource, required_info)`: Executes multiple episodes in parallel environments without training.
-    - `log_to_tb_train(tb_logger, mini_step, grad_norms, loss, Return, Reward, predict_Q, target_Q, extra_info)`: Logs training metrics to TensorBoard.
-    # Returns
-    - `train_episode`: A tuple containing:
-        - `is_train_ended` (bool): Whether the training has reached the maximum learning steps.
-        - `return_info` (dict): Dictionary containing training metrics such as return, loss, and environment-specific information.
-    - `rollout_episode`: A dictionary containing episode results such as return, cost, and metadata.
-    - `rollout_batch_episode`: A dictionary containing batch episode results such as return, cost, and environment-specific information.
-    # Raises
-    - `AssertionError`: If required network attributes (e.g., `model`) are not set or if the optimizer/criterion specified in the configuration is invalid.
-    - `ValueError`: If the length of the `learning_rates` list does not match the number of networks provided.
+    - `set_network`(networks, learning_rates): Sets up the networks, optimizer, and loss function for the agent.
+    - `get_step`(): Returns the current training step.
+    - `update_setting`(config): Updates the agent's configuration settings.
+    - `get_action`(state, epsilon_greedy=False): Selects an action based on the current state and exploration strategy.
+    - `train_episode`(envs, seeds, para_mode, compute_resource, tb_logger, required_info): Trains the agent for one episode in a parallelized environment.
+    - `rollout_episode`(env, seed, required_info): Executes a single episode in the environment without training.
+    - `rollout_batch_episode`(envs, seeds, para_mode, compute_resource, required_info): Executes multiple episodes in parallel environments without training.
+    - `log_to_tb_train`(tb_logger, mini_step, grad_norms, loss, Return, Reward, predict_Q, target_Q, extra_info): Logs training metrics to TensorBoard.
     """
     def __init__(self, config, networks: dict, learning_rates: float):
+        """
+        Initializes the DDQN agent with the given configuration, networks, and learning rates. Store the initial model
+
+        # Args:
+        - config: Configuration object containing all necessary parameters for the experiment.
+        - networks (dict): A dictionary of neural networks used by the agent.
+        - learning_rates (float): Learning rate for the optimizer.
+        """
         super().__init__(config)
         self.config = config
 
@@ -85,6 +86,17 @@ class DDQN_Agent(Basic_Agent):
         self.cur_checkpoint += 1
 
     def set_network(self, networks: dict, learning_rates: float):
+        """
+        Sets up the networks, optimizer, and loss function for the agent.
+
+        # Args:
+        - networks (dict): A dictionary of neural networks used by the agent.
+        - learning_rates (float): Learning rate for the optimizer.
+
+        # Raises:
+        - AssertionError: If required network attributes (e.g., `model`) are not set.
+        - ValueError: If the length of the `learning_rates` list does not match the number of networks provided.
+        """
         Network_name = []
         if networks:
             for name, network in networks.items():
@@ -116,9 +128,21 @@ class DDQN_Agent(Basic_Agent):
             getattr(self, network_name).to(self.device)
 
     def get_step(self):
+        """
+        Returns the current training step.
+
+        # Returns:
+        - int: The current training step.
+        """
         return self.learning_time
 
     def update_setting(self, config):
+        """
+        Updates the agent's configuration settings.
+
+        # Args:
+        - config: Configuration object containing updated parameters.
+        """
         self.config.max_learning_step = config.max_learning_step
         self.config.agent_save_dir = config.agent_save_dir
         self.learning_time = 0
@@ -127,6 +151,16 @@ class DDQN_Agent(Basic_Agent):
         self.cur_checkpoint = 1
 
     def get_action(self, state, epsilon_greedy = False):
+        """
+        Selects an action based on the current state and exploration strategy.
+
+        # Args:
+        - state (torch.Tensor): The current state.
+        - epsilon_greedy (bool): Whether to use epsilon-greedy exploration.
+
+        # Returns:
+        - numpy.ndarray: The selected action(s).
+        """
         state = torch.Tensor(state).to(self.device)
         with torch.no_grad():
             Q_list = self.model(state)
@@ -146,6 +180,20 @@ class DDQN_Agent(Basic_Agent):
                       compute_resource = {},
                       tb_logger = None,
                       required_info = {}):
+        """
+        Trains the agent for one episode in a parallelized environment.
+
+        # Args:
+        - envs: List of environments for training.
+        - seeds: Seeds for reproducibility.
+        - para_mode (str): Parallelization mode for the environments.
+        - compute_resource (dict): Resources for computation (e.g., CPUs, GPUs).
+        - tb_logger: TensorBoard logger for logging training metrics.
+        - required_info (dict): Additional information required from the environment.
+
+        # Returns:
+        - tuple: A boolean indicating whether training has ended and a dictionary with training metrics.
+        """
         num_cpus = None
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
@@ -251,6 +299,17 @@ class DDQN_Agent(Basic_Agent):
                         env,
                         seed = None,
                         required_info = {}):
+        """
+        Executes a single episode in the environment without training.
+
+        # Args:
+        - env: The environment for the rollout.
+        - seed (int, optional): Seed for reproducibility.
+        - required_info (dict): Additional information required from the environment.
+
+        # Returns:
+        - dict: A dictionary containing episode results such as return, cost, and metadata.
+        """
         with torch.no_grad():
             if seed is not None:
                 env.seed(seed)
@@ -286,6 +345,19 @@ class DDQN_Agent(Basic_Agent):
                               # num_gpus: int = 0,
                               compute_resource = {},
                               required_info = {}):
+        """
+        Executes multiple episodes in parallel environments without training.
+
+        # Args:
+        - envs: List of environments for the rollout.
+        - seeds (list, optional): List of seeds for reproducibility.
+        - para_mode (str): Parallelization mode for the environments.
+        - compute_resource (dict): Resources for computation (e.g., CPUs, GPUs).
+        - required_info (dict): Additional information required from the environments.
+
+        # Returns:
+        - dict: A dictionary containing batch episode results such as return, cost, and environment-specific information.
+        """
         num_cpus = None
         num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
         if 'num_cpus' in compute_resource.keys():
@@ -331,6 +403,21 @@ class DDQN_Agent(Basic_Agent):
                         Return, Reward,
                         predict_Q, target_Q,
                         extra_info = {}):
+        """
+        Logs training metrics to TensorBoard.
+
+        # Args:
+        - tb_logger: TensorBoard logger for logging training metrics.
+        - mini_step (int): Current mini-batch step.
+        - grad_norms (tuple): Gradient norms for the networks.
+        - loss (torch.Tensor): Training loss.
+        - Return (torch.Tensor): Episode return.
+        - Reward (torch.Tensor): Target reward.
+        - predict_Q (torch.Tensor): Predicted Q-values.
+        - target_Q (torch.Tensor): Target Q-values.
+        - extra_info (dict): Additional information to log.
+        """
+
         # Iterate over the extra_info dictionary and log data to tb_logger
         # extra_info: Dict[str, Dict[str, Union[List[str], List[Union[int, float]]]]] = {
         #     "loss": {"name": [], "data": [0.5]},  # No "name", logs under "loss"
