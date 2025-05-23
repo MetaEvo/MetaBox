@@ -86,15 +86,16 @@ draw normalized optimization curve across all problem instances and test runs:
 G = 200 # optimization generations
 draw_data = np.zeros((len(problem_list), len(metadata[problem_list[0]]),G))
 for i,problem in enumerate(problem_list):
-    for j, metarun in enumerate(metadata):
-        all_Y = metadata[problem]['Cost']
-        min_Y_0 = np.min(all_Y[0]
+    problem_data = metadata[problem]
+    for j, metarun in enumerate(problem_data):
+        all_Y = metarun['Cost']
+        min_Y_0 = np.min(all_Y[0])
         min_all_Y = np.min(all_Y[0])  
         for g in range(G):
-            min_all_Y = np.min(min_all_Y, all_Y[g].min())
+            min_all_Y = np.minimum(min_all_Y, all_Y[g].min())
             draw_data[i,j,g] = (min_all_Y - 0) /(min_Y_0 - 0)
 plt.plot(range(G),np.mean(darw_data,axis=(0,1)),'o')
-plt.fill_between(range(G),np.mean(darw_data,axis=(0,1))-np.mean(np.std(darw_data,axis=1),axis=0),np.mean(darw_data,axis=(0,1))+np.mean(np.std(darw_data,axis=1),axis=0),alpha=0.3)
+plt.fill_between(range(G),np.mean(draw_data,axis=(0,1))-np.mean(np.std(draw_data,axis=1),axis=0),np.mean(draw_data,axis=(0,1))+np.mean(np.std(draw_data,axis=1),axis=0),alpha=0.3)
 plt.show()
 ```
 
