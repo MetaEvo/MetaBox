@@ -33,8 +33,10 @@ python table_3.py
 
 ## 4. out-of-distribution test in Figure 6 of the paper.
 ```shell
-python zero_shot.py
+python figure_6.py
 ```
-This might costs you
 
 ## 5. laerning efficiency and Anti-NFL indicator test in Figure 7 of the paper.
+```shell
+python figure_7.py
+```
