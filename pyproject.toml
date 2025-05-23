@@ -48,7 +48,7 @@ dependencies = [
 
 [project.urls]
 "Homepage" = "https://github.com/MetaEvo/MetaBox"
-"Documentation" = "https://github.com/MetaEvo/MetaBox/blob/v2.0.0/README.md"
+"Documentation" = "https://metaboxdoc.readthedocs.io/"
 "Bug Tracker" = "https://github.com/MetaEvo/MetaBox/issues"
 
 [tool.setuptools.packages.find]
