@@ -163,8 +163,6 @@ class WFG(Basic_Problem):
         - l (int, optional): Number of distance parameters.
         - **kwargs: Additional keyword arguments.
 
-        # Returns
-        None
         """
 
         self.n_var = n_var
@@ -201,8 +199,6 @@ class WFG(Basic_Problem):
         - k (int): Number of position parameters.
         - n_obj (int): Number of objectives.
 
-        # Returns
-        None
 
         # Raises
         - ValueError: If constraints are violated.
@@ -282,8 +278,6 @@ class WFG(Basic_Problem):
         # Introduction
         Return a string representation of the problem class.
 
-        # Args
-        None
 
         # Returns
         - str: A string describing the problem's name, number of objectives, and variables.
