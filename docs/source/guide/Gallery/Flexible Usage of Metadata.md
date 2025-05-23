@@ -95,7 +95,8 @@ for i,problem in enumerate(problem_list):
             min_all_Y = np.minimum(min_all_Y, all_Y[g].min())
             draw_data[i,j,g] = (min_all_Y - 0) /(min_Y_0 - 0)
 plt.plot(range(G),np.mean(darw_data,axis=(0,1)),'-o')
-plt.fill_between(range(G),np.mean(draw_data,axis=(0,1))-np.mean(np.std(draw_data,axis=1),axis=0),np.mean(draw_data,axis=(0,1))+np.mean(np.std(draw_data,axis=1),axis=0),alpha=0.3)
+plt.fill_between(range(G),np.mean(draw_data,axis=(0,1))-np.mean(np.std(draw_data,axis=1),axis=0),
+                np.mean(draw_data,axis=(0,1))+np.mean(np.std(draw_data,axis=1),axis=0),alpha=0.3)
 plt.show()
 ```
 
