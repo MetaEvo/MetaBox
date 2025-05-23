@@ -20,7 +20,8 @@ dir_results = []
 for baseline in baseline_list:
     baseline_config = config.copy()
     if baseline == "GLHF" or baseline == "B2OPT" or baseline == "RNNOPT":
-        baseline_config['train_problem'] = "bbob-torch-10D" 
+        baseline_config['train_problem'] = "bbob-torch-10D"
+        baseline_config['train_parallel_mode'] = 'dummy'
 
     tmp_config = Config(baseline_config)
     tmp_config.train_name = ""
