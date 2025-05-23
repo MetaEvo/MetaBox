@@ -9,7 +9,7 @@ Multi-Task Optimization
 ```
 
 
-
+<!--
 # Problem Sets
 | 🚩 **Problem Category**           | 📚 **Problem set**                                                                                                         |
 | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
@@ -120,3 +120,4 @@ Multi-Task Optimization
   <img src="https://github.com/GMC-DRL/MetaBox/blob/v2.0.0/docs/pic/WCCI2020.png" width="600"/>
   </p>
   For example, P1 is composed of a single base problem, which consists of 50 differently shifted and rotated Sphere functions. In contrast, composite problems like P4 formed by multiple base problems are constructed by cyclically incorporating differently shifted and rotated Sphere, Rosenbrock, and Ackley functions to form a multi-task optimization problem.
+-->
