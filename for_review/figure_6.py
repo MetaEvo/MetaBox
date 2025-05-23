@@ -71,7 +71,7 @@ for test_problem in zero_shot_problem:
             for i, metarun in enumerate(metadata):
                 cost_run = metarun['Cost']
                 y_0 = np.min(cost_run[0])
-                y_min = y_0.copy()
+                y_min = np.min(cost_run[0])
                 for cost in cost_run:
                     y_min = np.minimum(y_min, np.min(cost))
                 

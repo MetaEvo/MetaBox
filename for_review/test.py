@@ -3,10 +3,6 @@ from metaevobox.baseline.metabbo import *
 from metaevobox.baseline.bbo import *
 from metaevobox.environment.optimizer import *
 
-import pickle
-import numpy as np
-import pandas as pd
-from openpyxl import Workbook
 # test bbob-10D difficult
 metabbo_list = ['RNNOPT', 'DEDDQN', 'DEDQN', 'LDE', 'RLPSO', 'RLEPSO', 'NRLPSO', 'LES', 'GLEET', 'GLHF', 'RLDAS', 'SYMBOL', 'B2OPT', 'RLDEAFL']
 metabbo_path = "train/"

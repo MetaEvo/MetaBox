@@ -28,7 +28,7 @@ for i, baseline in enumerate(baseline_list):
                 y_0 = np.min(run_cost[0])
                 y_min = y_0
                 for cost in run_cost:
-                    y_min = min(y_min, np.min(cost))
+                    y_min = np.minimum(y_min, np.min(cost))
                 total_.append(y_min)
             mean_result[i][j] = np.mean(total_)
             std_result[i][j] = np.std(total_)

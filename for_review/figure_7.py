@@ -68,16 +68,6 @@ for i, baseline in enumerate(metabbo_list):
     learning_efficiency.append((c20_result[baseline] - c0_result[baseline]) / (Tg_list[i] - T0_list[i]))
     print(f"{baseline}: {learning_efficiency[i]}")
 
-# plt.bar(metabbo_list, learning_efficiency)
-# plt.ylabel('Learning Efficiency')
-# plt.title('Learning Efficiency by Baseline')
-# plt.xticks(rotation=45)
-# plt.tight_layout()
-
-# plt.savefig('learning_efficiency.pdf', dpi=300)
-# print("Figure_7 saved as learning_efficiency.pdf")
-# plt.show()
-
 # ------------------------------------------------ anti-nfl ------------------------------------------------
 
 zeroshot_problem_list = ['bbob-10D', 'bbob-noisy-10D', 'bbob-30D', 'bbob-noisy-30D', 'protein', 'uav', 'hpo-b']
@@ -129,7 +119,7 @@ for zero_shot_problem in zeroshot_problem_list:
             for metarun in metadata:
                 cost_run = metarun['Cost']
                 y_0 = np.min(cost_run[0])
-                y_min = y_0.copy()
+                y_min = np.min(cost_run[0])
                 for cost in cost_run:
                     y_min = np.minimum(y_min, np.min(cost))
                 performance.append((y_min - y_0) / (gbest[zero_shot_problem][problem] - y_0 + 1e-20))
