@@ -1,5 +1,4 @@
 ```{toctree}
-
 :maxdepth: 1
 
 Single-Object Optimization
