@@ -71,12 +71,13 @@ run_id = 0
 data = metadata[problem][run_id]
 # process objective values data in the metadata
 all_Y = data['Cost']
-Y = [np.min(all_Y[0])]  
+Y = []
+y_min = np.min(all_Y[0])
 for y in all_Y:
-  Y.append(np.min(Y[-1],y.min()))
-Y = Y[1:] 
+  y_min = np.minimum(y_min, np.min(y))
+  Y.append(y_min)
 # draw optimization curve
-plt.plot(range(len(Y)),Y,'o')
+plt.plot(range(len(Y)),Y,'-o')
 plt.show()
 ```
 
