@@ -299,7 +299,6 @@ class GLHF(Basic_Agent):
     - __str__(): Returns the string representation of the agent.
     - train_episode(...): Trains the agent for one episode in parallel environments.
     - rollout_episode(...): Evaluates the agent in a single environment without training.
-    - rollout_batch_episode(...): Evaluates the agent in a batch of environments.
     - log_to_tb_train(...): Logs training metrics to TensorBoard.
     # train_episode
     Trains the agent for one episode using parallel environments. Handles environment setup, policy optimization, checkpointing, and logging.
@@ -321,16 +320,6 @@ class GLHF(Basic_Agent):
     - required_info (dict): Additional environment attributes to record.
     ## Returns:
     - results (dict): Dictionary containing cost, function evaluations, return, and optional metadata.
-    # rollout_batch_episode
-    Evaluates the agent in a batch of environments in parallel.
-    ## Args:
-    - envs: List of environments to evaluate on.
-    - seeds: Seeds for environment reproducibility.
-    - para_mode (str): Parallelization mode.
-    - compute_resource (dict): Resources for parallelization.
-    - required_info (dict): Additional environment attributes to record.
-    ## Returns:
-    - results (dict): Dictionary containing cost, function evaluations, and returns for each environment.
     # log_to_tb_train
     Logs training statistics and metrics to TensorBoard.
     ## Args:
@@ -498,43 +487,7 @@ class GLHF(Basic_Agent):
                 results[key] = getattr(env, required_info[key])
             return results
 
-    def rollout_batch_episode(self,
-                              envs,
-                              seeds = None,
-                              para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                              # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                              # num_cpus: Optional[Union[int, None]] = 1,
-                              # num_gpus: int = 0,
-                              compute_resource = {},
-                              required_info = {}):
-        num_cpus = None
-        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count()
-        if 'num_cpus' in compute_resource.keys():
-            num_cpus = compute_resource['num_cpus']
-        if 'num_gpus' in compute_resource.keys():
-            num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus = num_cpus, num_gpus = num_gpus)
-
-        env.seed(seeds)
-        env.reset()
-
-        R = torch.zeros(len(env))
-        TS = len(env)
-        # sample trajectory
-        while not env.all_done():
-            with torch.no_grad():
-                action = [copy.deepcopy(self.Pom) for _ in range(TS)]
-
-                _, rewards, is_end, info = env.step(action)
-
-                R += rewards
-        _Rs = R.detach().numpy().tolist()
-        env_cost = env.get_env_attr('cost')
-        env_fes = env.get_env_attr('fes')
-        results = {'cost': env_cost, 'fes': env_fes, 'return': _Rs}
-        for key in required_info.keys():
-            results[key] = env.get_env_attr(required_info[key])
-        return results
+    
 
     def log_to_tb_train(self, tb_logger, mini_step,
                         grad_norms,
