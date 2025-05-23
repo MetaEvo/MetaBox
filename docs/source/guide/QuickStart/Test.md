@@ -6,7 +6,8 @@ Numerous configurable options are available — refer to **Quickstart > [Config]
 
 ```{important}
 The following is the code specific to Linux.
-If you are using Windows, please add: \ ```if __name__ == "__main__":```
+If you are using Windows, please add: \
+```if __name__ == "__main__":```
 ```
 
 🧪 General Tester Code
