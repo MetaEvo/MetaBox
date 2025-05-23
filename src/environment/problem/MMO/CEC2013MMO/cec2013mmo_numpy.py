@@ -273,7 +273,7 @@ class CFunction(CEC2013MMO_Numpy_Problem):
         tmpx = np.divide((x - self.__O_[index]), self.__lambda_[index])
         self.__z_ = np.dot(tmpx, self.__M_[index])
 
-    def __load_rotmat(self, fname):
+    def __load_rotmat(self, file_obj):
         """
         # Introduction:
         Load the rotation matrix.
@@ -282,7 +282,7 @@ class CFunction(CEC2013MMO_Numpy_Problem):
         """
         self.__M_ = []
 
-        with fname.open('r') as f:
+        with file_obj as f:
             tmp = np.zeros((self.dim, self.dim))
             cline = 0
             ctmp = 0
