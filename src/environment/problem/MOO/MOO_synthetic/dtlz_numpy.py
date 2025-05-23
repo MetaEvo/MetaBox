@@ -150,15 +150,7 @@ class DTLZ(Basic_Problem):
         - n_obj (int): Number of objectives.
         - k (int, optional): Number of distance-related variables. Optional; computed if not given.
         - **kwargs: Additional keyword arguments for extension or metadata (currently unused).
-
-        # Attributes:
-        - n_var (int): The number of decision variables.
-        - n_obj (int): The number of objectives.
-        - k (int): The number of distance-related variables.
-        - vtype (type): The variable type. Default is `float`.
-        - lb (np.ndarray): Lower bounds of the decision variables (default: zeros).
-        - ub (np.ndarray): Upper bounds of the decision variables (default: ones).
-
+        
         # Raises:
         - Exception: If neither `n_var` nor `k` is provided.
         """
