@@ -574,7 +574,7 @@ class MOEAD(Basic_Optimizer):
         self.reset()
     
     def normal_boundary_weights(self,nobjs, divisions_outer, divisions_inner=0):
-       """
+        """
         # Introduction
 
         Generates a set of uniformly distributed weight vectors on the unit simplex using the normal boundary intersection method. This is commonly used in multi-objective optimization algorithms such as MOEA/D to decompose the objective space.
