@@ -114,7 +114,7 @@ tester.test()
 By default, MetaBox would automatically generate various visualized experimental results in your_dir/output/test/, enjoy these useful analysis results!
 
 ### High-level Development Usage
-We sincerely suggest researchers with interests to check out **[Online Documentation](https://metaboxdoc.readthedocs.io/en/latest/index.html)** for further flexible usege of MetaBox-v2, such as implementing your own MetaBBO, customized experimental design & analysis, using pre-collected metadata and seamless API calling with other famous optimization repos.
+We sincerely suggest researchers with interests to check out **[Online Documentation](https://metaboxdoc.readthedocs.io/en/stable/index.html)** for further flexible usege of MetaBox-v2, such as implementing your own MetaBBO, customized experimental design & analysis, using pre-collected metadata and seamless API calling with other famous optimization repos.
 
 
 ## Available Optimization Problem Set in MetaBox
