@@ -448,19 +448,20 @@ class Tester(object):
             self.agent_for_cp.append(copy.deepcopy(agent))
             self.agent_name_list.append(name)
             if name not in name_count:
-                name_count[name] = [id]
+                name_count[name] = 0
             else:
-                name_count[name].append(id)
+                name_count[name] += 1
         metabbo = []
-        for id, opt in enumerate(agents_optimizers_for_cp):
-            name = self.agent_name_list[id]
-            if len(name_count[name]) > 1:
-                for i in range(1, len(name_count[name])):
-                    updated_name = f"{i}_" + name
-                    self.agent_name_list[name_count[name][i]] = updated_name
-            setattr(opt, "test_name", self.agent_name_list[id])
-            metabbo.append(self.agent_name_list[id])
-            self.l_optimizer_for_cp.append(copy.deepcopy(opt))
+        for id, opt in enumerate(reversed(agents_optimizers_for_cp)):
+            name = self.agent_name_list[len(self.agent_name_list) - id - 1]
+            count = name_count[name]
+            if count:
+                name_count[name] -= 1
+                name = f"{count}_" + name
+            self.agent_name_list[len(self.agent_name_list) - id - 1] = name
+            setattr(opt, 'test_name', name)
+            metabbo.insert(0, name)
+            self.l_optimizer_for_cp.insert(0, copy.deepcopy(opt))
 
         name_count = dict()
         for id, opt in enumerate(traditional_optimizers_for_cp):
