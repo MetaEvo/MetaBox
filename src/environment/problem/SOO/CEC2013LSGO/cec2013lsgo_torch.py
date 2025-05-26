@@ -560,7 +560,7 @@ class F5_Torch(CEC2013LSGO_Torch_Problem):
     def __str__(self):
         return '7-nonseparable, 1-separable Shifted and Rotated Rastrigin'
 
-    def compute(self, x):
+    def func(self, x):
    
         result = torch.zeros(x.shape[0]).to(self.device)
 
@@ -608,7 +608,7 @@ class F6_Torch(CEC2013LSGO_Torch_Problem):
     def __str__(self):
         return '7-nonseparable, 1-separable Shifted and Rotated Ackley'
 
-    def compute(self, x):
+    def func(self, x):
 
         result = torch.zeros(x.shape[0])
 
@@ -657,7 +657,7 @@ class F7_Torch(CEC2013LSGO_Torch_Problem):
         return '7-nonseparable, 1-separable Shifted Schwefel'
 
 
-    def compute(self, x):
+    def func(self, x):
 
         result = torch.zeros(x.shape[0])
 
@@ -704,7 +704,7 @@ class F8_Torch(CEC2013LSGO_Torch_Problem):
     def __str__(self):
         return '20-nonseparable Shifted and Rotated Elliptic'
 
-    def compute(self, x):
+    def func(self, x):
 
         result = torch.zeros(x.shape[0])
 
@@ -743,7 +743,7 @@ class F9_Torch(CEC2013LSGO_Torch_Problem):
     def __str__(self):
         return '20-nonseparable Shifted and Rotated Rastrigin'
     
-    def compute(self, x):
+    def func(self, x):
 
         result = torch.zeros(x.shape[0])
 
@@ -785,7 +785,7 @@ class F10_Torch(CEC2013LSGO_Torch_Problem):
         return '20-nonseparable Shifted and Rotated Ackley'
 
 
-    def compute(self, x):
+    def func(self, x):
 
         result = torch.zeros(x.shape[0])
 
@@ -826,7 +826,7 @@ class F11_Torch(CEC2013LSGO_Torch_Problem):
     def __str__(self):
         return '20-nonseparable Shifted Schwefel'
 
-    def compute(self, x):
+    def func(self, x):
 
         result = torch.zeros(x.shape[0])
 
@@ -857,7 +857,7 @@ class F12_Torch(CEC2013LSGO_Torch_Problem):
     def __str__(self):
         return '20-nonseparable Shifted Schwefel'
 
-    def compute(self, x):
+    def func(self, x):
 
         result = torch.zeros(x.shape[0])
 
@@ -891,7 +891,7 @@ class F13_Torch(CEC2013LSGO_Torch_Problem):
     def __str__(self):
         return 'Shifted Schwefel’s Function with Conforming Overlapping Subcomponents'
 
-    def compute(self, x):
+    def func(self, x):
 
         result = torch.zeros(x.shape[0])
 
@@ -933,7 +933,7 @@ class F14_Torch(CEC2013LSGO_Torch_Problem):
     def __str__(self):
         return 'Shifted Schwefel’s Function with Conflicting Overlapping Subcomponents'
         
-    def compute(self, x):
+    def func(self, x):
 
         result = torch.zeros(x.shape[0])
 
@@ -963,7 +963,7 @@ class F15_Torch(CEC2013LSGO_Torch_Problem):
     def __str__(self):
         return 'Shifted Schwefel’s Function with Conflicting Overlapping Subcomponents'
     
-    def compute(self, x):      
+    def func(self, x):      
 
         result = torch.zeros(x.shape[0])
 
