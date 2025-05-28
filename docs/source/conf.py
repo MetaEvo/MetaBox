@@ -104,7 +104,16 @@ myst_enable_extensions = [
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "shibuya"
-
+html_context = {
+    "source_type": "github",
+    "source_user": "MetaEvo",
+    "source_repo": "MetaBox",
+    "source_version": "v2.0.0",
+    "source_docs_path": "/docs/source/", 
+}
+html_theme_options = {
+    "github_url": "https://github.com/MetaEvo/MetaBox",
+}
 # html_theme = 'sphinx_book_theme'
 # html_theme = 'press'
 html_static_path = ['_static']
