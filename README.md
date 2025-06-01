@@ -298,6 +298,13 @@ booktitle = {Advances in Neural Information Processing Systems},
 year={2023},
 volume = {36}
 }
+
+@article{ma2025metabox,
+  title={MetaBox-v2: A Unified Benchmark Platform for Meta-Black-Box Optimization},
+  author={Ma, Zeyuan and Gong, Yue-Jiao and Guo, Hongshu and Qiu, Wenjie and Ma, Sijie and Lian, Hongqiao and Zhan, Jiajun and Chen, Kaixu and Wang, Chen and Huang, Zhiyang and others},
+  journal={arXiv preprint arXiv:2505.17745},
+  year={2025}
+}
 ```
 
 ## 😁Contact Us
