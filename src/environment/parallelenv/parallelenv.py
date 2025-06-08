@@ -43,7 +43,7 @@ class ParallelEnv():
         
         # resource allocation
         if self.num_cpus is None:
-            self.num_cpus = int(os.cpu_count() * (100 - psutil.cpu_percent() / 100))
+            self.num_cpus = int(os.cpu_count() * (1 - psutil.cpu_percent() / 100))
             if self.num_cpus < 1:
                 self.num_cpus = os.cpu_count()  # anyway, take all available
         # if self.num_gpus is None:
