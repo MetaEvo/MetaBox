@@ -855,7 +855,7 @@ class F12_Torch(CEC2013LSGO_Torch_Problem):
         self.anotherz = torch.zeros(self.dim)
     
     def __str__(self):
-        return '20-nonseparable Shifted Schwefel'
+        return 'Shifted Rosenbrock'
 
     def func(self, x):
 
@@ -961,7 +961,7 @@ class F15_Torch(CEC2013LSGO_Torch_Problem):
         self.anotherz = torch.zeros(self.dimension) 
 
     def __str__(self):
-        return 'Shifted Schwefel’s Function with Conflicting Overlapping Subcomponents'
+        return 'Non-separable shifted Schwefel'
     
     def func(self, x):      
 
