@@ -414,7 +414,7 @@ class RLDAS(PPO_Agent):
                 state, reward, is_done, info = env.step(action)
                 R += reward
             env_cost = env.get_env_attr('cost')
-            env_fes = env.get_env_attr('fes')
+            env_fes = env.get_env_attr('FEs')
             results = {'cost': env_cost, 'fes': env_fes, 'return': R}
 
             if self.config.full_meta_data:
