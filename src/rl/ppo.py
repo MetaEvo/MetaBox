@@ -377,7 +377,7 @@ class PPO_Agent(Basic_Agent):
         is_train_ended = self.learning_time >= self.config.max_learning_step
         return_info = {'return': _R, 'learn_steps': self.learning_time, }
         env_cost = env.get_env_attr('cost')
-        return_info['gbest'] = env_cost[-1]
+        return_info['gbest'] = env_cost[:,-1]
 
         '''
         'return': 奖励
