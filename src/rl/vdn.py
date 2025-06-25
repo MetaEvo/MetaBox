@@ -344,7 +344,7 @@ class VDN_Agent(Basic_Agent):
         # Returns:
         - dict: A dictionary containing episode results such as return, cost, and metadata.
         """
-        if hasattr(self.config,required_info):
+        if hasattr(self.config,"required_info"):
             required_info = self.config.required_info
         with torch.no_grad():
             if seed is not None:
