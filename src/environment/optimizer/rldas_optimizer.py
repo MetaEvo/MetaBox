@@ -1388,7 +1388,7 @@ def compare_diff(diff, epsilon):
 # calculate FDC of group
 def cal_fdc(group, costs):
     opt_x = sorted(zip(group, costs), key = lambda x: x[1])[0][0]
-    ds = np.sum((group - opt_x) ** 2, axis = 1)
+    ds = np.linalg.norm(group - opt_x, axis=1)
     fs = 1 / (costs + (1e-8))
     C_fd = ((fs - fs.mean()) * (ds - ds.mean())).mean()
     delta_f = ((fs - fs.mean()) ** 2).mean()
