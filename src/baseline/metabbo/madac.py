@@ -88,7 +88,6 @@ class MADAC(VDN_Agent):
         config.warm_up_size = 500
         config.chunk_size = 1
         config.update_iter = 10
-        config.device = 'cuda' if th.cuda.is_available() else 'cpu'
         config.n_agent = 4
         config.available_action = [4, 4, 4, 2]
         config.optimizer = 'Adam'
