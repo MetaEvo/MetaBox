@@ -421,10 +421,10 @@ class WFG1(WFG):
         c = np.ones((num, M))
         for i in range(num):
             for j in range(1, M):
-                temp = Point[i, j] / Point[i, 0] * np.prod(1 - c[i, M - j: M - 1])
+                temp = Point[i, j] / (Point[i, 0]+1e-12) * np.prod(1 - c[i, M - j: M - 1])
                 c[i, M - j - 1] = (temp ** 2 - temp + np.sqrt(2 * temp)) / (temp ** 2 + 1)
         x = np.arccos(c) * 2 / np.pi
-        temp = (1 - np.sin(np.pi / 2 * x[:, [1]])) * Point[:, [M - 1]] / Point[:, [M - 2]]
+        temp = (1 - np.sin(np.pi / 2 * x[:, [1]])) * Point[:, [M - 1]] / (Point[:, [M - 2]]+1e-12)
         a = np.linspace(0, 1, 10000 + 1)
         for i in range(num):
             E = np.abs(
@@ -562,10 +562,10 @@ class WFG2(WFG):
         c = np.ones((num, M))
         for i in range(num):
             for j in range(1, M):
-                temp = Point[i, j] / Point[i, 0] * np.prod(1 - c[i, M - j: M - 1])
+                temp = Point[i, j] / (Point[i, 0]+1e-12) * np.prod(1 - c[i, M - j: M - 1])
                 c[i, M - j - 1] = (temp ** 2 - temp + np.sqrt(2 * temp)) / (temp ** 2 + 1)
         x = np.arccos(c) * 2 / np.pi
-        temp = (1 - np.sin(np.pi / 2 * x[:, [1]])) * Point[:, [M - 1]] / Point[:, [M - 2]]
+        temp = (1 - np.sin(np.pi / 2 * x[:, [1]])) * Point[:, [M - 1]] / (Point[:, [M - 2]]+1e-12)
         a = np.linspace(0, 1, 10000 + 1)
         for i in range(num):
             E = np.abs(temp[i] * (1 - np.cos(np.pi / 2 * a)) - 1 + a * np.cos(5 * np.pi * a) ** 2)
