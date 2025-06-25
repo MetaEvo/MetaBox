@@ -225,10 +225,10 @@ class WFG1_Torch(WFG_Torch):
         c = th.ones((num, M))
         for i in range(num):
             for j in range(1, M):
-                temp = Point[i, j] / Point[i, 0] * th.prod(1 - c[i, M - j: M - 1])
+                temp = Point[i, j] / (Point[i, 0]+1e-12) * th.prod(1 - c[i, M - j: M - 1])
                 c[i, M - j - 1] = (temp ** 2 - temp + th.sqrt(2 * temp)) / (temp ** 2 + 1)
         x = th.arccos(c) * 2 / math.pi
-        temp = (1 - th.sin(math.pi / 2 * x[:, [1]])) * Point[:, [M - 1]] / Point[:, [M - 2]]
+        temp = (1 - th.sin(math.pi / 2 * x[:, [1]])) * Point[:, [M - 1]] / (Point[:, [M - 2]]+1e-12)
         a = th.linspace(0, 1, 10000 + 1)
         for i in range(num):
             E = th.abs(
@@ -296,10 +296,10 @@ class WFG2_Torch(WFG_Torch):
         c = th.ones((num, M))
         for i in range(num):
             for j in range(1, M):
-                temp = Point[i, j] / Point[i, 0] * th.prod(1 - c[i, M - j: M - 1])
+                temp = Point[i, j] / (Point[i, 0]+1e-12) * th.prod(1 - c[i, M - j: M - 1])
                 c[i, M - j - 1] = (temp ** 2 - temp + th.sqrt(2 * temp)) / (temp ** 2 + 1)
         x = th.arccos(c) * 2 / math.pi
-        temp = (1 - th.sin(math.pi / 2 * x[:, [1]])) * Point[:, [M - 1]] / Point[:, [M - 2]]
+        temp = (1 - th.sin(math.pi / 2 * x[:, [1]])) * Point[:, [M - 1]] / (Point[:, [M - 2]]+1e-12)
         a = th.linspace(0, 1, 10000 + 1)
         for i in range(num):
             E = th.abs(temp[i] * (1 - th.cos(math.pi / 2 * a)) - 1 + a * th.cos(5 * math.pi * a) ** 2)
