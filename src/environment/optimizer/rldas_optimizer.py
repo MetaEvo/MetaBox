@@ -116,7 +116,7 @@ class RLDAS_Optimizer(Learnable_Optimizer):
         self.best_history = [[] for _ in range(len(optimizers))]
         self.worst_history = [[] for _ in range(len(optimizers))]
 
-        self.population = Population(self.dim, self.rng)
+        self.population = Population(self.dim, self.rng, problem)
         self.population.initialize_costs(self.problem)
         self.cost_scale_factor = self.population.gbest
         self.FEs = self.population.NP
@@ -267,13 +267,14 @@ class RLDAS_Optimizer(Learnable_Optimizer):
 
 
 class Population:
-    def __init__(self, dim, rng):
+    def __init__(self, dim, rng, problem):
         """
         # Introduction
         Initializes the RL-Differential Adaptive Search (RLDAS) optimizer with specified population and algorithm parameters.
         # Args:
         - dim (int): The dimensionality of each individual in the population.
         - rng (np.random.Generator): A NumPy random number generator instance for stochastic operations.
+        - problem (Basic_Problem): Current problem to be optimized
         # Built-in Attributes:
         - `self.Nmax` (int): The upper bound of the population size.Default is 170.
         - `self.Nmin` (int): The lower bound of the population size.Default is 30.
@@ -309,8 +310,8 @@ class Population:
         self.cbest_id = -1  # the index of individual with the best cost
         self.gbest = 1e15  # the global best cost
         self.gbest_solution = np.zeros(dim)  # the individual with global best cost
-        self.Xmin = np.ones(dim) * -5  # the upperbound of individual value
-        self.Xmax = np.ones(dim) * 5  # the lowerbound of individual value
+        self.Xmin = np.ones(dim) * getattr(problem, 'lb', 5)  # the upperbound of individual value
+        self.Xmax = np.ones(dim) * getattr(problem, 'ub', -5)  # the lowerbound of individual value
 
         self.rng = rng
 
