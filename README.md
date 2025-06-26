@@ -20,7 +20,7 @@
     <a href="https://metaboxdoc.readthedocs.io/en/stable/index.html"><img src="https://img.shields.io/badge/docs-passing-brightgreen?logo=read-the-docs&logoColor=white" alt="Documentation"></a>
     <a href="https://github.com/metaevo/metabox"><img src="https://visitor-badge.laobi.icu/badge?page_id=metaevo.metabox" alt="visitors"></a>
     <a href="https://pypi.org/project/metaevobox/"><img src="https://img.shields.io/pypi/v/metaevobox?logo=pypi&label=PyPI" alt="PyPI Version"></a>
-    <a href="https://pypi.org/project/metaevobox/"><img src="https://static.pepy.tech/badge/metaevobox?logo=pypi" alt="PyPI Downloads"></a>
+    <a href="https://pepy.tech/projects/metaevobox?timeRange=threeMonths&category=version&includeCIDownloads=true&granularity=daily&viewType=line&versions=2.0.1%2C2.0.0.5%2C2.0.0.4"><img src="https://static.pepy.tech/badge/metaevobox?logo=pypi" alt="PyPI Downloads"></a>
     <a href="https://qm.qq.com/q/NKwtJ21qyA"><img src="https://img.shields.io/badge/QQ%20Group-952185139-07C160?logo=tencent-qq&logoColor=white" alt="QQ Group"></a>
 </div>
 <h2 align="center" style="font-size: 1.2em; font-weight: normal; margin-top: 20px;">
