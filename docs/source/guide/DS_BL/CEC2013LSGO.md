@@ -1,4 +1,13 @@
 # CEC2013LSGO
+Problem Difficulty Classification
+| Difficulty Mode | Training Set | Testing Set |
+|-----------------|--------------|-------------|
+| **easy** | 8, 9, 13-20 | 1-7, 10-12 |
+| **difficult** | 1-7, 10-12 | 8, 9, 13-20 |
+
+*Note: When `difficulty` is 'all', both training and testing sets contain all problems (1-20).*
+
+---
 
 CEC2013LSGO proposes 15 large-scale benchmark problems to represent a wider range of realworld large-scale optimization problems.
 - **paper**：\

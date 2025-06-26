@@ -1,4 +1,13 @@
 # CEC2017MTO
+Problem Difficulty Classification
+| Difficulty Mode | Training Set | Testing Set |
+|-----------------|--------------|-------------|
+| **easy** | 0, 1, 2, 3, 4, 5 | 6, 7, 8 |
+| **difficult** | 6, 7, 8 | 0, 1, 2, 3, 4, 5 |
+
+*Note: When `difficulty` is 'all', both training and testing sets contain all problems (0-8).*
+
+---
 
 CEC2017MTO comprises 9 multi-task problem instances, each of which contains two basic problems. Optional basic problems include Shpere, Rosenbrock, Ackley, Rastrigin, Griewank, Weierstrass and Schwefel, with dimension ranging from 25D~50D.
 
