@@ -1,3 +1,19 @@
+"""
+# Problem Difficulty Classification
+
+| Difficulty Mode | Training Set | Testing Set |
+|-----------------|--------------|-------------|
+| **easy** | Easy problems (see dimension-specific splits below) | Difficult problems |
+| **difficult** | Difficult problems | Easy problems |
+
+*Dimension-specific classifications:*
+- **2D**: Easy: 1-6, 8-15, 20, 22 | Difficult: 7, 16-19, 21, 23, 24
+- **5D**: Easy: 1-15, 20 | Difficult: 16-19, 21-24  
+- **10D**: Easy: 1-15, 20 | Difficult: 16-19, 21-24
+
+*Note: When `difficulty` is 'all', both training and testing sets contain all functions (1-24).*
+
+"""
 from .kan import *
 from ....problem.basic_problem import Basic_Problem
 from ....problem.SOO.COCO_BBOB.bbob_numpy import *
@@ -7,6 +23,8 @@ import time
 import torch.nn as nn
 import importlib.util
 import importlib.resources as pkg_resources
+
+
 # MLP
 class MLP(nn.Module):
     def __init__(self, input_dim):

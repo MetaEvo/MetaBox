@@ -1,3 +1,14 @@
+"""
+# Problem Difficulty Classification
+
+| Difficulty Mode | Training Set | Testing Set |
+|-----------------|--------------|-------------|
+| **easy** | Even IDs: 0, 2, 4, ..., 54 (28 problems) | Odd IDs: 1, 3, 5, ..., 55 (28 problems) |
+| **difficult** | Odd IDs: 1, 3, 5, ..., 55 (28 problems) | Even IDs: 0, 2, 4, ..., 54 (28 problems) |
+
+*Note: When `difficulty` is 'all', both training and testing sets contain all problems (0-55).*
+
+"""
 from .uav_numpy import Terrain as Terrain_Numpy
 from torch.utils.data import Dataset
 from .utils import createmodel
@@ -108,10 +119,15 @@ class UAV_Dataset(Dataset):
         # if easy |train| = 42 = 14 + 28(easy + diff)
         # if diff |train| = 42 = 28 + 14(easy + diff)
 
-        if difficulty == None and user_test_list == None and user_train_list == None:
-            raise ValueError('Please set difficulty or user_train_list and user_test_list.')
         if difficulty not in ['easy', 'difficult', 'all', None]:
             raise ValueError(f'{difficulty} difficulty is invalid.')
+
+        if difficulty is None:
+            if user_train_list is None and user_test_list is None:
+                raise ValueError("When difficulty is not set, at least one of user_train_list or user_test_list must be provided.")
+        else:
+            if user_train_list is not None or user_test_list is not None:
+                raise ValueError("Cannot specify both 'difficulty' and user-defined lists. Choose one method.")
 
         train_set = []
         test_set = []
@@ -170,7 +186,7 @@ class UAV_Dataset(Dataset):
                     instance_list.append(instance)
                     continue
 
-                if user_train_list == None and user_test_list == None:
+                if user_train_list is None and user_test_list is None:
                     if id in train_id:
                         train_set.append(instance)
                     if id in test_id:
@@ -194,22 +210,6 @@ class UAV_Dataset(Dataset):
                     else:
                         train_set.append(instance)
 
-                # if id in train_id:
-                #     if not user_train_list or id in user_train_list:
-                #         terrain_data = model_data[id]
-                #         terrain_data['n'] = dv
-                #         terrain_data['J_pen'] = j_pen
-                #         instance = eval(Terrain)(terrain_data, id + 1)
-                #         train_set.append(instance)
-                #
-                # if id in test_id:
-                #     if not user_test_list or id in user_test_list:
-                #         terrain_data = model_data[id]
-                #         terrain_data['n'] = dv
-                #         terrain_data['J_pen'] = j_pen
-                #         instance = eval(Terrain)(terrain_data, id + 1)
-                #         test_set.append(instance)
-
         elif mode == "custom":
             for id in range(num):
                 if id < 0.5 * num:
@@ -229,7 +229,7 @@ class UAV_Dataset(Dataset):
                     instance_list.append(instance)
                     continue
 
-                if user_train_list == None and user_test_list == None:
+                if user_train_list is None and user_test_list is None:
                     if id in train_id:
                         train_set.append(instance)
                     if id in test_id:

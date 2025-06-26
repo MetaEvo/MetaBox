@@ -1,7 +1,20 @@
+"""
+# Problem Difficulty Classification
+
+| Difficulty Mode | Training Set | Testing Set |
+|-----------------|--------------|-------------|
+| **easy** | 1, 2, 3, 4, 5, 6, 7, 8, 9 | 10, 11, 12, 13, 14, 15 |
+| **difficult** | 7, 8, 9, 10, 11, 12, 13, 14, 15 | 1, 2, 3, 4, 5, 6 |
+
+*Note: Functions 7, 8, 9 appear in both easy and difficult categories. When `difficulty` is 'all', both sets contain all problems (1-15).*
+
+"""
 import numpy as np
 from torch.utils.data import Dataset
 from .cec2013lsgo_numpy import *
 from .cec2013lsgo_torch import *
+
+
 class CEC2013LSGO_Dataset(Dataset):
     """
     # Introduction

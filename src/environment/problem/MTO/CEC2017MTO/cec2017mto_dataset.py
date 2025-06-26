@@ -1,3 +1,14 @@
+"""
+# Problem Difficulty Classification
+
+| Difficulty Mode | Training Set | Testing Set |
+|-----------------|--------------|-------------|
+| **easy** | 0, 1, 2, 3, 4, 5 | 6, 7, 8 |
+| **difficult** | 6, 7, 8 | 0, 1, 2, 3, 4, 5 |
+
+*Note: When `difficulty` is 'all', both training and testing sets contain all problems (0-8).*
+
+"""
 from .cec2017mto_numpy import Sphere, Ackley, Rosenbrock, Rastrigin, Schwefel, Griewank, Weierstrass
 from .cec2017mto_torch import Sphere_Torch, Ackley_Torch, Rosenbrock_Torch, Rastrigin_Torch, Schwefel_Torch,Griewank_Torch, Weierstrass_Torch
 import numpy as np
@@ -11,7 +22,6 @@ def mat2np(file_obj):
     with file_obj as f:
         data = sio.loadmat(f)
     return data
-
 
 class CEC2017MTO_Tasks():
     def __init__(self, tasks):

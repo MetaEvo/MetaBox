@@ -1,10 +1,20 @@
+"""
+# Problem Difficulty Classification
+
+| Difficulty Mode | Training Set | Testing Set |
+|-----------------|--------------|-------------|
+| **easy** | 20% of problems, selected randomly | Remaining 80% of problems |
+| **difficult** | 80% of problems, selected randomly | Remaining 20% of problems |
+
+*Note: The random selection does not use a fixed seed, so the split will vary on each run. When `difficulty` is 'all', both sets contain all 127 problems.*
+
+"""
 from .augmented_wcci2020_numpy import Sphere, Ackley, Rosenbrock, Rastrigin, Schwefel, Griewank, Weierstrass
 from .augmented_wcci2020_torch import Sphere_Torch, Ackley_Torch, Rosenbrock_Torch, Rastrigin_Torch, Schwefel_Torch, Griewank_Torch, Weierstrass_Torch
 import numpy as np
 from torch.utils.data import Dataset
 import os
 from itertools import combinations
-
 
 def rotate_gen(dim):  # Generate a rotate matrix
     random_state = np.random

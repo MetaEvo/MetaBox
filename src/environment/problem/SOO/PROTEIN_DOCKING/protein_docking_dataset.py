@@ -1,3 +1,16 @@
+"""
+# Problem Difficulty Classification
+
+The dataset is deterministically split based on a fixed random seed (1035).
+
+| Difficulty Mode | Training Set Ratio | Testing Set Ratio |
+|-----------------|--------------------|-------------------|
+| **easy** | 75% | 25% |
+| **difficult** | 25% | 75% |
+
+*Note: The split is applied to each protein category ('rigid', 'medium', 'difficult') separately. When `difficulty` is 'all', both sets contain all 280 problems.*
+
+"""
 import torch
 import numpy as np
 from torch.utils.data import Dataset
@@ -7,6 +20,8 @@ from .protein_docking import Protein_Docking_Torch_Problem, Protein_Docking_Nump
 import importlib.util
 import importlib.resources as pkg_resources
 import os
+
+
 class Protein_Docking_Dataset(Dataset):
     """
     # Introduction

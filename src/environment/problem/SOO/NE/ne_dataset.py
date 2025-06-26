@@ -1,9 +1,19 @@
+"""
+# Problem Difficulty Classification
+
+| Difficulty Mode | Training Set | Testing Set |
+|-----------------|--------------|-------------|
+| **easy** | Deep networks (depth > 2) | Shallow networks (depth ≤ 2) |
+| **difficult** | Shallow networks (depth ≤ 2) | Deep networks (depth > 2) |
+
+*Note: Total 66 networks available. When `difficulty` is 'all', both sets contain all networks.*
+
+"""
 from torch.utils.data import Dataset
 import sys
 import subprocess
 import numpy as np
 from .evox_ne import *
-
 
 class NE_Dataset(Dataset):
     """
