@@ -6,14 +6,6 @@
   </picture>
 </div>
 
-<p align="center">
-    <img src="https://via.placeholder.com/220x150.gif?text=Your+Result+1" alt="Result 1 Demo" height="150">
-  &nbsp;&nbsp;&nbsp;&nbsp;
-    <img src="https://via.placeholder.com/220x150.gif?text=Your+Result+2" alt="Result 2 Demo" height="150">
-  &nbsp;&nbsp;&nbsp;&nbsp;
-    <img src="https://via.placeholder.com/220x150.gif?text=Your+Result+3" alt="Result 3 Demo" height="150">
-</p>
-
 <div align="center">
     <a href="https://nips.cc/virtual/2023/poster/73497"><img src="https://img.shields.io/badge/NeurIPS-2023-b31b1b?logo=files&logoColor=white" alt="NeurIPS 2023"></a>
     <a href="https://arxiv.org/abs/2505.17745"><img src="https://img.shields.io/badge/arXiv-2311.02708-b31b1b?logo=arxiv&logoColor=white" alt="arXiv"></a>
