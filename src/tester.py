@@ -405,6 +405,9 @@ def get_baseline(config):
         else:  # bbo
             traditional_optimizers_for_cp.append(baselines[bsl]['optimizer'](config))
     config.baselines = None
+    # config update
+    for agent in agents_for_cp:
+        agent.config.full_meta_data = config.full_meta_data
     return (agents_for_cp, agents_optimizers_for_cp, traditional_optimizers_for_cp, agent_keys), config
 
 
