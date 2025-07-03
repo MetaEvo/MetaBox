@@ -58,7 +58,7 @@ class LGA(Basic_Agent):
         self.M = 256
         self.T = 50
         self.J = 256
-        self.optimizer = CMA(mean = np.zeros(673),
+        self.optimizer = CMA(mean = np.zeros(673-129),
                              sigma = 0.1,
                              population_size = self.M)
 
@@ -116,9 +116,9 @@ class LGA(Basic_Agent):
         env = ParallelEnv(envs, para_mode, num_cpus = num_cpus, num_gpus = num_gpus)
         env.seed(seeds)
 
-        env.set_env_attr("rng_cpu", "None")
+        env.set_env_attr("rng_cpu", ["None"]*len(env))
         if self.config.device != 'cpu':
-            env.set_env_attr("rng_gpu", "None")
+            env.set_env_attr("rng_gpu", ["None"]*len(env))
         env_population = [loads(dumps(env)) for _ in range(self.M)]
 
         for i, e in enumerate(env_population):
