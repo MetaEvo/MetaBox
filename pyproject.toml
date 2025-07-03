@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "metaevobox"
-version = "2.0.1"
+version = "2.0.2"
 description = "An all-in-one platform for using and developing the algorithms in Meta-Black-Box Optimization"
 authors = [
   { name="Zeyuan Ma", email="scut.crazynicolas@gmail.com" },
