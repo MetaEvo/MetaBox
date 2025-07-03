@@ -214,7 +214,7 @@ class SurrRLDE(DDQN_Agent):
 				if self.learning_time >= self.config.max_learning_step:
 					_Rs = _R.detach().numpy().tolist()
 					return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time, }
-					env_cost = env.get_env_attr('cost')
+					env_cost = np.array(env.get_env_attr('cost'))
 					return_info['normalizer'] = env_cost[:,0]
 					return_info['gbest'] = env_cost[:,-1]
 					for key in required_info.keys():
@@ -225,7 +225,7 @@ class SurrRLDE(DDQN_Agent):
 		is_train_ended = self.learning_time >= self.config.max_learning_step
 		_Rs = _R.detach().numpy().tolist()
 		return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time, }
-		env_cost = env.get_env_attr('cost')
+		env_cost = np.array(env.get_env_attr('cost'))
 		return_info['normalizer'] = env_cost[:,0]
 		return_info['gbest'] = env_cost[:,-1]
 		for key in required_info.keys():
