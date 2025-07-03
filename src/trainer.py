@@ -221,9 +221,9 @@ class Trainer(object):
         tb_logger = None
         start_time = time.time()
         if not self.config.no_tb:
-            if not os.path.exists(os.path.join('output/tensorboard', self.config.run_time)):
-                os.makedirs(os.path.join('output/tensorboard', self.config.run_time))
-            tb_logger = SummaryWriter(os.path.join('output/tensorboard', self.config.run_time))
+            if not os.path.exists(os.path.join(f'{self.config.tb_dir}', self.config.run_time)):
+                os.makedirs(os.path.join(f'{self.config.tb_dir}', self.config.run_time))
+            tb_logger = SummaryWriter(os.path.join(f'{self.config.tb_dir}', self.config.run_time))
             tb_logger.add_scalar("epoch-step", 0, 0)
         train_log = {'loss': [], 'learn_steps': [], 'return': [], 'runtime': [], 'config': copy.deepcopy(self.config)}
         if not os.path.exists(os.path.join('output/train_log', self.config.run_time)):
