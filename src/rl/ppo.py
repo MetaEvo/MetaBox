@@ -206,6 +206,9 @@ class PPO_Agent(Basic_Agent):
         if 'num_gpus' in compute_resource.keys():
             num_gpus = compute_resource['num_gpus']
         env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
+
+        self._set_train()
+
         env.seed(seeds)
         memory = Memory()
 
@@ -218,13 +221,14 @@ class PPO_Agent(Basic_Agent):
 
         state = env.reset()
         try:
-            state = torch.FloatTensor(state).to(self.device)
+            state = torch.Tensor(state).to(self.device)
         except:
             pass
 
         t = 0
         # initial_cost = obj
         _R = torch.zeros(len(env))
+        _loss = []
         # sample trajectory
         while not env.all_done():
             t_s = t
@@ -234,25 +238,31 @@ class PPO_Agent(Basic_Agent):
             bl_val = []
 
             # accumulate transition
-            while t - t_s < n_step:
+            while t - t_s < n_step and not env.all_done():
 
                 memory.states.append(state.clone())
-                action, log_lh, entro_p = self.actor(state)
+
+                state = self._trans_state(state)
+
+                # action, log_lh, entro_p = self.actor(state)
+                action, log_lh, entro_p = self._get_action(state)
 
                 memory.actions.append(action.clone() if isinstance(action, torch.Tensor) else copy.deepcopy(action))
                 memory.logprobs.append(log_lh)
 
                 entropy.append(entro_p.detach().cpu())
 
-                baseline_val = self.critic(state)
+                # baseline_val = self.critic(state)
+                baseline_val = self._get_critic(state)
                 baseline_val_detached = baseline_val.detach()
 
                 bl_val_detached.append(baseline_val_detached)
                 bl_val.append(baseline_val)
 
                 # state transient
+                action = self._trans_action(action)
                 state, rewards, is_end, info = env.step(action)
-                memory.rewards.append(torch.FloatTensor(rewards).to(self.device))
+                memory.rewards.append(torch.Tensor(rewards).to(self.device))
                 # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
                 _R += rewards
                 # store info
@@ -261,7 +271,7 @@ class PPO_Agent(Basic_Agent):
                 t = t + 1
 
                 try:
-                    state = torch.FloatTensor(state).to(self.device)
+                    state = torch.Tensor(state).to(self.device)
                 except:
                     pass
 
@@ -293,12 +303,15 @@ class PPO_Agent(Basic_Agent):
 
                     for tt in range(t_time):
                         # get new action_prob
-                        _, log_p, entro_p = self.actor(old_states[tt], old_actions[tt])
+                        # _, log_p, entro_p = self.actor(old_states[tt], old_actions[tt])
+                        old_state = self._trans_state(old_states[tt])
+                        _, log_lh, entro_p = self._get_action(old_state, old_actions[tt])
 
-                        logprobs.append(log_p)
+                        logprobs.append(log_lh)
                         entropy.append(entro_p.detach().cpu())
 
-                        baseline_val = self.critic(old_states[tt])
+                        # baseline_val = self.critic(old_states[tt])
+                        baseline_val = self._get_critic(old_state)
                         baseline_val_detached = baseline_val.detach()
 
                         bl_val_detached.append(baseline_val_detached)
@@ -313,7 +326,9 @@ class PPO_Agent(Basic_Agent):
                 Reward = []
                 reward_reversed = memory.rewards[::-1]
                 # get next value
-                R = self.critic(self.actor(state))[0]
+                # R = self.critic(self.actor(state))[0]
+                state = self._trans_state(state)
+                R = self._get_critic(state).detach()
 
                 for r in range(len(reward_reversed)):
                     R = R * gamma + reward_reversed[r]
@@ -350,6 +365,7 @@ class PPO_Agent(Basic_Agent):
                 # update gradient step
                 self.optimizer.zero_grad()
                 loss.backward()
+                _loss.append(loss.item())
 
                 # Clip gradient norm and get (clipped) gradient norms for logging
                 # current_step = int(pre_step + t//n_step * K_epochs  + _k)
@@ -364,8 +380,10 @@ class PPO_Agent(Basic_Agent):
 
                 if self.learning_time >= self.config.max_learning_step:
                     memory.clear_memory()
-                    return_info = {'return': _R, 'learn_steps': self.learning_time, }
+                    _Rs = _R.detach().numpy().tolist()
+                    return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time, }
                     env_cost = np.array(env.get_env_attr('cost'))
+                    return_info['normalizer'] = env_cost[:,0]
                     return_info['gbest'] = env_cost[:,-1]
                     for key in required_info.keys():
                         return_info[key] = env.get_env_attr(required_info[key])
@@ -375,23 +393,36 @@ class PPO_Agent(Basic_Agent):
             memory.clear_memory()
 
         is_train_ended = self.learning_time >= self.config.max_learning_step
-        return_info = {'return': _R, 'learn_steps': self.learning_time, }
+        _Rs = _R.detach().numpy().tolist()
+        return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time, }
         env_cost = np.array(env.get_env_attr('cost'))
+        return_info['normalizer'] = env_cost[:,0]
         return_info['gbest'] = env_cost[:,-1]
-
-        '''
-        'return': 奖励
-        'learn_steps': 训练步数
-        'gbest': 最优评估值
-        
-        针对非并行环境,若并行环境则为np.array(len(envs)): 如'learn_steps': np.array(['learn_steps' for env in envs])
-        return_info = {'return': _R -> float, 'learn_steps': self.learning_time -> int, 'gbest': env_cost[-1] -> float}
-        '''
         for key in required_info.keys():
             return_info[key] = env.get_env_attr(required_info[key])
         env.close()
-
         return is_train_ended, return_info
+
+    def _set_train(self):
+        pass
+
+    def _set_test(self):
+        pass
+
+    def _trans_state(self, state):
+        # freely to state
+        return state
+
+    def _trans_action(self, action):
+        return action.cpu().numpy()
+
+    def _get_action(self, state, action_t = None):
+        action, log_lh, entro_p = self.actor(state, action_t)
+        return action, log_lh, entro_p
+
+    def _get_critic(self, state):
+        baseline_val = self.critic(state)
+        return baseline_val
 
     def rollout_episode(self,
                         env,
@@ -412,15 +443,20 @@ class PPO_Agent(Basic_Agent):
             if seed is not None:
                 env.seed(seed)
             is_done = False
-            state = env.reset()
+
+            self._set_test()
+
+            state = env.reset() # 这个会比train的少一个bs 两个维度
             R = 0
             while not is_done:
                 try:
-                    state = torch.FloatTensor(state).unsqueeze(0).to(self.device)
+                    state = torch.Tensor(state).unsqueeze(0).to(self.device)
                 except:
                     state = [state]
-                action = self.actor(state)[0]
-                action = action.cpu().numpy().squeeze()
+                state = self._trans_state(state)
+                action, _, _ = self._get_action(state)
+                # action = action.cpu().numpy().squeeze()
+                action = self._trans_action(action)[0]
                 state, reward, is_done = env.step(action)
                 R += reward
             env_cost = env.get_env_attr('cost')
