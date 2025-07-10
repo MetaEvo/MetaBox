@@ -308,8 +308,8 @@ class VDN_Agent(Basic_Agent):
                     if self.learning_time >= self.config.max_learning_step:
                         _Rs = _R.detach().numpy().tolist()
                         return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time}
-                        env_cost = env.get_env_attr('cost')
-                        return_info['gbest'] = env_cost[-1]
+                        env_cost = np.array(env.get_env_attr('cost'))
+                        return_info['gbest'] = env_cost[:,-1]
                         return_info['loss'] = _loss
                         for key in required_info.keys():
                             return_info[key] = env.get_env_attr(required_info[key])
@@ -319,8 +319,8 @@ class VDN_Agent(Basic_Agent):
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
         return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time}
-        env_cost = env.get_env_attr('cost')
-        return_info['gbest'] = env_cost[-1]
+        env_cost = np.array(env.get_env_attr('cost'))
+        return_info['gbest'] = env_cost[:,-1]
         return_info['loss'] = _loss
 
         for key in required_info.keys():
@@ -344,7 +344,7 @@ class VDN_Agent(Basic_Agent):
         # Returns:
         - dict: A dictionary containing episode results such as return, cost, and metadata.
         """
-        if hasattr(self.config,required_info):
+        if hasattr(self.config,"required_info"):
             required_info = self.config.required_info
         with torch.no_grad():
             if seed is not None:

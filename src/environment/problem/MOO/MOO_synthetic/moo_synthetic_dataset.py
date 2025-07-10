@@ -1,16 +1,25 @@
-import random
+"""
+# Problem Difficulty Classification
 
+| Difficulty Mode | Training Set | Testing Set |
+|-----------------|--------------|-------------|
+| **easy** | First 80% of problems sorted by complexity | Last 20% of problems sorted by complexity |
+| **difficult** | First 20% of problems sorted by complexity | Last 80% of problems sorted by complexity |
+
+*Note: Problems are sorted by complexity (n_obj × n_var). When `difficulty` is 'all', both sets contain all 187 problems.*
+
+"""
+import random
 from torch.utils.data import Dataset
 import numpy as np
-from ....problem.MOO.MOO_synthetic.zdt_numpy import *
-from ....problem.MOO.MOO_synthetic.uf_numpy import *
-from ....problem.MOO.MOO_synthetic.dtlz_numpy import *
-from ....problem.MOO.MOO_synthetic.wfg_numpy import *
-from ....problem.MOO.MOO_synthetic.zdt_torch import *
-from ....problem.MOO.MOO_synthetic.uf_torch import *
-from ....problem.MOO.MOO_synthetic.dtlz_torch import *
-from ....problem.MOO.MOO_synthetic.wfg_torch import *
-
+from .zdt_numpy import *
+from .uf_numpy import *
+from .wfg_numpy import *
+from .dtlz_numpy import *
+from .zdt_torch import *
+from .uf_torch import *
+from .dtlz_torch import *
+from .wfg_torch import *
 
 class MOO_Synthetic_Dataset(Dataset):
     """
@@ -45,9 +54,7 @@ class MOO_Synthetic_Dataset(Dataset):
     - `shuffle()`: 
         Shuffles the dataset indices for random access.
     # Raises:
-    - `ValueError`: Raised in the `get_datasets` method if:
-        - Neither `difficulty` nor `user_train_list` and `user_test_list` are provided.
-        - An invalid `difficulty` value is specified.
+    - `ValueError`: If neither `difficulty` nor user lists are provided, or if difficulty is invalid.
     """
 
     def __init__(self,
@@ -101,14 +108,20 @@ class MOO_Synthetic_Dataset(Dataset):
         - `ValueError`: If neither `difficulty` nor user lists are provided, or if difficulty is invalid.
         """
         # get functions ID of indicated suit
-        if difficulty == None and user_test_list == None and user_train_list == None:
-            raise ValueError('Please set difficulty or user_train_list and user_test_list.')
         if difficulty not in ['easy', 'difficult', 'all', None]:
             raise ValueError(f'{difficulty} difficulty is invalid.')
+
+        if difficulty is None:
+            if user_train_list is None or user_test_list is None:
+                raise ValueError("When difficulty is not set, both user_train_list and user_test_list must be provided.")
+        else:
+            if user_train_list is not None or user_test_list is not None:
+                raise ValueError("Cannot specify both 'difficulty' and user-defined lists. Choose one method.")
+
         instance_set = []
         train_set = []
         test_set = []
-        if difficulty == None:
+        if difficulty is None:
             for problem in user_train_list:
                 parts = problem.split("_")
                 problem_name = parts[0]
@@ -121,7 +134,7 @@ class MOO_Synthetic_Dataset(Dataset):
                 n_var = int([p for p in parts if p.startswith("d")][0][1:])
                 n_obj = int([p for p in parts if p.startswith("n")][0][1:])
                 test_set.append(eval(problem_name)(n_obj = n_obj, n_var = n_var))
-        elif difficulty != None:
+        else:
             # UF1-7
             for id in range(1, 8):
                 if version == 'numpy':

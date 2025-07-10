@@ -148,9 +148,9 @@ class QLPSO(QLearning_Agent):
             if self.learning_time >= self.config.max_learning_step:
                 _Rs = _R.detach().numpy().tolist()
                 return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time, }
-                env_cost = env.get_env_attr('cost')
-                return_info['normalizer'] = env_cost[0]
-                return_info['gbest'] = env_cost[-1]
+                env_cost = np.array(env.get_env_attr('cost'))
+                return_info['normalizer'] = env_cost[:,0]
+                return_info['gbest'] = env_cost[:,-1]
                 for key in required_info.keys():
                     return_info[key] = env.get_env_attr(required_info[key])
                 env.close()
@@ -166,9 +166,9 @@ class QLPSO(QLearning_Agent):
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
         return_info = {'return': _Rs, 'loss': _loss, 'learn_steps': self.learning_time, }
-        env_cost = env.get_env_attr('cost')
-        return_info['normalizer'] = env_cost[0]
-        return_info['gbest'] = env_cost[-1]
+        env_cost = np.array(env.get_env_attr('cost'))
+        return_info['normalizer'] = env_cost[:,0]
+        return_info['gbest'] = env_cost[:,-1]
         for key in required_info.keys():
             return_info[key] = env.get_env_attr(required_info[key])
         env.close()

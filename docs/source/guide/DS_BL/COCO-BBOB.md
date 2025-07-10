@@ -1,4 +1,21 @@
 # COCO-BBOB
+Problem Difficulty Classification
+
+**BBOB (F1-F24)**
+| Difficulty Mode | Training Set | Testing Set |
+|-----------------|--------------|-------------|
+| **easy**        | 4, 6-14, 18-20, 22-24 | 1, 2, 3, 5, 15, 16, 17, 21 |
+| **difficult**   | 1, 2, 3, 5, 15, 16, 17, 21 | 4, 6-14, 18-20, 22-24 |
+
+**BBOB-Noisy (F101-F130)**
+| Difficulty Mode | Training Set | Testing Set |
+|-----------------|--------------|-------------|
+| **easy**        | 102-104, 106-114, 118, 121-124, 126-130 | 101, 105, 115-117, 119, 120, 125 |
+| **difficult**   | 101, 105, 115-117, 119, 120, 125 | 102-104, 106-114, 118, 121-124, 126-130 |
+
+*Note: When `difficulty` is 'all', both training and testing sets contain all problems in the suite.*
+
+---
 
 The blackbox optimization benchmarking (bbob) test suite is COCO's standard test suite with 24 noiseless, single-objective and scalable test functions. Each function is provided in dimensions (2, 3, 5, 10, 20, 40) and in 15 instances, however also available for arbitrary dimensions and number of instances. Links to their definition with visualizations are provided in the table.
 

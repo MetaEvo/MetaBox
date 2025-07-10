@@ -373,9 +373,9 @@ class RLDAS(PPO_Agent):
                     memory.clear_memory()
                     _Rs = _R.detach().numpy().tolist()
                     return_info = {'return': _Rs, 'loss': _loss,'learn_steps': self.learning_time, }
-                    env_cost = env.get_env_attr('cost')
-                    return_info['normalizer'] = env_cost[0]
-                    return_info['gbest'] = env_cost[-1]
+                    env_cost = np.array(env.get_env_attr('cost'))
+                    return_info['normalizer'] = env_cost[:,0]
+                    return_info['gbest'] = env_cost[:,-1]
                     for key in required_info:
                         return_info[key] = env.get_env_attr(key)
                     env.close()
@@ -386,9 +386,9 @@ class RLDAS(PPO_Agent):
         is_train_ended = self.learning_time >= self.config.max_learning_step
         _Rs = _R.detach().numpy().tolist()
         return_info = {'return': _Rs, 'loss': _loss,'learn_steps': self.learning_time,}
-        env_cost = env.get_env_attr('cost')
-        return_info['normalizer'] = env_cost[0]
-        return_info['gbest'] = env_cost[-1]
+        env_cost = np.array(env.get_env_attr('cost'))
+        return_info['normalizer'] = env_cost[:,0]
+        return_info['gbest'] = env_cost[:,-1]
         for key in required_info:
             return_info[key] = env.get_env_attr(key)
         env.close()
@@ -414,7 +414,7 @@ class RLDAS(PPO_Agent):
                 state, reward, is_done, info = env.step(action)
                 R += reward
             env_cost = env.get_env_attr('cost')
-            env_fes = env.get_env_attr('fes')
+            env_fes = env.get_env_attr('FEs')
             results = {'cost': env_cost, 'fes': env_fes, 'return': R}
 
             if self.config.full_meta_data:

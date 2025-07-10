@@ -1,9 +1,22 @@
+"""
+# Problem Difficulty Classification
+
+| Difficulty Mode | Training Set | Testing Set |
+|-----------------|--------------|-------------|
+| **easy** | 8, 9, 13-20 | 1-7, 10-12 |
+| **difficult** | 1-7, 10-12 | 8, 9, 13-20 |
+
+*Note: When `difficulty` is 'all', both training and testing sets contain all problems (1-20).*
+
+"""
 from torch.utils.data import Dataset
 import numpy as np
 import torch
 from .cec2013mmo_numpy import *
 from .cec2013mmo_torch import *
 import math
+
+
 
 class CEC2013MMO_Dataset(Dataset):
     """

@@ -1,4 +1,13 @@
 # MOO-Synthetic
+Problem Difficulty Classification
+| Difficulty Mode | Training Set | Testing Set |
+|-----------------|--------------|-------------|
+| **easy** | First 80% of problems sorted by complexity | Last 20% of problems sorted by complexity |
+| **difficult** | First 20% of problems sorted by complexity | Last 80% of problems sorted by complexity |
+
+*Note: Problems are sorted by complexity (n_obj × n_var). When `difficulty` is 'all', both sets contain all 187 problems.*
+
+---
 
 MOO-Synthetic is constructed by mixing 4 well-known multi-objective problem sets: ZDT, UF, DTLZ and WFG. In total, we have constructed 187 problem instances. Their objective numbers range from 2 \~ 10, dimensions range from 6D \~ 38D.
 

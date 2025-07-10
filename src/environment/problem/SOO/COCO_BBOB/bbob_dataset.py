@@ -1,3 +1,21 @@
+"""
+# Problem Difficulty Classification
+
+**BBOB (F1-F24)**
+| Difficulty Mode | Training Set | Testing Set |
+|-----------------|--------------|-------------|
+| **easy**        | 4, 6-14, 18-20, 22-24 | 1, 2, 3, 5, 15, 16, 17, 21 |
+| **difficult**   | 1, 2, 3, 5, 15, 16, 17, 21 | 4, 6-14, 18-20, 22-24 |
+
+**BBOB-Noisy (F101-F130)**
+| Difficulty Mode | Training Set | Testing Set |
+|-----------------|--------------|-------------|
+| **easy**        | 102-104, 106-114, 118, 121-124, 126-130 | 101, 105, 115-117, 119, 120, 125 |
+| **difficult**   | 101, 105, 115-117, 119, 120, 125 | 102-104, 106-114, 118, 121-124, 126-130 |
+
+*Note: When `difficulty` is 'all', both training and testing sets contain all problems in the suite.*
+
+"""
 from .bbob_numpy import *
 from .bbob_torch import *
 from torch.utils.data import Dataset
@@ -249,3 +267,4 @@ class BBOB_Dataset(Dataset):
         """
         
         self.index = np.random.permutation(self.N)
+

@@ -1,3 +1,16 @@
+"""
+# Problem Difficulty Classification
+
+By default, the dataset is split into a fixed training set and a testing set.
+
+| Set Type | Source Data | Number of Problems |
+|--------------|----------|---------------|
+| **Training Set** | `meta_train_data` | 758 |
+| **Testing Set** | `meta_vali_data` + `meta_test_data` | 177 |
+
+*Note: If `difficulty` is set to 'all', the training and testing sets are merged, containing all 935 problems.*
+
+"""
 import numpy as np
 from torch.utils.data import Dataset
 import subprocess, sys, os
@@ -5,6 +18,7 @@ from .hpo_b import HPOB_Problem
 from tqdm import tqdm
 import json
 import xgboost as xgb
+
 
 
 class HPOB_Dataset(Dataset):

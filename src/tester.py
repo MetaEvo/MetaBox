@@ -378,11 +378,13 @@ def get_baseline(config):
     agents_for_cp=[]
     agents_optimizers_for_cp=[]
     traditional_optimizers_for_cp=[]
+    agent_keys = []
     baselines = config.baselines
     assert baselines is not None
     for bsl in baselines.keys():
         if 'agent' in baselines[bsl].keys():  # metabbo
             agents_optimizers_for_cp.append(baselines[bsl]['optimizer'](config))
+            agent_keys.append(bsl)
             if 'model_load_path' in baselines[bsl].keys() and baselines[bsl]['model_load_path'] is not None:
                 with open(os.path.join(os.getcwd(), baselines[bsl]['model_load_path']), 'rb') as f:
                     agents_for_cp.append(pickle.load(f, fix_imports=False))
@@ -403,7 +405,10 @@ def get_baseline(config):
         else:  # bbo
             traditional_optimizers_for_cp.append(baselines[bsl]['optimizer'](config))
     config.baselines = None
-    return (agents_for_cp, agents_optimizers_for_cp, traditional_optimizers_for_cp), config
+    # config update
+    for agent in agents_for_cp:
+        agent.config.full_meta_data = config.full_meta_data
+    return (agents_for_cp, agents_optimizers_for_cp, traditional_optimizers_for_cp, agent_keys), config
 
 
 class Tester(object):
@@ -437,7 +442,7 @@ class Tester(object):
         self.t_optimizer_for_cp = []
 
         # 先append 用户的
-        agents_for_cp, agents_optimizers_for_cp, traditional_optimizers_for_cp = baselines
+        agents_for_cp, agents_optimizers_for_cp, traditional_optimizers_for_cp, agent_keys = baselines
         agents_for_cp = agents_for_cp if isinstance(agents_for_cp, list) else [agents_for_cp]
         agents_optimizers_for_cp = agents_optimizers_for_cp if isinstance(agents_optimizers_for_cp, list) else [agents_optimizers_for_cp]
         traditional_optimizers_for_cp = traditional_optimizers_for_cp if isinstance(traditional_optimizers_for_cp, list) else [traditional_optimizers_for_cp]
@@ -448,20 +453,20 @@ class Tester(object):
             self.agent_for_cp.append(copy.deepcopy(agent))
             self.agent_name_list.append(name)
             if name not in name_count:
-                name_count[name] = 0
+                name_count[name] = [id]
             else:
-                name_count[name] += 1
+                name_count[name].append(id)
         metabbo = []
-        for id, opt in enumerate(reversed(agents_optimizers_for_cp)):
-            name = self.agent_name_list[len(self.agent_name_list) - id - 1]
-            count = name_count[name]
-            if count:
-                name_count[name] -= 1
-                name = f"{count}_" + name
-            self.agent_name_list[len(self.agent_name_list) - id - 1] = name
-            setattr(opt, 'test_name', name)
-            metabbo.insert(0, name)
-            self.l_optimizer_for_cp.insert(0, copy.deepcopy(opt))
+        for id, opt in enumerate(agents_optimizers_for_cp):
+            # name = self.agent_name_list[id]
+            name = agents_for_cp[id].__str__()
+            if len(name_count[name]) > 1:
+                for i in range(1, len(name_count[name])):
+                    # updated_name = f"{i}_" + name
+                    self.agent_name_list[name_count[name][i]] = agent_keys[id]
+            setattr(opt, "test_name", self.agent_name_list[id])
+            metabbo.append(self.agent_name_list[id])
+            self.l_optimizer_for_cp.append(copy.deepcopy(opt))
 
         name_count = dict()
         for id, opt in enumerate(traditional_optimizers_for_cp):

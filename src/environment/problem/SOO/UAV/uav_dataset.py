@@ -1,8 +1,20 @@
+"""
+# Problem Difficulty Classification
+
+| Difficulty Mode | Training Set | Testing Set |
+|-----------------|--------------|-------------|
+| **easy** | Even IDs: 0, 2, 4, ..., 54 (28 problems) | Odd IDs: 1, 3, 5, ..., 55 (28 problems) |
+| **difficult** | Odd IDs: 1, 3, 5, ..., 55 (28 problems) | Even IDs: 0, 2, 4, ..., 54 (28 problems) |
+
+*Note: When `difficulty` is 'all', both training and testing sets contain all problems (0-55).*
+
+"""
 from .uav_numpy import Terrain as Terrain_Numpy
 from torch.utils.data import Dataset
 from .utils import createmodel
 import numpy as np
 import pickle
+
 
 class UAV_Dataset(Dataset):
     """

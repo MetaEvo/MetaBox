@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "metaevobox"
+version = "2.0.2"
+description = "An all-in-one platform for using and developing the algorithms in Meta-Black-Box Optimization"
+authors = [
+  { name="Zeyuan Ma", email="scut.crazynicolas@gmail.com" },
+  { name="Hongshu Guo", email="guohongshu369@gmail.com" },
+  { name="Wenjie Qiu", email="wukongqwj@gmail.com" },
+  { name="Sijie Ma", email="masijie9@gmail.com" },
+  { name="Jiajun Zhan", email="cszhanjiajun@mail.scut.edu.cn" },
+  { name="Zhiyang Huang", email="scut.hzy@gmail.com" },
+  { name="Hongqiao Lian", email="hongqiaolian9@gmail.com"},
+  { name="Guojun Peng", email="pgj20010419@gmail.com" },
+  { name="Zechuan Huang", email="hohqhzc825@gmail.com" },
+  { name="Kaixu Chen", email="202421043943@mail.scut.edu.cn" },
+  { name="Chen Wang", email="wangchen0339@gmail.com" },
+]
+readme = "README.md"
+license = {text = "BSD-3-Clause"}
+requires-python = ">=3.11.5"
+
+# pip install dependencies
+dependencies = [
+  "deap>=1.4.2",
+  "evox>=1.1.2",
+  "pypop7>=0.0.82",
+  "matplotlib==3.10.1",
+  "tensorboardX==2.6.2.2",
+  "tensorboard==2.19.0",
+  "pandas>=2.2.3",
+  "gym>=0.26",
+  "GPUtil==1.4.0",
+  "psutil==7.0.0",
+  "ray==2.44.1",
+  "tqdm",
+  "cmaes==0.11.1",
+  "dill==0.4.0",
+  "Cython>=3.0.12",
+  "xgboost==3.0.0",
+  "tianshou==1.1.0",
+  "openpyxl==3.1.5",
+  "openai"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/MetaEvo/MetaBox"
+"Documentation" = "https://metaboxdoc.readthedocs.io/"
+"Bug Tracker" = "https://github.com/MetaEvo/MetaBox/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+"metaevobox.environment.problem.SOO.COCO_BBOB" = ["datafile/**/**/**/*"]
+"metaevobox.environment.problem.SOO.PROTEIN_DOCKING" = ["datafile/**/*"]
+"metaevobox.environment.problem.SOO.CEC2013LSGO" = ["datafile/*"]
+"metaevobox.environment.problem.MTO.CEC2017MTO" = ["datafile/*"]
+"metaevobox.environment.problem.MTO.WCCI2020" = ["datafile/**/*"]
+"metaevobox.environment.problem.MMO.CEC2013MMO" = ["datafile/*"]
+"metaevobox" = ["model/**/**/*"]

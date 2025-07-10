@@ -1,2 +1,2 @@
-from MOO_synthetic import *
-from UAV import *
+from .MOO_synthetic import *
+from .UAV import *

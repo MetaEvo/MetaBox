@@ -65,18 +65,18 @@ class Policy(nn.Module):
         self.device = device
 
         # Linear layers with bias
-        self.W_QP = nn.Linear(self.DF, DK, bias = True) # 32 + 16 = 48
-        self.W_KC = nn.Linear(self.DF, DK, bias = True) # 32 + 16 = 48
-        self.W_VC = nn.Linear(self.DF, DK, bias = True) # 32 + 16 = 48
+        self.W_QP = nn.Linear(self.DF, DK, bias = False) # 32 + 16 = 48
+        self.W_KC = nn.Linear(self.DF, DK, bias = False) # 32 + 16 = 48
+        self.W_VC = nn.Linear(self.DF, DK, bias = False) # 32 + 16 = 48
 
-        self.W_QS = nn.Linear(DK, DK, bias = True) # 256 + 16 = 272
-        self.W_KS = nn.Linear(self.DF, DK, bias = True) # 32 + 16 = 48
+        self.W_QS = nn.Linear(DK, DK, bias = False) # 256 + 16 = 272
+        self.W_KS = nn.Linear(self.DF, DK, bias = False) # 32 + 16 = 48
 
-        self.W_QM = nn.Linear(self.DF + self.D_sigma, DK, bias = True) # 48 + 16 = 64
-        self.W_KM = nn.Linear(self.DF + self.D_sigma, DK, bias = True) # 48 + 16 = 64
-        self.W_VM = nn.Linear(self.DF + self.D_sigma, DK, bias = True) # 48 + 16 = 64
+        self.W_QM = nn.Linear(self.DF + self.D_sigma, DK, bias = False) # 48 + 16 = 64
+        self.W_KM = nn.Linear(self.DF + self.D_sigma, DK, bias = False) # 48 + 16 = 64
+        self.W_VM = nn.Linear(self.DF + self.D_sigma, DK, bias = False) # 48 + 16 = 64
 
-        self.W_sigma = nn.Linear(DK, self.D_sigma, bias = True) # 16 + 1 = 17
+        self.W_sigma = nn.Linear(DK, self.D_sigma, bias = False) # 16 + 1 = 17
 
         # Apply custom initialization
         self._init_weights(self.mu, self.sigma)

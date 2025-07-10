@@ -221,9 +221,9 @@ class Trainer(object):
         tb_logger = None
         start_time = time.time()
         if not self.config.no_tb:
-            if not os.path.exists(os.path.join('output/tensorboard', self.config.run_time)):
-                os.makedirs(os.path.join('output/tensorboard', self.config.run_time))
-            tb_logger = SummaryWriter(os.path.join('output/tensorboard', self.config.run_time))
+            if not os.path.exists(os.path.join(f'{self.config.tb_dir}', self.config.run_time)):
+                os.makedirs(os.path.join(f'{self.config.tb_dir}', self.config.run_time))
+            tb_logger = SummaryWriter(os.path.join(f'{self.config.tb_dir}', self.config.run_time))
             tb_logger.add_scalar("epoch-step", 0, 0)
         train_log = {'loss': [], 'learn_steps': [], 'return': [], 'runtime': [], 'config': copy.deepcopy(self.config)}
         if not os.path.exists(os.path.join('output/train_log', self.config.run_time)):
@@ -246,7 +246,7 @@ class Trainer(object):
             self.train_set.shuffle()
             return_record = []
             loss_record = []
-            with tqdm(range(int(np.ceil(self.train_set.N / self.train_set.batch_size))), desc = f'Training {self.agent.__class__.__name__} Epoch {epoch}') as pbar:
+            with tqdm(range(int(np.ceil(self.train_set.N / self.train_set.batch_size))), desc = f'Training {self.agent.__class__.__name__} Epoch {epoch+1}') as pbar:
                 for problem_id, problem in enumerate(self.train_set):
                     # set seed
                     seed_list = (epoch * epoch_seed + id_seed * (np.arange(bs) + bs * problem_id) + seed).tolist()

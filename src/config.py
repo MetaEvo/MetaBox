@@ -167,6 +167,7 @@ def get_config(args=None):
                         help = 'training mode：single fixed learning step, multi fixed number of problems encountered')
     parser.add_argument('--end_mode', type = str, default = 'epoch', choices = ['step', 'epoch'])
     parser.add_argument('--no_tb', action='store_true', default = False, help = 'disable tensorboard logging')
+    parser.add_argument('--tb_dir', type = str, default = 'output/tensorboard', help = 'directory to save tensorboard logs')
 
     # ------------------------------ The Config of Testing Mode ------------------------------
     parser.add_argument('--test_batch_size', type = int, default = 1, help = 'batch size of test set')

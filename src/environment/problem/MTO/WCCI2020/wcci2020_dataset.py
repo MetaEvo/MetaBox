@@ -1,3 +1,14 @@
+"""
+# Problem Difficulty Classification
+
+| Difficulty Mode | Training Set | Testing Set |
+|-----------------|--------------|-------------|
+| **easy** | 0, 1, 2, 3, 4, 5 | 6, 7, 8, 9 |
+| **difficult** | 6, 7, 8, 9 | 0, 1, 2, 3, 4, 5 |
+
+*Note: When `difficulty` is 'all', both training and testing sets contain all problems (0-9).*
+
+"""
 from .wcci2020_numpy import Sphere, Ackley, Rosenbrock, Rastrigin, Schwefel, Griewank, Weierstrass
 from .wcci2020_torch import Sphere_Torch, Ackley_Torch, Rosenbrock_Torch, Rastrigin_Torch, Schwefel_Torch, Griewank_Torch, Weierstrass_Torch
 import numpy as np
@@ -5,6 +16,7 @@ from torch.utils.data import Dataset
 import os
 import importlib.util
 import importlib.resources as pkg_resources
+
 
 class WCCI2020MTO_Tasks():
     def __init__(self, tasks):

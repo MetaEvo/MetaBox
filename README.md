@@ -1,16 +1,28 @@
 <div align="center">
-<img src="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-title.png" width="50%">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-title.png">
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-title.png">
+    <img alt="MetaBox Logo" src="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-title.png" width="600px">
+  </picture>
 </div>
-<h2 align="center">
-  <div style="font-size: 0.9em; margin-top: 12px">
-    Benchmarking Meta-Black-Box Optimization under<br/>
-    Diverse Optimization Scenarios with Efficiency and Flexibility
-  </div>
+
+<div align="center">
+    <a href="https://nips.cc/virtual/2023/poster/73497"><img src="https://img.shields.io/badge/NeurIPS-2023-b31b1b?logo=files&logoColor=white" alt="NeurIPS 2023"></a>
+    <a href="https://arxiv.org/abs/2505.17745"><img src="https://img.shields.io/badge/arXiv-2311.02708-b31b1b?logo=arxiv&logoColor=white" alt="arXiv"></a>
+    <a href="https://metaboxdoc.readthedocs.io/en/stable/index.html"><img src="https://img.shields.io/badge/docs-passing-brightgreen?logo=read-the-docs&logoColor=white" alt="Documentation"></a>
+    <a href="https://github.com/metaevo/metabox"><img src="https://visitor-badge.laobi.icu/badge?page_id=metaevo.metabox" alt="visitors"></a>
+    <a href="https://pypi.org/project/metaevobox/"><img src="https://img.shields.io/pypi/v/metaevobox?logo=pypi&label=PyPI" alt="PyPI Version"></a>
+    <a href="https://pepy.tech/projects/metaevobox?timeRange=threeMonths&category=version&includeCIDownloads=true&granularity=daily&viewType=line&versions=2.0.1%2C2.0.0.5%2C2.0.0.4"><img src="https://static.pepy.tech/badge/metaevobox?logo=pypi" alt="PyPI Downloads"></a>
+    <a href="https://qm.qq.com/q/NKwtJ21qyA"><img src="https://img.shields.io/badge/QQ%20Group-952185139-07C160?logo=tencent-qq&logoColor=white" alt="QQ Group"></a>
+</div>
+<h2 align="center" style="font-size: 1.2em; font-weight: normal; margin-top: 20px;">
+  Benchmarking Meta-Black-Box Optimization under<br>
+  Diverse Optimization Scenarios with Efficiency and Flexibility
 </h2>
 
-[![NeurIPS](https://img.shields.io/badge/NeurIPS-2023-b31b1b.svg)]([https://proceedings.neurips.cc/paper_files/paper/2023/hash/232eee8ef411a0a316efa298d7be3c2b-Abstract-Datasets_and_Benchmarks.html]) **MetaBox-v1 has been accepted as an oral presentation at NeurIPS 2023!**
+**MetaBox-v1 has been accepted as an oral presentation at NeurIPS 2023!**
 
-😀[Online Documentation](https://metaboxdoc.readthedocs.io/en/latest/index.html) is here, you can get started quickly！😀
+😀[Online Documentation](https://metaboxdoc.readthedocs.io/en/stable/index.html) is here, you can get started quickly！😀
 
 <div align="center">
 <img src="https://github.com/MetaEvo/MetaBox/blob/v2.0.0/docs/source/_static/MetaBOX-features.png" width="99%">
@@ -114,7 +126,7 @@ tester.test()
 By default, MetaBox would automatically generate various visualized experimental results in your_dir/output/test/, enjoy these useful analysis results!
 
 ### High-level Development Usage
-We sincerely suggest researchers with interests to check out **[Online Documentation](https://metaboxdoc.readthedocs.io/en/latest/index.html)** for further flexible usege of MetaBox-v2, such as implementing your own MetaBBO, customized experimental design & analysis, using pre-collected metadata and seamless API calling with other famous optimization repos.
+We sincerely suggest researchers with interests to check out **[Online Documentation](https://metaboxdoc.readthedocs.io/en/stable/index.html)** for further flexible usege of MetaBox-v2, such as implementing your own MetaBBO, customized experimental design & analysis, using pre-collected metadata and seamless API calling with other famous optimization repos.
 
 
 ## Available Optimization Problem Set in MetaBox
@@ -297,6 +309,13 @@ title={MetaBox: A Benchmark Platform for Meta-Black-Box Optimization with Reinfo
 booktitle = {Advances in Neural Information Processing Systems},
 year={2023},
 volume = {36}
+}
+
+@article{ma2025metabox,
+  title={MetaBox-v2: A Unified Benchmark Platform for Meta-Black-Box Optimization},
+  author={Ma, Zeyuan and Gong, Yue-Jiao and Guo, Hongshu and Qiu, Wenjie and Ma, Sijie and Lian, Hongqiao and Zhan, Jiajun and Chen, Kaixu and Wang, Chen and Huang, Zhiyang and others},
+  journal={arXiv preprint arXiv:2505.17745},
+  year={2025}
 }
 ```
 

@@ -855,7 +855,7 @@ class F12(CEC2013LSGO_Numpy_Problem):
         self.anotherz = np.zeros(self.dim)
     
     def __str__(self):
-        return '20-nonseparable Shifted Schwefel'
+        return 'Shifted Rosenbrock'
 
     def func(self, x):
 
@@ -961,7 +961,7 @@ class F15(CEC2013LSGO_Numpy_Problem):
         self.anotherz = np.zeros(self.dimension) 
 
     def __str__(self):
-        return 'Shifted Schwefel’s Function with Conflicting Overlapping Subcomponents'
+        return 'Non-separable shifted Schwefel'
     
     def func(self, x):
 

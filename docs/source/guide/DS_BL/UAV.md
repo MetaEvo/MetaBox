@@ -1,4 +1,13 @@
 # UAV
+Problem Difficulty Classification
+| Difficulty Mode | Training Set | Testing Set |
+|-----------------|--------------|-------------|
+| **easy** | Even IDs: 0, 2, 4, ..., 54 (28 problems) | Odd IDs: 1, 3, 5, ..., 55 (28 problems) |
+| **difficult** | Odd IDs: 1, 3, 5, ..., 55 (28 problems) | Even IDs: 0, 2, 4, ..., 54 (28 problems) |
+
+*Note: When `difficulty` is 'all', both training and testing sets contain all problems (0-55).*
+
+---
 
 UAV provides 56 terrain-based landscapes as realistic Unmanned Aerial Vehicle(UAV) path planning problems, each of which is 30D. The objective is to select given number of path nodes (x,y,z coordinates) from the 3D space, so the the UAV could fly as shortly as possible in a collision-free way.
 
