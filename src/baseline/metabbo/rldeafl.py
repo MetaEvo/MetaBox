@@ -262,7 +262,7 @@ class Actor(nn.Module):
 
         return (action, m_mu, m_sigma, c_mu, c_sigma)
 
-    def forward(self, x, fixed_action = None, require_entropy = False):
+    def forward(self, x, fixed_action = None, require_entropy = True):
         mutation_p = self.mutation_selector_net(x)  # 3D : bs * n * mu_operator
         crossover_p = self.crossover_selector_net(x) # 3D : bs * n * cr_operator
         # Apply softmax to get probabilities for operator selection
@@ -661,6 +661,23 @@ class RLDEAFL(PPO_Agent):
             return_info[key] = env.get_env_attr(required_info[key])
         env.close()
         return is_train_ended, return_info
+
+    def _set_train(self):
+        torch.set_grad_enabled(True)
+        self.fe.set_on_train()
+        self.actor.train()
+        self.critic.train()
+
+    def _set_test(self):
+        self.fe.set_off_train()
+        self.actor.eval()
+        self.critic.eval()
+
+    def _trans_state(self, state):
+        return self.fe(state)
+
+    def _get_critic(self, state):
+        return self.critic(state)[1]
 
 
     def rollout_episode(self,
