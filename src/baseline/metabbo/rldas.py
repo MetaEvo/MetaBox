@@ -162,7 +162,7 @@ class RLDAS(PPO_Agent):
 
         self.config.gamma = 0.99
         self.config.n_step = 10
-        self.config.K_epochs = None # RLDAS can calculate base optimizer
+        self.config.K_epochs = 3 # RLDAS can calculate base optimizer
         self.config.eps_clip = 0.1
         self.config.max_grad_norm = 0.1
 
@@ -185,6 +185,29 @@ class RLDAS(PPO_Agent):
 
     def __str__(self):
         return "RLDAS"
+    
+    def _set_train(self):
+        torch.set_grad_enabled(True)
+        self.actor.train()
+        self.critic.train()
+        
+    def _set_test(self):
+        torch.set_grad_enabled(False)
+        self.actor.eval()
+        self.critic.eval()
+
+    def _get_action(self, state, action_t=None):
+        if action_t is None:
+            action, log_prob, entropy = self.actor(state, require_entropy=True)
+            return action, log_prob, entropy
+        else:
+            _, log_prob, entropy = self.actor(state, fix_action=action_t, require_entropy=True)
+            return action_t, log_prob, entropy
+            
+    def _get_critic(self, state):
+        baseline_val_detached, baseline_val = self.critic(state)
+        return baseline_val
+
 
     def train_episode(self,
                       envs,
