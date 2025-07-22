@@ -240,8 +240,11 @@ class PPO_Agent(Basic_Agent):
             # accumulate transition
             while t - t_s < n_step and not env.all_done():
 
-                memory.states.append(state.clone())
-
+                if isinstance(state, torch.Tensor):
+                    memory.states.append(state.clone())
+                else:
+                    memory.states.append(state.copy()) 
+                
                 state = self._trans_state(state)
 
                 # action, log_lh, entro_p = self.actor(state)
@@ -284,7 +287,7 @@ class PPO_Agent(Basic_Agent):
             try:
                 old_states = torch.stack(memory.states).detach()  # .view(t_time, bs, ps, dim_f)
             except:
-                pass
+                old_states = memory.states  
             # old_actions = all_actions.view(t_time, bs, ps, -1)
             old_logprobs = torch.stack(memory.logprobs).detach().view(-1)
 
