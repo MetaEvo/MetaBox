@@ -9,8 +9,9 @@ from torch import nn
 import torch
 from torch.distributions import Normal
 import torch.nn.functional as F
-from ...rl.utils import *
+from ...rl.utils import clip_grad_norms, save_class
 from ...environment.parallelenv.parallelenv import ParallelEnv
+from ...rl.ppo import PPO_Agent
 
 class Actor(nn.Module):
     def __init__(self, n_state, n_action, hidden_dim=64):
@@ -180,9 +181,43 @@ class L2T(PPO_Agent):
             self.config.train_name
         )
         super().__init__(self.config, {'actor': actor, 'critic': critic}, [self.config.lr_actor, self.config.lr_critic])
+        self.actor = actor
+        self.critic = critic
 
     def __str__(self):
         return "L2T"
+    
+    def _set_train(self):
+        """Sets the agent to training mode."""
+        torch.set_grad_enabled(True)
+        self.actor.train()
+        self.critic.train()
+
+    def _set_test(self):
+        """Sets the agent to evaluation mode."""
+        self.actor.eval()
+        self.critic.eval()
+
+    def _trans_state(self, state):
+        """Transforms the state for the actor and critic networks."""
+        try:
+            return torch.Tensor(state).to(self.device)
+        except:
+            return state
+
+    def _trans_action(self, action):
+        """Transforms the action for the environment."""
+        if isinstance(action, torch.Tensor):
+            return action.cpu().numpy()
+        return action
+
+    def _get_action(self, state, fixed_action=None):
+        """Returns the action, log probability, and entropy from the actor."""
+        return self.actor(state, fixed_action)
+
+    def _get_critic(self, state):
+        """Returns the detached value and the value from the critic."""
+        return self.critic(state)
 
     def train_episode(self, 
                       envs,
@@ -203,6 +238,7 @@ class L2T(PPO_Agent):
         env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
         env.seed(seeds)
         memory = Memory()
+        self._set_train()
 
         # params for training
         gamma = self.gamma
@@ -212,11 +248,7 @@ class L2T(PPO_Agent):
         eps_clip = self.eps_clip
         
         state = env.reset()
-
-        try:
-            state = torch.DoubleTensor(state).to(self.device)
-        except:
-            pass
+        state = self._trans_state(state)
         
         t = 0
         # initial_cost = obj
@@ -234,13 +266,13 @@ class L2T(PPO_Agent):
             while t - t_s < n_step :  
                 
                 memory.states.append(state.clone())
-                action, log_lh, entro_p = self.actor(state)
+                action, log_lh, entro_p = self._get_action(state)
                 memory.actions.append(action.clone() if isinstance(action, torch.Tensor) else copy.deepcopy(action))
                 memory.logprobs.append(log_lh)
 
                 entropy.append(entro_p.detach().cpu())
 
-                baseline_val, baseline_val_detached = self.critic(state)
+                baseline_val_detached, baseline_val = self._get_critic(state)
                 
                 bl_val_detached.append(baseline_val_detached)
                 bl_val.append(baseline_val)
@@ -254,11 +286,7 @@ class L2T(PPO_Agent):
 
                 # next
                 t = t + 1
-
-                try:
-                    state = torch.Tensor(state).to(self.device)
-                except:
-                    pass
+                state = self._trans_state(state)
                 
                 if np.all(is_end):
                     break
@@ -291,12 +319,12 @@ class L2T(PPO_Agent):
                     for tt in range(t_time):
 
                         # get new action_prob
-                        _, log_p, entro_p = self.actor(old_states[tt], fixed_action = old_actions[tt])
+                        _, log_p, entro_p = self._get_action(old_states[tt], fixed_action = old_actions[tt])
 
                         logprobs.append(log_p)
                         entropy.append(entro_p.detach().cpu())
 
-                        baseline_val, baseline_val_detached = self.critic(old_states[tt])
+                        baseline_val_detached, baseline_val = self._get_critic(old_states[tt])
                         
                         bl_val_detached.append(baseline_val_detached)
                         bl_val.append(baseline_val)
@@ -311,7 +339,7 @@ class L2T(PPO_Agent):
                 Reward = []
                 reward_reversed = memory.rewards[::-1]
                 # get next value
-                R = self.critic(state)[0].squeeze(1)
+                R = self._get_critic(state)[0].squeeze(1)
                 critic_output = R.clone()
                 for r in range(len(reward_reversed)):
                     R = R * gamma + reward_reversed[r]
@@ -398,16 +426,14 @@ class L2T(PPO_Agent):
         with torch.no_grad():
             if seed is not None:
                 env.seed(seed)
+            self._set_test()
             is_done = False
             state = env.reset()
             R = 0
             while not is_done:
-                try:
-                    state = torch.DoubleTensor(state).to(self.device)
-                except:
-                    state = [state]
-                action = self.actor(state)[0]
-                action = action.cpu().numpy()
+                state = self._trans_state(state)
+                action = self._get_action(state)[0]
+                action = self._trans_action(action)
                 state, reward, is_done, info = env.step(action)
                 R += reward
             env_cost = env.get_env_attr('cost')
