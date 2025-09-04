@@ -459,7 +459,7 @@ class PPO_Agent(Basic_Agent):
                 state = self._trans_state(state)
                 action, _, _ = self._get_action(state)
                 # action = action.cpu().numpy().squeeze()
-                action = self._trans_action(action)[0]
+                action = self._trans_action(action)
                 state, reward, is_done = env.step(action)
                 R += reward
             env_cost = env.get_env_attr('cost')
@@ -542,4 +542,3 @@ class PPO_Agent(Basic_Agent):
                 data_list = value['data']
                 for name, data in zip(name_list, data_list):
                     tb_logger.add_scalar(f'{key}/{name}', data, mini_step)
-
