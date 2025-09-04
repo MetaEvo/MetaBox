@@ -59,7 +59,7 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         self.sr = None
         self.log_index = None
         self.log_interval = None
-
+        self.max_fes = config.maxFEs
         self.archive = None
         self.archive_val = None
 
@@ -283,10 +283,10 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
         - Optionally collects meta-data if configured.
         """
         
-        self.max_fes = problem.maxfes
+        # self.max_fes = problem.maxfes
         self.dim = problem.dim
         self.max_dist=np.sqrt((problem.ub - problem.lb)**2*self.dim)
-        self.log_interval = (problem.maxfes // self.__config.n_logpoint)
+        self.log_interval = (self.max_fes // self.__config.n_logpoint)
         self.archive = np.zeros((0, self.dim))
         self.archive_val = np.array([])
 
@@ -561,5 +561,5 @@ class RLEMMO_Optimizer(Learnable_Optimizer):
                     self.sr.append(raw_sr.copy())
 
         info = {}
-        return next_state, reward, is_end, info
+        return next_state, reward, is_end
 
