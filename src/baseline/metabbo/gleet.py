@@ -274,243 +274,260 @@ class GLEET(PPO_Agent):
 
     def __str__(self):
         return "GLEET"
+    
+    def _trans_state(self, state):
+        # freely to state
+        self._to_critic = None
+        return state
+    
+    def _trans_action(self, action):
+        return action.cpu().numpy().squeeze()
 
-    def train_episode(self,
-                      envs,
-                      seeds: Optional[Union[int, List[int], np.ndarray]],
-                      para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
-                      # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
-                      # num_cpus: Optional[Union[int, None]] = 1,
-                      # num_gpus: int = 0,
-                      compute_resource = {},
-                      tb_logger = None,
-                      required_info = {}):
-        num_cpus = None
-        num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count() if self.config.device == 'cpu' else torch.cuda.device_count()
-        if 'num_cpus' in compute_resource.keys():
-            num_cpus = compute_resource['num_cpus']
-        if 'num_gpus' in compute_resource.keys():
-            num_gpus = compute_resource['num_gpus']
-        env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
-        env.seed(seeds)
-        memory = Memory()
+    def _get_action(self, state, action_t = None):
+        action, log_lh, entro_p, self._to_critic = self.actor(state,fixed_action = action_t, require_entropy = True, to_critic=True)
+        return action, log_lh, entro_p
 
-        # params for training
-        gamma = self.gamma
-        n_step = self.n_step
+    def _get_critic(self, state):
+        to_critic = self._to_critic if self._to_critic is not None else self.actor(state, only_critic = True)
+        baseline_val = self.critic(to_critic)
+        return baseline_val
 
-        K_epochs = self.K_epochs
-        eps_clip = self.eps_clip
+    # def train_episode(self,
+    #                   envs,
+    #                   seeds: Optional[Union[int, List[int], np.ndarray]],
+    #                   para_mode: Literal['dummy', 'subproc', 'ray', 'ray-subproc'] = 'dummy',
+    #                   # todo: asynchronous: Literal[None, 'idle', 'restart', 'continue'] = None,
+    #                   # num_cpus: Optional[Union[int, None]] = 1,
+    #                   # num_gpus: int = 0,
+    #                   compute_resource = {},
+    #                   tb_logger = None,
+    #                   required_info = {}):
+    #     num_cpus = None
+    #     num_gpus = 0 if self.config.device == 'cpu' else torch.cuda.device_count() if self.config.device == 'cpu' else torch.cuda.device_count()
+    #     if 'num_cpus' in compute_resource.keys():
+    #         num_cpus = compute_resource['num_cpus']
+    #     if 'num_gpus' in compute_resource.keys():
+    #         num_gpus = compute_resource['num_gpus']
+    #     env = ParallelEnv(envs, para_mode, num_cpus=num_cpus, num_gpus=num_gpus)
+    #     env.seed(seeds)
+    #     memory = Memory()
 
-        state = env.reset()
-        try:
-            state = torch.Tensor(state).to(self.device)
-        except:
-            pass
+    #     # params for training
+    #     gamma = self.gamma
+    #     n_step = self.n_step
 
-        t = 0
-        # initial_cost = obj
-        _R = torch.zeros(len(env))
-        _loss = []
-        # sample trajectory
-        while not env.all_done():
-            t_s = t
-            total_cost = 0
-            entropy = []
-            bl_val_detached = []
-            bl_val = []
+    #     K_epochs = self.K_epochs
+    #     eps_clip = self.eps_clip
 
-            # accumulate transition
-            while t - t_s < n_step and not env.all_done():
+    #     state = env.reset()
+    #     try:
+    #         state = torch.Tensor(state).to(self.device)
+    #     except:
+    #         pass
 
-                memory.states.append(state.clone())
-                action, log_lh, entro_p, _to_critic = self.actor(state, require_entropy = True, to_critic = True)
+    #     t = 0
+    #     # initial_cost = obj
+    #     _R = torch.zeros(len(env))
+    #     _loss = []
+    #     # sample trajectory
+    #     while not env.all_done():
+    #         t_s = t
+    #         total_cost = 0
+    #         entropy = []
+    #         bl_val_detached = []
+    #         bl_val = []
 
-                memory.actions.append(action.clone() if isinstance(action, torch.Tensor) else copy.deepcopy(action))
-                memory.logprobs.append(log_lh)
+    #         # accumulate transition
+    #         while t - t_s < n_step and not env.all_done():
 
-                entropy.append(entro_p.detach().cpu())
+    #             memory.states.append(state.clone())
+    #             action, log_lh, entro_p, _to_critic = self.actor(state, require_entropy = True, to_critic = True)
 
-                baseline_val = self.critic(_to_critic)
-                baseline_val_detached = baseline_val.detach()
+    #             memory.actions.append(action.clone() if isinstance(action, torch.Tensor) else copy.deepcopy(action))
+    #             memory.logprobs.append(log_lh)
 
-                bl_val_detached.append(baseline_val_detached)
-                bl_val.append(baseline_val)
+    #             entropy.append(entro_p.detach().cpu())
 
-                # state transient
-                state, rewards, is_end, info = env.step(action.cpu().numpy()[:, :, 0])
-                memory.rewards.append(torch.Tensor(rewards).to(self.device))
-                # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
-                _R += rewards
-                # store info
+    #             baseline_val = self.critic(_to_critic)
+    #             baseline_val_detached = baseline_val.detach()
 
-                # next
-                t = t + 1
+    #             bl_val_detached.append(baseline_val_detached)
+    #             bl_val.append(baseline_val)
 
-                try:
-                    state = torch.Tensor(state).to(self.device)
-                except:
-                    pass
+    #             # state transient
+    #             state, rewards, is_end, info = env.step(action.cpu().numpy()[:, :, 0])
+    #             memory.rewards.append(torch.Tensor(rewards).to(self.device))
+    #             # print('step:{},max_reward:{}'.format(t,torch.max(rewards)))
+    #             _R += rewards
+    #             # store info
 
-            # store info
-            t_time = t - t_s
-            total_cost = total_cost / t_time
+    #             # next
+    #             t = t + 1
 
-            # begin update
-            old_actions = torch.stack(memory.actions)
-            try:
-                old_states = torch.stack(memory.states).detach()  # .view(t_time, bs, ps, dim_f)
-            except:
-                pass
-            # old_actions = all_actions.view(t_time, bs, ps, -1)
-            old_logprobs = torch.stack(memory.logprobs).detach().view(-1)
+    #             try:
+    #                 state = torch.Tensor(state).to(self.device)
+    #             except:
+    #                 pass
 
-            # Optimize PPO policy for K mini-epochs:
-            old_value = None
-            for _k in range(K_epochs):
-                if _k == 0:
-                    logprobs = memory.logprobs
+    #         # store info
+    #         t_time = t - t_s
+    #         total_cost = total_cost / t_time
 
-                else:
-                    # Evaluating old actions and values :
-                    logprobs = []
-                    entropy = []
-                    bl_val_detached = []
-                    bl_val = []
+    #         # begin update
+    #         old_actions = torch.stack(memory.actions)
+    #         try:
+    #             old_states = torch.stack(memory.states).detach()  # .view(t_time, bs, ps, dim_f)
+    #         except:
+    #             pass
+    #         # old_actions = all_actions.view(t_time, bs, ps, -1)
+    #         old_logprobs = torch.stack(memory.logprobs).detach().view(-1)
 
-                    for tt in range(t_time):
-                        # get new action_prob
-                        _, log_p, entro_p, _to_critic = self.actor(old_states[tt], fixed_action = old_actions[tt],
-                                                                   require_entropy = True,  # take same action
-                                                                   to_critic = True)
+    #         # Optimize PPO policy for K mini-epochs:
+    #         old_value = None
+    #         for _k in range(K_epochs):
+    #             if _k == 0:
+    #                 logprobs = memory.logprobs
 
-                        logprobs.append(log_p)
-                        entropy.append(entro_p.detach().cpu())
+    #             else:
+    #                 # Evaluating old actions and values :
+    #                 logprobs = []
+    #                 entropy = []
+    #                 bl_val_detached = []
+    #                 bl_val = []
 
-                        baseline_val = self.critic(_to_critic)
-                        baseline_val_detached = baseline_val.detach()
+    #                 for tt in range(t_time):
+    #                     # get new action_prob
+    #                     _, log_p, entro_p, _to_critic = self.actor(old_states[tt], fixed_action = old_actions[tt],
+    #                                                                require_entropy = True,  # take same action
+    #                                                                to_critic = True)
 
-                        bl_val_detached.append(baseline_val_detached)
-                        bl_val.append(baseline_val)
+    #                     logprobs.append(log_p)
+    #                     entropy.append(entro_p.detach().cpu())
 
-                logprobs = torch.stack(logprobs).view(-1)
-                entropy = torch.stack(entropy).view(-1)
-                bl_val_detached = torch.stack(bl_val_detached).view(-1)
-                bl_val = torch.stack(bl_val).view(-1)
+    #                     baseline_val = self.critic(_to_critic)
+    #                     baseline_val_detached = baseline_val.detach()
 
-                # get traget value for critic
-                Reward = []
-                reward_reversed = memory.rewards[::-1]
-                # get next value
-                R = self.critic(self.actor(state, only_critic = True)).detach()
-                critic_output = R.clone()
-                for r in range(len(reward_reversed)):
-                    R = R * gamma + reward_reversed[r]
-                    Reward.append(R)
-                # clip the target:
-                Reward = torch.stack(Reward[::-1], 0)
-                Reward = Reward.view(-1)
+    #                     bl_val_detached.append(baseline_val_detached)
+    #                     bl_val.append(baseline_val)
 
-                # Finding the ratio (pi_theta / pi_theta__old):
-                ratios = torch.exp(logprobs - old_logprobs.detach())
+    #             logprobs = torch.stack(logprobs).view(-1)
+    #             entropy = torch.stack(entropy).view(-1)
+    #             bl_val_detached = torch.stack(bl_val_detached).view(-1)
+    #             bl_val = torch.stack(bl_val).view(-1)
 
-                # Finding Surrogate Loss:
-                advantages = Reward - bl_val_detached
+    #             # get traget value for critic
+    #             Reward = []
+    #             reward_reversed = memory.rewards[::-1]
+    #             # get next value
+    #             R = self.critic(self.actor(state, only_critic = True)).detach()
+    #             critic_output = R.clone()
+    #             for r in range(len(reward_reversed)):
+    #                 R = R * gamma + reward_reversed[r]
+    #                 Reward.append(R)
+    #             # clip the target:
+    #             Reward = torch.stack(Reward[::-1], 0)
+    #             Reward = Reward.view(-1)
 
-                surr1 = ratios * advantages
-                surr2 = torch.clamp(ratios, 1 - eps_clip, 1 + eps_clip) * advantages
-                reinforce_loss = -torch.min(surr1, surr2).mean()
+    #             # Finding the ratio (pi_theta / pi_theta__old):
+    #             ratios = torch.exp(logprobs - old_logprobs.detach())
 
-                # define baseline loss
-                if old_value is None:
-                    baseline_loss = ((bl_val - Reward) ** 2).mean()
-                    old_value = bl_val.detach()
-                else:
-                    vpredclipped = old_value + torch.clamp(bl_val - old_value, - eps_clip, eps_clip)
-                    v_max = torch.max(((bl_val - Reward) ** 2), ((vpredclipped - Reward) ** 2))
-                    baseline_loss = v_max.mean()
+    #             # Finding Surrogate Loss:
+    #             advantages = Reward - bl_val_detached
 
-                # check K-L divergence (for logging only)
-                approx_kl_divergence = (.5 * (old_logprobs.detach() - logprobs) ** 2).mean().detach()
-                approx_kl_divergence[torch.isinf(approx_kl_divergence)] = 0
-                # calculate loss
-                loss = baseline_loss + reinforce_loss
+    #             surr1 = ratios * advantages
+    #             surr2 = torch.clamp(ratios, 1 - eps_clip, 1 + eps_clip) * advantages
+    #             reinforce_loss = -torch.min(surr1, surr2).mean()
 
-                # update gradient step
-                self.optimizer.zero_grad()
-                loss.backward()
-                _loss.append(loss.item())
-                # Clip gradient norm and get (clipped) gradient norms for logging
-                # current_step = int(pre_step + t//n_step * K_epochs  + _k)
-                grad_norms = clip_grad_norms(self.optimizer.param_groups, self.config.max_grad_norm)
+    #             # define baseline loss
+    #             if old_value is None:
+    #                 baseline_loss = ((bl_val - Reward) ** 2).mean()
+    #                 old_value = bl_val.detach()
+    #             else:
+    #                 vpredclipped = old_value + torch.clamp(bl_val - old_value, - eps_clip, eps_clip)
+    #                 v_max = torch.max(((bl_val - Reward) ** 2), ((vpredclipped - Reward) ** 2))
+    #                 baseline_loss = v_max.mean()
 
-                # perform gradient descent
-                self.optimizer.step()
-                self.learning_time += 1
-                if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
-                    save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
-                    self.cur_checkpoint += 1
+    #             # check K-L divergence (for logging only)
+    #             approx_kl_divergence = (.5 * (old_logprobs.detach() - logprobs) ** 2).mean().detach()
+    #             approx_kl_divergence[torch.isinf(approx_kl_divergence)] = 0
+    #             # calculate loss
+    #             loss = baseline_loss + reinforce_loss
 
-                if not self.config.no_tb:
-                    self.log_to_tb_train(tb_logger, self.learning_time,
-                                         grad_norms,
-                                         reinforce_loss, baseline_loss,
-                                         _R, Reward, memory.rewards,
-                                         critic_output, logprobs, entropy, approx_kl_divergence)
+    #             # update gradient step
+    #             self.optimizer.zero_grad()
+    #             loss.backward()
+    #             _loss.append(loss.item())
+    #             # Clip gradient norm and get (clipped) gradient norms for logging
+    #             # current_step = int(pre_step + t//n_step * K_epochs  + _k)
+    #             grad_norms = clip_grad_norms(self.optimizer.param_groups, self.config.max_grad_norm)
 
-                if self.learning_time >= self.config.max_learning_step:
-                    memory.clear_memory()
-                    _Rs = _R.detach().numpy().tolist()
-                    return_info = {'return': _Rs, 'loss': _loss,'learn_steps': self.learning_time, }
-                    env_cost = np.array(env.get_env_attr('cost'))
-                    return_info['normalizer'] = env_cost[:,0]
-                    return_info['gbest'] = env_cost[:,-1]
-                    for key in required_info.keys():
-                        return_info[key] = env.get_env_attr(required_info[key])
-                    env.close()
-                    return self.learning_time >= self.config.max_learning_step, return_info
+    #             # perform gradient descent
+    #             self.optimizer.step()
+    #             self.learning_time += 1
+    #             if self.learning_time >= (self.config.save_interval * self.cur_checkpoint) and self.config.end_mode == "step":
+    #                 save_class(self.config.agent_save_dir, 'checkpoint-' + str(self.cur_checkpoint), self)
+    #                 self.cur_checkpoint += 1
 
-            memory.clear_memory()
+    #             if not self.config.no_tb:
+    #                 self.log_to_tb_train(tb_logger, self.learning_time,
+    #                                      grad_norms,
+    #                                      reinforce_loss, baseline_loss,
+    #                                      _R, Reward, memory.rewards,
+    #                                      critic_output, logprobs, entropy, approx_kl_divergence)
 
-        is_train_ended = self.learning_time >= self.config.max_learning_step
-        _Rs = _R.detach().numpy().tolist()
-        return_info = {'return': _Rs, 'loss': _loss,'learn_steps': self.learning_time,}
-        env_cost = np.array(env.get_env_attr('cost'))
-        return_info['normalizer'] = env_cost[:,0]
-        return_info['gbest'] = env_cost[:,-1]
-        for key in required_info.keys():
-            return_info[key] = env.get_env_attr(required_info[key])
-        env.close()
-        return is_train_ended, return_info
+    #             if self.learning_time >= self.config.max_learning_step:
+    #                 memory.clear_memory()
+    #                 _Rs = _R.detach().numpy().tolist()
+    #                 return_info = {'return': _Rs, 'loss': _loss,'learn_steps': self.learning_time, }
+    #                 env_cost = np.array(env.get_env_attr('cost'))
+    #                 return_info['normalizer'] = env_cost[:,0]
+    #                 return_info['gbest'] = env_cost[:,-1]
+    #                 for key in required_info.keys():
+    #                     return_info[key] = env.get_env_attr(required_info[key])
+    #                 env.close()
+    #                 return self.learning_time >= self.config.max_learning_step, return_info
 
-    def rollout_episode(self,
-                        env,
-                        seed = None,
-                        required_info = {}):
-        with torch.no_grad():
-            env.seed(seed)
-            is_done = False
-            state = env.reset()
-            R = 0
-            while not is_done:
-                try:
-                    state = torch.Tensor(state).unsqueeze(0).to(self.device)
-                except:
-                    state = [state]
-                action = self.actor(state)[0]
-                action = action.cpu().numpy().squeeze()
-                state, reward, is_done, info = env.step(action)
-                R += reward
-            env_cost = env.get_env_attr('cost')
-            env_fes = env.get_env_attr('fes')
-            results = {'cost': env_cost, 'fes': env_fes, 'return': R}
+    #         memory.clear_memory()
 
-            if self.config.full_meta_data:
-                meta_X = env.get_env_attr('meta_X')
-                meta_Cost = env.get_env_attr('meta_Cost')
-                metadata = {'X': meta_X, 'Cost': meta_Cost}
-                results['metadata'] = metadata
+    #     is_train_ended = self.learning_time >= self.config.max_learning_step
+    #     _Rs = _R.detach().numpy().tolist()
+    #     return_info = {'return': _Rs, 'loss': _loss,'learn_steps': self.learning_time,}
+    #     env_cost = np.array(env.get_env_attr('cost'))
+    #     return_info['normalizer'] = env_cost[:,0]
+    #     return_info['gbest'] = env_cost[:,-1]
+    #     for key in required_info.keys():
+    #         return_info[key] = env.get_env_attr(required_info[key])
+    #     env.close()
+    #     return is_train_ended, return_info
 
-            for key in required_info.keys():
-                results[key] = getattr(env, required_info[key])
-            return results
+    # def rollout_episode(self,
+    #                     env,
+    #                     seed = None,
+    #                     required_info = {}):
+    #     with torch.no_grad():
+    #         env.seed(seed)
+    #         is_done = False
+    #         state = env.reset()
+    #         R = 0
+    #         while not is_done:
+    #             try:
+    #                 state = torch.Tensor(state).unsqueeze(0).to(self.device)
+    #             except:
+    #                 state = [state]
+    #             action = self.actor(state)[0]
+    #             action = action.cpu().numpy().squeeze()
+    #             state, reward, is_done, info = env.step(action)
+    #             R += reward
+    #         env_cost = env.get_env_attr('cost')
+    #         env_fes = env.get_env_attr('fes')
+    #         results = {'cost': env_cost, 'fes': env_fes, 'return': R}
+
+    #         if self.config.full_meta_data:
+    #             meta_X = env.get_env_attr('meta_X')
+    #             meta_Cost = env.get_env_attr('meta_Cost')
+    #             metadata = {'X': meta_X, 'Cost': meta_Cost}
+    #             results['metadata'] = metadata
+
+    #         for key in required_info.keys():
+    #             results[key] = getattr(env, required_info[key])
+    #         return results
