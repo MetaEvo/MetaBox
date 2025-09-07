@@ -417,7 +417,7 @@ class PPO_Agent(Basic_Agent):
         return state
 
     def _trans_action(self, action):
-        return action.cpu().numpy()
+        return action.cpu().numpy().squeeze()
 
     def _get_action(self, state, action_t = None):
         action, log_lh, entro_p = self.actor(state, action_t)
@@ -460,7 +460,7 @@ class PPO_Agent(Basic_Agent):
                 action, _, _ = self._get_action(state)
                 # action = action.cpu().numpy().squeeze()
                 action = self._trans_action(action)
-                state, reward, is_done = env.step(action)
+                state, reward, is_done, info = env.step(action)
                 R += reward
             env_cost = env.get_env_attr('cost')
             env_fes = env.get_env_attr('fes')
