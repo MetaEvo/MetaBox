@@ -234,6 +234,9 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
             self.meta_X = [self.population.current_position.copy()]
             self.meta_Cost = [self.population.c_cost.copy()]
 
+        # Update fes
+        self.fes = self.population.cur_fes
+        
         # return state
         return self.observe()
 
@@ -347,6 +350,9 @@ class SYMBOL_Optimizer(Learnable_Optimizer):
                     self.cost.append(self.population.gbest_cost)
             # print(f'problem: {self.problem.__str__()}')
 
+        # Update fes
+        self.fes = self.population.cur_fes
+        
         return self.observe(), reward, is_end, {}
 
     def cal_reward(self, tea_pop, max_step):
