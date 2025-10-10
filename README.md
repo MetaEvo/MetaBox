@@ -21,6 +21,7 @@
 </h2>
 
 **MetaBox-v1 has been accepted as an oral presentation at NeurIPS 2023!**
+
 **MetaBox-v2 has been accepted as poster at NeurIPS 2025!**
 
 😀[Online Documentation](https://metaboxdoc.readthedocs.io/en/stable/index.html) is here, you can get started quickly！😀
