@@ -21,6 +21,7 @@
 </h2>
 
 **MetaBox-v1 has been accepted as an oral presentation at NeurIPS 2023!**
+**MetaBox-v2 has been accepted as poster at NeurIPS 2025!**
 
 😀[Online Documentation](https://metaboxdoc.readthedocs.io/en/stable/index.html) is here, you can get started quickly！😀
 
@@ -303,19 +304,18 @@ We sincerely suggest researchers with interests to check out **[Online Documenta
 The PDF version of the paper is available [here](https://arxiv.org/abs/2310.08252). If you find our MetaBox useful, please cite it in your publications or projects.
 
 ```latex
-@inproceedings{metabox,
+@inproceedings{metabox-v1,
 author={Ma, Zeyuan and Guo, Hongshu and Chen, Jiacheng and Li, Zhenrui and Peng, Guojun and Gong, Yue-Jiao and Ma, Yining and Cao, Zhiguang},
 title={MetaBox: A Benchmark Platform for Meta-Black-Box Optimization with Reinforcement Learning},
 booktitle = {Advances in Neural Information Processing Systems},
 year={2023},
-volume = {36}
 }
 
-@article{ma2025metabox,
-  title={MetaBox-v2: A Unified Benchmark Platform for Meta-Black-Box Optimization},
-  author={Ma, Zeyuan and Gong, Yue-Jiao and Guo, Hongshu and Qiu, Wenjie and Ma, Sijie and Lian, Hongqiao and Zhan, Jiajun and Chen, Kaixu and Wang, Chen and Huang, Zhiyang and others},
-  journal={arXiv preprint arXiv:2505.17745},
-  year={2025}
+@inproceedings{metabox-v2,
+title={MetaBox-v2: A Unified Benchmark Platform for Meta-Black-Box Optimization},
+author={Zeyuan Ma and Yue-Jiao Gong and Hongshu Guo and Wenjie Qiu and Sijie Ma and Hongqiao Lian and Jiajun Zhan and Kaixu Chen and Chen Wang and Zhiyang Huang and Zechuan Huang and Guojun Peng and Ran Cheng and Yining Ma},
+booktitle={Advances in Neural Information Processing Systems},
+year={2025},
 }
 ```
 
